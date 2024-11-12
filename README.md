@@ -42,7 +42,7 @@ This is a Go-based web application that provides  marketplace API services.
    ```
 
 3. Configure application:
-   Copy `config/config.toml.example` to `config/config.toml` and modify settings as needed.
+   Copy `config/config.yaml.example` to `config/config.yaml` and modify settings as needed.
 
 4. Run application:
    ```
@@ -51,7 +51,7 @@ This is a Go-based web application that provides  marketplace API services.
 
 ## Configuration
 
-Configuration file is located at `config/config.toml`. Main configuration items include:
+Configuration file is located at `config/config.yaml`. Main configuration items include:
 
 - Database connection
 - Server settings

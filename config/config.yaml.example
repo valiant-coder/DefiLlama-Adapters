@@ -1,0 +1,31 @@
+mysql:
+  host: localhost
+  port: 3306
+  database: mydb
+  user: root
+  pass: password
+  loc: Local
+  migrate: true
+
+trace:
+  exporter: jaeger
+  jaeger_endpoint: http://localhost:14268/api/traces
+
+redis:
+  is_cluster: false
+  cluster:
+    urls:
+      - "localhost:6379"
+    user: ""
+    pass: ""
+  host: localhost
+  port: 6379
+  db: 0
+  pass: ""
+
+jwt:
+  secret_key: "RqdCsdaS6X*!zn]E4rBv" 
+  realm: "exapp"
+  timeout: 24  # hour
+
+
