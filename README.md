@@ -9,7 +9,7 @@ This is a Go-based web application that provides  marketplace API services.
 - Tracing System
 
 ## Project Structure
-
+```
 ├── api
 │   ├── marketplace
 │   └── admin
@@ -27,6 +27,7 @@ This is a Go-based web application that provides  marketplace API services.
 ├── pkg
 ├── main.go
 └── README.md
+```
 
 ## Installation and Running
 
