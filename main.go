@@ -10,8 +10,8 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name:  "exapp-go",
-		Usage: "cdex go",
+		Name:  "exapp",
+		Usage: "exapp go",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config",

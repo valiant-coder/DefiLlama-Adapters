@@ -24,7 +24,7 @@ func HandlerMiddleWare(authMiddleware *jwt.GinJWTMiddleware) gin.HandlerFunc {
 func InitParams() *jwt.GinJWTMiddleware {
 
 	return &jwt.GinJWTMiddleware{
-		Realm:       "cdex-app",
+		Realm:       "exapp",
 		Key:         []byte("secret key"),
 		Timeout:     time.Hour,
 		MaxRefresh:  time.Hour,

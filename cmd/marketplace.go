@@ -11,8 +11,8 @@ import (
 )
 
 var MarketplaceApi = &cli.Command{
-	Name:  "marketplace-api",
-	Usage: "cdex go marketplace api",
+	Name:  "marketplace",
+	Usage: "exapp marketplace api",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "addr",
