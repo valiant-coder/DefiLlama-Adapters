@@ -1,0 +1,8 @@
+.lh
+.DS_Store
+*.toml
+.vscode
+sources
+develop/data
+.idea
+*.yaml
