@@ -35,6 +35,15 @@ type Config struct {
 		DB   int    `yaml:"db"`
 		Pass string `yaml:"pass"`
 	} `yaml:"redis"`
+
+	JWT JWTConfig `mapstructure:"jwt"`
+}
+
+type JWTConfig struct {
+	SecretKey string `mapstructure:"secret_key"`
+	Realm     string `mapstructure:"realm"`
+	// hour
+	Timeout   int    `mapstructure:"timeout"` 
 }
 
 var (

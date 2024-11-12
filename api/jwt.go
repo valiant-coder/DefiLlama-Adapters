@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"exapp-go/config"
+
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 )
@@ -22,12 +24,13 @@ func HandlerMiddleWare(authMiddleware *jwt.GinJWTMiddleware) gin.HandlerFunc {
 }
 
 func InitParams() *jwt.GinJWTMiddleware {
+	cfg := config.Conf()
 
 	return &jwt.GinJWTMiddleware{
-		Realm:       "exapp",
-		Key:         []byte("secret key"),
-		Timeout:     time.Hour,
-		MaxRefresh:  time.Hour,
+		Realm:       cfg.JWT.Realm,
+		Key:         []byte(cfg.JWT.SecretKey),
+		Timeout:     time.Duration(cfg.JWT.Timeout) * time.Hour,
+		MaxRefresh:  time.Duration(cfg.JWT.Timeout) * time.Hour,
 		IdentityKey: identityKey,
 		PayloadFunc: payloadFunc(),
 
@@ -36,10 +39,8 @@ func InitParams() *jwt.GinJWTMiddleware {
 		Authorizator:    authorizator(),
 		Unauthorized:    unauthorized(),
 		TokenLookup:     "header: Authorization, query: token, cookie: jwt",
-		// TokenLookup: "query:token",
-		// TokenLookup: "cookie:token",
-		TokenHeadName: "Bearer",
-		TimeFunc:      time.Now,
+		TokenHeadName:   "Bearer",
+		TimeFunc:        time.Now,
 	}
 }
 
@@ -55,7 +56,6 @@ func payloadFunc() func(data interface{}) jwt.MapClaims {
 	}
 }
 
-
 func identityHandler() func(c *gin.Context) interface{} {
 	return func(c *gin.Context) interface{} {
 		// claims := jwt.ExtractClaims(c)
@@ -65,7 +65,6 @@ func identityHandler() func(c *gin.Context) interface{} {
 		return nil
 	}
 }
-
 
 func authenticator() func(c *gin.Context) (interface{}, error) {
 	return func(c *gin.Context) (interface{}, error) {
@@ -87,7 +86,6 @@ func authenticator() func(c *gin.Context) (interface{}, error) {
 		return nil, nil
 	}
 }
-
 
 func authorizator() func(data interface{}, c *gin.Context) bool {
 	return func(data interface{}, c *gin.Context) bool {
