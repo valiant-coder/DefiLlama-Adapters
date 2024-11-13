@@ -29,6 +29,7 @@ require (
 
 require (
 	github.com/appleboy/gin-jwt/v2 v2.9.2
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.1
 	github.com/redis/go-redis/v9 v9.5.1
 	google.golang.org/api v0.106.0
