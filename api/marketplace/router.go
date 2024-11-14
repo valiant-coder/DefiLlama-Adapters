@@ -12,11 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"exapp-go/docs/marketplace"
 )
 
 // @title exapp-go marketplace api
 // @version 1.0
-// @host 127.0.0.1:8083
+// @host 127.0.0.1:8080
 // @BasePath /
 // @schemes http https
 // @securityDefinitions.apikey ApiKeyAuth
@@ -36,7 +37,7 @@ func Run(addr string, release bool) error {
 		}))
 		swaggerHost := os.Getenv("SWAGGER_HOST")
 		if swaggerHost != "" {
-			// marketplace.SwaggerInfomarketplace.Host = swaggerHost
+			marketplace.SwaggerInfomarketplace.Host = swaggerHost
 		}
 	}
 
@@ -56,7 +57,11 @@ func Run(addr string, release bool) error {
 		gin.CustomRecovery(handleRecovery),
 	)
 
-	authMiddleware, err := jwt.New(api.InitParams())
+	jwtParams := api.InitParams()
+	jwtParams.Authenticator = authenticator
+	jwtParams.Authorizator = authorizator
+
+	authMiddleware, err := jwt.New(jwtParams)
 	if err != nil {
 		log.Logger().Errorf("[RegisterJwtMiddleWare] %s", err)
 	}

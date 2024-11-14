@@ -37,6 +37,15 @@ type Config struct {
 	} `yaml:"redis"`
 
 	JWT JWTConfig `mapstructure:"jwt"`
+
+	Oauth2 struct {
+		Google struct {
+			ClientID string `yaml:"client_id"`
+		} `yaml:"google"`
+		Apple struct {
+			ClientID string `yaml:"client_id"`
+		} `yaml:"apple"`
+	} `yaml:"oauth2"`
 }
 
 type JWTConfig struct {

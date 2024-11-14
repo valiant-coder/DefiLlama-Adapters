@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	identityKey = "user_id"
+	identityKey = "uid"
 )
 
 func HandlerMiddleWare(authMiddleware *jwt.GinJWTMiddleware) gin.HandlerFunc {
@@ -38,6 +38,7 @@ func InitParams() *jwt.GinJWTMiddleware {
 		Authenticator:   authenticator(),
 		Authorizator:    authorizator(),
 		Unauthorized:    unauthorized(),
+		LoginResponse:   loginResponse(),
 		TokenLookup:     "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName:   "Bearer",
 		TimeFunc:        time.Now,
@@ -47,22 +48,19 @@ func InitParams() *jwt.GinJWTMiddleware {
 // payload set
 func payloadFunc() func(data interface{}) jwt.MapClaims {
 	return func(data interface{}) jwt.MapClaims {
-		// if v, ok := data.(*User); ok {
-		// 	return jwt.MapClaims{
-		// 		identityKey: v.UserName,
-		// 	}
-		// }
+		if v, ok := data.(string); ok {
+			return jwt.MapClaims{
+				identityKey: v,
+			}
+		}
 		return jwt.MapClaims{}
 	}
 }
 
 func identityHandler() func(c *gin.Context) interface{} {
 	return func(c *gin.Context) interface{} {
-		// claims := jwt.ExtractClaims(c)
-		// return &User{
-		// 	UserName: claims[identityKey].(string),
-		// }
-		return nil
+		claims := jwt.ExtractClaims(c)
+		return claims[identityKey]
 	}
 }
 
@@ -102,6 +100,15 @@ func unauthorized() func(c *gin.Context, code int, message string) {
 		c.JSON(code, gin.H{
 			"code":    code,
 			"message": message,
+		})
+	}
+}
+
+func loginResponse() func(c *gin.Context, code int, token string, expire time.Time) {
+	return func(c *gin.Context, code int, token string, expire time.Time) {
+		success(gin.H{
+			"token":  token,
+			"expire": expire.Format(time.DateTime),
 		})
 	}
 }
