@@ -32,6 +32,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.1
 	github.com/redis/go-redis/v9 v9.5.1
+	github.com/swaggo/swag v1.16.3
 	google.golang.org/api v0.106.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -78,7 +79,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc4 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/swaggo/swag v1.16.3 // indirect
 	github.com/tidwall/gjson v1.17.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
