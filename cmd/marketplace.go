@@ -24,6 +24,11 @@ var MarketplaceApi = &cli.Command{
 			Value: false,
 			Usage: "release mode",
 		},
+		&cli.StringFlag{
+			Name:  "config",
+			Usage: "config file path",
+			Value: "./config/config_dev.yaml",
+		},
 	},
 	Action: func(c *cli.Context) error {
 		err := config.Load(c.String("config"))
