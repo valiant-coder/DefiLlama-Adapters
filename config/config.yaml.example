@@ -28,4 +28,9 @@ jwt:
   realm: "exapp"
   timeout: 24  # hour
 
+oauth2:
+  google:
+    client_id: "1234567890"
+  apple:
+    client_id: "1234567890"
 
