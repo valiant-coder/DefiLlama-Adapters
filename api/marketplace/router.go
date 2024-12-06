@@ -79,10 +79,13 @@ func Run(addr string, release bool) error {
 	r.GET("/book", getOrderBook)
 	r.GET("/klines", getKlines)
 	r.GET("/tokens", getTokens)
+	
 
 	// Protected endpoints
 	auth.GET("/orders", getOrders)
 	auth.GET("/trades", getTrades)
 	auth.GET("/assets", getUserAssets)
+	auth.POST("/credentials", createUserCredentials)
+	auth.GET("/credentials", getUserCredentials)
 	return r.Run(addr)
 }

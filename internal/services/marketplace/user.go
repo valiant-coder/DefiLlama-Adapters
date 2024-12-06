@@ -58,3 +58,28 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 func (s *UserService) IsUserExist(ctx context.Context, uid string) (bool, error) {
 	return s.db.IsUserExist(ctx, uid)
 }
+
+func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]entity.UserCredential, error) {
+	credentials, err := s.db.GetUserCredentials(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var dst []entity.UserCredential
+	for _, v := range credentials {
+		dst = append(dst, entity.UserCredential{
+			CredentialID: v.CredentialID,
+			PublicKey:    v.PublicKey,
+		})
+	}
+
+	return dst, nil
+}
+
+func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserCredential, uid string) error {
+	return s.db.CreateCredentialIfNotExist(ctx, &db.UserCredential{
+		UID:          uid,
+		CredentialID: req.CredentialID,
+		PublicKey:    req.PublicKey,
+	})
+}

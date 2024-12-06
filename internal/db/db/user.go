@@ -67,3 +67,33 @@ func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
 	return result.RowsAffected > 0, result.Error
 }
+
+
+
+type UserCredential struct {
+	gorm.Model
+	UID          string `gorm:"column:uid;type:varchar(255);not null;"`
+	CredentialID string `gorm:"column:credential_id;type:text;not null;uniqueIndex:idx_credential_id"`
+	PublicKey    string `gorm:"column:public_key;type:text;not null"`
+}
+
+func (UserCredential) TableName() string {
+	return "td_user_credentials"
+}
+
+
+
+func (r *Repo) CreateCredentialIfNotExist(ctx context.Context, credential *UserCredential) error {
+	var existingCredential UserCredential
+	result := r.DB.WithContext(ctx).Where("credential_id = ?", credential.CredentialID).First(&existingCredential)
+	if result.Error == gorm.ErrRecordNotFound {
+		return r.DB.WithContext(ctx).Create(credential).Error
+	}
+	return nil
+}
+
+func (r *Repo) GetUserCredentials(ctx context.Context, uid string) ([]UserCredential, error) {
+	var credentials []UserCredential
+	result := r.DB.WithContext(ctx).Where("user_id = ?", uid).Find(&credentials)
+	return credentials, result.Error
+}

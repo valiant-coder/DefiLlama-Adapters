@@ -17,6 +17,11 @@ const docTemplatemarketplace = `{
     "paths": {
         "/assets": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get user assets",
                 "consumes": [
                     "application/json"
@@ -69,6 +74,71 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "$ref": "#/definitions/entity.OrderBook"
                         }
+                    }
+                }
+            }
+        },
+        "/credentials": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get user credentials",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user credentials",
+                "responses": {
+                    "200": {
+                        "description": "user credentials",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.UserCredential"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create user credentials",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Create user credentials",
+                "parameters": [
+                    {
+                        "description": "create user credential params",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.UserCredential"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -177,6 +247,11 @@ const docTemplatemarketplace = `{
         },
         "/orders": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get orders",
                 "consumes": [
                     "application/json"
@@ -307,6 +382,11 @@ const docTemplatemarketplace = `{
         },
         "/trades": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get trades",
                 "consumes": [
                     "application/json"
@@ -627,6 +707,17 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "token_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserCredential": {
+            "type": "object",
+            "properties": {
+                "credential_id": {
+                    "type": "string"
+                },
+                "public_key": {
                     "type": "string"
                 }
             }

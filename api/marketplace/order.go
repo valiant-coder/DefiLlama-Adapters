@@ -4,6 +4,7 @@ import "github.com/gin-gonic/gin"
 
 // @Summary Get orders
 // @Description Get orders
+// @Security ApiKeyAuth
 // @Tags order
 // @Accept json
 // @Produce json

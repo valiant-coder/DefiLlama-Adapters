@@ -18,3 +18,9 @@ type UserAsset struct {
 
 
 
+
+
+type UserCredential struct {
+	CredentialID string `json:"credential_id"`
+	PublicKey    string `json:"public_key"`
+}

@@ -1,6 +1,7 @@
 package marketplace
 
 import (
+	"exapp-go/api"
 	"exapp-go/internal/entity"
 	"exapp-go/internal/services/marketplace"
 
@@ -42,9 +43,9 @@ func authorizator(data interface{}, c *gin.Context) bool {
 	return true
 }
 
-
 // @Summary Get user assets
 // @Description Get user assets
+// @Security ApiKeyAuth
 // @Tags user
 // @Accept json
 // @Produce json
@@ -53,3 +54,45 @@ func authorizator(data interface{}, c *gin.Context) bool {
 func getUserAssets(c *gin.Context) {
 
 }
+
+// @Summary Create user credentials
+// @Description Create user credentials
+// @Security ApiKeyAuth
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param req body entity.UserCredential true "create user credential params"
+// @Success 200
+// @Router /credentials [post]
+func createUserCredentials(c *gin.Context) {
+	var req entity.UserCredential
+	if err := c.ShouldBind(&req); err != nil {
+		api.Error(c, err)
+		return
+	}
+	userService := marketplace.NewUserService()
+	if err := userService.CreateUserCredential(c.Request.Context(), req, c.GetString("uid")); err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, nil)
+}
+
+// @Summary Get user credentials
+// @Description Get user credentials
+// @Security ApiKeyAuth
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {array} entity.UserCredential "user credentials"
+// @Router /credentials [get]
+func getUserCredentials(c *gin.Context) {
+	userService := marketplace.NewUserService()
+	credentials, err := userService.GetUserCredentials(c.Request.Context(), c.GetString("uid"))
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, credentials)
+}
+
