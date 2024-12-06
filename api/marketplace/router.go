@@ -73,6 +73,16 @@ func Run(addr string, release bool) error {
 	auth := r.Group("/", authMiddleware.MiddlewareFunc())
 	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 
-	return r.Run(addr)
+	// Public endpoints
+	r.GET("/pairs", getPairs)
+	r.GET("/pairs/:pair_id", getPair)
+	r.GET("/book", getOrderBook)
+	r.GET("/klines", getKlines)
+	r.GET("/tokens", getTokens)
 
+	// Protected endpoints
+	auth.GET("/orders", getOrders)
+	auth.GET("/trades", getTrades)
+	auth.GET("/assets", getUserAssets)
+	return r.Run(addr)
 }

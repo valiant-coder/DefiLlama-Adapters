@@ -41,3 +41,15 @@ func authorizator(data interface{}, c *gin.Context) bool {
 	}
 	return true
 }
+
+
+// @Summary Get user assets
+// @Description Get user assets
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {array} entity.UserAsset "user assets"
+// @Router /assets [get]
+func getUserAssets(c *gin.Context) {
+
+}
