@@ -79,7 +79,7 @@ func Run(addr string, release bool) error {
 	r.GET("/book", getOrderBook)
 	r.GET("/klines", getKlines)
 	r.GET("/tokens", getTokens)
-	
+	r.POST("/eos/pay-cpu", payCPU)
 
 	// Protected endpoints
 	auth.GET("/orders", getOrders)
@@ -87,5 +87,7 @@ func Run(addr string, release bool) error {
 	auth.GET("/assets", getUserAssets)
 	auth.POST("/credentials", createUserCredentials)
 	auth.GET("/credentials", getUserCredentials)
+
+
 	return r.Run(addr)
 }

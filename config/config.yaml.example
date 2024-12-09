@@ -34,3 +34,7 @@ oauth2:
   apple:
     client_id: "1234567890"
 
+eos:
+  node_url: "https://eos.greymass.com"
+  payer_account: "your_payer_account"   
+  payer_private_key: "your_private_key" 

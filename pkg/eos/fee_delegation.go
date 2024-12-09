@@ -77,9 +77,17 @@ func CreateUserSignedTransaction(
 func SignAndBroadcastByPayer(
 	ctx context.Context,
 	api *eos.API,
-	tx *eos.SignedTransaction,
+	singleSignedTx string,
 	payerPrivateKey string,
 ) (*eos.PushTransactionFullResp, error) {
+
+	tx := &eos.SignedTransaction{}
+	err := eos.UnmarshalBinary([]byte(singleSignedTx), tx)
+	if err != nil {
+		return nil, err
+	}
+
+
 	payerKey, err := ecc.NewPrivateKey(payerPrivateKey)
 	if err != nil {
 		return nil, err
@@ -93,17 +101,17 @@ func SignAndBroadcastByPayer(
 		return nil, err
 	}
 
-	signedTx, err := api.Signer.Sign(ctx, tx, []byte(txOpts.ChainID), payerKey.PublicKey())
+	fullSignedTx, err := api.Signer.Sign(ctx, tx, []byte(txOpts.ChainID), payerKey.PublicKey())
 	if err != nil {
 		return nil, err
 	}
 
 	// Reverse signatures - payer's signature must be first
-	if len(signedTx.Signatures) > 1 {
-		signedTx.Signatures = append(signedTx.Signatures[1:], signedTx.Signatures[0])
+	if len(fullSignedTx.Signatures) > 1 {
+		fullSignedTx.Signatures = append(fullSignedTx.Signatures[1:], fullSignedTx.Signatures[0])
 	}
 
-	packed, err := signedTx.Pack(eos.CompressionNone)
+	packed, err := fullSignedTx.Pack(eos.CompressionNone)
 	if err != nil {
 		return nil, err
 	}

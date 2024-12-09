@@ -143,6 +143,40 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/eos/pay-cpu": {
+            "post": {
+                "description": "pay cpu for user tx",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "eos"
+                ],
+                "summary": "pay cpu",
+                "parameters": [
+                    {
+                        "description": "signed tx",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqPayCPU"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "txid",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespPayCPU"
+                        }
+                    }
+                }
+            }
+        },
         "/klines": {
             "get": {
                 "description": "Get kline data by pair id and interval",
@@ -622,6 +656,17 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.ReqPayCPU": {
+            "type": "object",
+            "required": [
+                "single_signed_transaction"
+            ],
+            "properties": {
+                "single_signed_transaction": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.ReqUserLogin": {
             "type": "object",
             "properties": {
@@ -630,6 +675,14 @@ const docTemplatemarketplace = `{
                 },
                 "method": {
                     "description": "google,apple",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.RespPayCPU": {
+            "type": "object",
+            "properties": {
+                "transaction_id": {
                     "type": "string"
                 }
             }

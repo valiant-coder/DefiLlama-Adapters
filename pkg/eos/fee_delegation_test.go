@@ -16,16 +16,16 @@ func TestFeeDelegation(t *testing.T) {
 	ctx := context.Background()
 
 	// Transaction parameters
-	fromAccount := ""     // Sender account
-	toAccount := ""       // Receiver account
-	quantity := "1.0000 EOS"          // Transfer amount
-	memo := "test fee delegation"     // Memo
-	userPrivateKey := "" // User private key
-	payerAccount := ""    // Payer account
-	payerPrivateKey := ""  // Payer private key
+	fromAccount := ""             // Sender account
+	toAccount := ""               // Receiver account
+	quantity := "1.0000 EOS"      // Transfer amount
+	memo := "test fee delegation" // Memo
+	userPrivateKey := ""          // User private key
+	payerAccount := ""            // Payer account
+	payerPrivateKey := ""         // Payer private key
 
 	// 1. Create user signed transaction
-	signedTx, err := CreateUserSignedTransaction(
+	singleSignedTx, err := CreateUserSignedTransaction(
 		ctx,
 		api,
 		fromAccount,
@@ -39,11 +39,15 @@ func TestFeeDelegation(t *testing.T) {
 		log.Fatalf("Failed to create transaction: %v", err)
 	}
 
+	singleSignedTxBytes, err := eos.MarshalBinary(singleSignedTx)
+	if err != nil {
+		log.Fatalf("Failed to marshal transaction: %v", err)
+	}
 	// 2. Sign and broadcast transaction by payer account
 	resp, err := SignAndBroadcastByPayer(
 		ctx,
 		api,
-		signedTx,
+		string(singleSignedTxBytes),
 		payerPrivateKey,
 	)
 	if err != nil {
