@@ -15,14 +15,9 @@ const docTemplatemarketplace = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/assets": {
+        "/api/v1/balances": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get user assets",
+                "description": "Get user balances",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,21 +27,137 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "Get user assets",
+                "summary": "Get user balances",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "eos account name",
+                        "name": "account",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "user assets",
+                        "description": "user balances",
+                        "schema": {
+                            "$ref": "#/definitions/entity.UserBalance"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/klines": {
+            "get": {
+                "description": "Get kline data by pair id and interval",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kline"
+                ],
+                "summary": "Get kline data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool id",
+                        "name": "pool_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1m",
+                            "5m",
+                            "15m",
+                            "30m",
+                            "1h",
+                            "4h",
+                            "1d",
+                            "1w",
+                            "1M"
+                        ],
+                        "type": "string",
+                        "description": "interval",
+                        "name": "interval",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "start timestamp",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "end timestamp",
+                        "name": "end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit count",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "kline data",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.UserAsset"
+                                "$ref": "#/definitions/entity.Kline"
                             }
                         }
                     }
                 }
             }
         },
-        "/book": {
+        "/api/v1/open-orders": {
+            "get": {
+                "description": "Get open orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get open orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "eos account name",
+                        "name": "account",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "open order list",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Order"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orderbook": {
             "get": {
                 "description": "Get order book by pair id",
                 "consumes": [
@@ -56,14 +167,14 @@ const docTemplatemarketplace = `{
                     "application/json"
                 ],
                 "tags": [
-                    "book"
+                    "order book"
                 ],
                 "summary": "Get order book",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "pair_id",
-                        "name": "pair_id",
+                        "description": "pool_id",
+                        "name": "pool_id",
                         "in": "query",
                         "required": true
                     }
@@ -73,6 +184,219 @@ const docTemplatemarketplace = `{
                         "description": "order book",
                         "schema": {
                             "$ref": "#/definitions/entity.OrderBook"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders": {
+            "get": {
+                "description": "Get history orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get history orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "eos account name",
+                        "name": "account",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "order_type",
+                        "name": "order_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "order list",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Order"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}": {
+            "get": {
+                "description": "Get order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get order detail",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "order detail",
+                        "schema": {
+                            "$ref": "#/definitions/entity.OrderDetail"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/pools": {
+            "get": {
+                "description": "Get a list of all trading pools",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pools"
+                ],
+                "summary": "List all trading pools",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "base coin symbol",
+                        "name": "base_symbol",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "quote coin symbol",
+                        "name": "quote_symbol",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "pool info",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.PoolInfo"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/pools/{symbol}": {
+            "get": {
+                "description": "Get detailed information about a specific trading pool",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pools"
+                ],
+                "summary": "Get pool details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool symbol",
+                        "name": "symbol",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Pool"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/trades": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get trades",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trade"
+                ],
+                "summary": "Get trades",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "start timestamp",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "end timestamp",
+                        "name": "end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit count",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "trade list",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Trade"
+                            }
                         }
                     }
                 }
@@ -177,77 +501,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "/klines": {
-            "get": {
-                "description": "Get kline data by pair id and interval",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "kline"
-                ],
-                "summary": "Get kline data",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pair_id",
-                        "name": "pair_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "1m",
-                            "5m",
-                            "15m",
-                            "30m",
-                            "1h",
-                            "4h",
-                            "1d",
-                            "1w",
-                            "1M"
-                        ],
-                        "type": "string",
-                        "description": "interval",
-                        "name": "interval",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "start timestamp",
-                        "name": "start",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "end timestamp",
-                        "name": "end",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit count",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "kline data",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Kline"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/login": {
             "post": {
                 "description": "Login",
@@ -278,181 +531,12 @@ const docTemplatemarketplace = `{
                     }
                 }
             }
-        },
-        "/orders": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pair_id",
-                        "name": "pair_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "order_type",
-                        "name": "order_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "status",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "order list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Order"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/pairs": {
-            "get": {
-                "description": "Get all trading pairs",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pair"
-                ],
-                "summary": "Get trading pairs",
-                "responses": {
-                    "200": {
-                        "description": "pair list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Pair"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/pairs/{pair_id}": {
-            "get": {
-                "description": "Get trading pair detail by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pair"
-                ],
-                "summary": "Get trading pair detail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pair_id",
-                        "name": "pair_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "pair detail",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Pair"
-                        }
-                    }
-                }
-            }
-        },
-        "/tokens": {
-            "get": {
-                "description": "Get tokens",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "token"
-                ],
-                "summary": "Get tokens",
-                "responses": {
-                    "200": {
-                        "description": "token list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Token"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/trades": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get trades",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trade"
-                ],
-                "summary": "Get trades",
-                "responses": {
-                    "200": {
-                        "description": "trade list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Trade"
-                            }
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
         "entity.Kline": {
             "type": "object",
             "properties": {
-                "amount": {
-                    "type": "number"
-                },
                 "close": {
                     "type": "number"
                 },
@@ -468,97 +552,65 @@ const docTemplatemarketplace = `{
                 "open": {
                     "type": "number"
                 },
-                "pair_id": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "symbol": {
-                    "type": "string"
+                "pool_id": {
+                    "type": "integer"
                 },
                 "timestamp": {
                     "type": "string"
+                },
+                "turnover": {
+                    "type": "number"
+                },
+                "volume": {
+                    "type": "number"
                 }
             }
         },
         "entity.Order": {
             "type": "object",
             "properties": {
-                "amount": {
-                    "description": "Order amount",
+                "created_at": {
                     "type": "string"
                 },
-                "executed_amount": {
-                    "description": "Executed amount",
+                "cumulative_quote_quantity": {
                     "type": "string"
                 },
                 "executed_quantity": {
-                    "description": "Executed quantity",
-                    "type": "string"
-                },
-                "fee": {
-                    "description": "Fee",
-                    "type": "string"
-                },
-                "fee_asset": {
-                    "description": "Fee asset",
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "is_bid": {
+                    "type": "boolean"
+                },
+                "is_market": {
+                    "type": "boolean"
+                },
+                "order_cid": {
                     "type": "string"
                 },
-                "last_trade_time": {
-                    "description": "Last trade time",
+                "original_quantity": {
                     "type": "string"
                 },
-                "maker": {
-                    "description": "Maker",
+                "paid_fees": {
                     "type": "string"
                 },
-                "pair_id": {
-                    "description": "Trading pair ID",
-                    "type": "string"
+                "pool_id": {
+                    "type": "integer"
                 },
                 "price": {
-                    "description": "Order price",
-                    "type": "string"
-                },
-                "quantity": {
-                    "description": "Order quantity",
-                    "type": "string"
-                },
-                "side": {
-                    "description": "Order side",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entity.OrderSide"
-                        }
-                    ]
+                    "type": "integer"
                 },
                 "status": {
-                    "description": "Order status",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entity.OrderStatus"
-                        }
-                    ]
+                    "type": "string"
                 },
-                "timestamp": {
-                    "description": "Order timestamp",
+                "trader": {
                     "type": "string"
                 },
                 "type": {
-                    "description": "Order type",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entity.OrderType"
-                        }
-                    ]
-                },
-                "user": {
-                    "description": "User",
-                    "type": "string"
+                    "description": "0: no restriction, 1: immediate or cancel, 2: fill or kill, 3: post only",
+                    "type": "integer"
                 }
             }
         },
@@ -568,74 +620,89 @@ const docTemplatemarketplace = `{
                 "asks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.OrderEntry"
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "bids": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.OrderEntry"
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
-                "pair_id": {
-                    "type": "string"
+                "pool_id": {
+                    "type": "integer"
                 },
                 "timestamp": {
                     "type": "string"
                 }
             }
         },
-        "entity.OrderEntry": {
+        "entity.OrderDetail": {
             "type": "object",
             "properties": {
-                "price": {
-                    "type": "number"
+                "created_at": {
+                    "type": "string"
                 },
-                "quantity": {
-                    "type": "number"
+                "cumulative_quote_quantity": {
+                    "type": "string"
+                },
+                "executed_quantity": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_bid": {
+                    "type": "boolean"
+                },
+                "is_market": {
+                    "type": "boolean"
+                },
+                "order_cid": {
+                    "type": "string"
+                },
+                "original_quantity": {
+                    "type": "string"
+                },
+                "paid_fees": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "trader": {
+                    "type": "string"
+                },
+                "trades": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TradeDetail"
+                    }
+                },
+                "type": {
+                    "description": "0: no restriction, 1: immediate or cancel, 2: fill or kill, 3: post only",
+                    "type": "integer"
                 }
             }
         },
-        "entity.OrderSide": {
-            "type": "string",
-            "enum": [
-                "buy",
-                "sell"
-            ],
-            "x-enum-varnames": [
-                "OrderSideBuy",
-                "OrderSideSell"
-            ]
-        },
-        "entity.OrderStatus": {
-            "type": "string",
-            "enum": [
-                "open",
-                "filled",
-                "partially_filled",
-                "canceled"
-            ],
-            "x-enum-varnames": [
-                "OrderStatusOpen",
-                "OrderStatusFilled",
-                "OrderStatusPartiallyFilled",
-                "OrderStatusCanceled"
-            ]
-        },
-        "entity.OrderType": {
-            "type": "string",
-            "enum": [
-                "limit",
-                "market"
-            ],
-            "x-enum-varnames": [
-                "OrderTypeLimit",
-                "OrderTypeMarket"
-            ]
-        },
-        "entity.Pair": {
+        "entity.Pool": {
             "type": "object",
             "properties": {
+                "asking_time": {
+                    "type": "string"
+                },
                 "base_contract": {
                     "type": "string"
                 },
@@ -643,7 +710,19 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
+                },
+                "maker_fee_rate": {
+                    "type": "integer"
+                },
+                "max_flct": {
+                    "type": "integer"
+                },
+                "pool_info": {
+                    "$ref": "#/definitions/entity.PoolInfo"
+                },
+                "price_precision": {
+                    "type": "integer"
                 },
                 "quote_contract": {
                     "type": "string"
@@ -651,7 +730,42 @@ const docTemplatemarketplace = `{
                 "quote_symbol": {
                     "type": "string"
                 },
+                "status": {
+                    "type": "integer"
+                },
+                "taker_fee_rate": {
+                    "type": "integer"
+                },
+                "trading_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.PoolInfo": {
+            "type": "object",
+            "properties": {
+                "change": {
+                    "type": "number"
+                },
+                "high": {
+                    "type": "string"
+                },
+                "low": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
                 "symbol": {
+                    "type": "string"
+                },
+                "trade_count": {
+                    "type": "integer"
+                },
+                "turnover": {
+                    "type": "string"
+                },
+                "volume": {
                     "type": "string"
                 }
             }
@@ -687,36 +801,13 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "entity.Token": {
-            "type": "object",
-            "properties": {
-                "change_24h": {
-                    "type": "string"
-                },
-                "contract": {
-                    "type": "string"
-                },
-                "decimals": {
-                    "type": "integer"
-                },
-                "last_price": {
-                    "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.Trade": {
             "type": "object",
             "properties": {
                 "buyer": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "pair_id": {
+                "pool_id": {
                     "type": "integer"
                 },
                 "price": {
@@ -736,6 +827,59 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.TradeDetail": {
+            "type": "object",
+            "properties": {
+                "base_quantity": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "maker": {
+                    "type": "string"
+                },
+                "maker_fee": {
+                    "type": "string"
+                },
+                "maker_order_cid": {
+                    "type": "string"
+                },
+                "maker_order_id": {
+                    "type": "integer"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "quote_quantity": {
+                    "type": "string"
+                },
+                "taker": {
+                    "type": "string"
+                },
+                "taker_fee": {
+                    "type": "string"
+                },
+                "taker_is_bid": {
+                    "type": "boolean"
+                },
+                "taker_order_cid": {
+                    "type": "string"
+                },
+                "taker_order_id": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "tx_hash": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.TradeSide": {
             "type": "string",
             "enum": [
@@ -747,20 +891,20 @@ const docTemplatemarketplace = `{
                 "TradeSideSell"
             ]
         },
-        "entity.UserAsset": {
+        "entity.UserBalance": {
             "type": "object",
             "properties": {
-                "balance": {
-                    "type": "string"
+                "pool_balances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserPoolBalance"
+                    }
                 },
-                "free": {
-                    "type": "string"
-                },
-                "locked": {
-                    "type": "string"
-                },
-                "token_id": {
-                    "type": "string"
+                "token_balances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserTokenBalance"
+                    }
                 }
             }
         },
@@ -771,6 +915,40 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "public_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserPoolBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "pool_symbol": {
+                    "type": "string"
+                },
+                "token_contract": {
+                    "type": "string"
+                },
+                "token_symbol": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserTokenBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "string"
+                },
+                "contract": {
+                    "type": "string"
+                },
+                "symbol": {
                     "type": "string"
                 }
             }

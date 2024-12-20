@@ -43,17 +43,7 @@ func authorizator(data interface{}, c *gin.Context) bool {
 	return true
 }
 
-// @Summary Get user assets
-// @Description Get user assets
-// @Security ApiKeyAuth
-// @Tags user
-// @Accept json
-// @Produce json
-// @Success 200 {array} entity.UserAsset "user assets"
-// @Router /assets [get]
-func getUserAssets(c *gin.Context) {
 
-}
 
 // @Summary Create user credentials
 // @Description Create user credentials
@@ -96,3 +86,15 @@ func getUserCredentials(c *gin.Context) {
 	api.OK(c, credentials)
 }
 
+
+// @Summary Get user balances
+// @Description Get user balances
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param account query string false "eos account name"
+// @Success 200 {object} entity.UserBalance "user balances"
+// @Router /api/v1/balances [get]
+func getUserBalances(c *gin.Context) {
+
+}

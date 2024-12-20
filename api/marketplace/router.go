@@ -7,12 +7,13 @@ import (
 	"os"
 	"time"
 
+	"exapp-go/docs/marketplace"
+
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"exapp-go/docs/marketplace"
 )
 
 // @title exapp-go marketplace api
@@ -57,6 +58,27 @@ func Run(addr string, release bool) error {
 		gin.CustomRecovery(handleRecovery),
 	)
 
+
+	v1 := r.Group("/api/v1")
+
+
+	// Pool routes
+	v1.GET("/pools", pools)
+	v1.GET("/pools/:symbol", getPool)
+	
+	v1.GET("/klines", klines)
+	v1.GET("/orderbook", getOrderBook)
+	v1.GET("/trades", getTrades)
+	v1.GET("/open-orders", getOpenOrders)
+	v1.GET("/orders", getOrders)
+	v1.GET("/orders/:id", getOrder)
+ 
+
+	v1.GET("/balances", getUserBalances)
+
+
+	r.POST("/eos/pay-cpu", payCPU)
+
 	jwtParams := api.InitParams()
 	jwtParams.Authenticator = authenticator
 	jwtParams.Authorizator = authorizator
@@ -68,26 +90,14 @@ func Run(addr string, release bool) error {
 
 	// register middleware
 	r.Use(api.HandlerMiddleWare(authMiddleware))
-
 	r.POST("/login", authMiddleware.LoginHandler)
 	auth := r.Group("/", authMiddleware.MiddlewareFunc())
 	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 
-	// Public endpoints
-	r.GET("/pairs", getPairs)
-	r.GET("/pairs/:pair_id", getPair)
-	r.GET("/book", getOrderBook)
-	r.GET("/klines", getKlines)
-	r.GET("/tokens", getTokens)
-	r.POST("/eos/pay-cpu", payCPU)
 
-	// Protected endpoints
-	auth.GET("/orders", getOrders)
-	auth.GET("/trades", getTrades)
-	auth.GET("/assets", getUserAssets)
+
 	auth.POST("/credentials", createUserCredentials)
 	auth.GET("/credentials", getUserCredentials)
-
 
 	return r.Run(addr)
 }

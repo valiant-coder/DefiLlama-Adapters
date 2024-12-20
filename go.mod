@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.3
 
 require (
-	github.com/bytedance/sonic v1.11.6
+	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.20.0
@@ -34,6 +34,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.5.1
+	github.com/shopspring/decimal v1.2.0
 	github.com/swaggo/swag v1.16.3
 	google.golang.org/api v0.106.0
 	gopkg.in/yaml.v3 v3.0.1

@@ -1,30 +1,34 @@
 package utils
 
-import "github.com/bytedance/sonic"
+import (
+	"encoding/json"
 
-
+)
 
 func UnmarshalFromString(str string, v interface{}) error {
-	return sonic.UnmarshalString(str, v)
+	return json.Unmarshal([]byte(str), v)
 }
 
 func MarshalToString(v interface{}) (string, error) {
-	return sonic.MarshalString(v)
+	data, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 func Unmarshal(data []byte, v interface{}) error {
-	return sonic.Unmarshal(data, v)
+	return json.Unmarshal(data, v)
 }
 
 func Marshal(v interface{}) ([]byte, error) {
-	return sonic.Marshal(v)
+	return json.Marshal(v)
 }
 
 func MarshalE(v interface{}) []byte {
 	data, _ := Marshal(v)
 	return data
 }
-
 
 func MarshalToStringE(v interface{}) string {
 	str, _ := MarshalToString(v)
