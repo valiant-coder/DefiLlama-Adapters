@@ -18,6 +18,14 @@ type Config struct {
 		Migrate  bool   `yaml:"migrate"`
 	} `yaml:"mysql"`
 
+	ClickHouse struct {
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+		Database string `yaml:"database"`
+		User     string `yaml:"user"`
+		Pass     string `yaml:"pass"`
+	} `yaml:"clickhouse"`
+
 	Trace struct {
 		Exporter       string `yaml:"exporter"`
 		JaegerEndpoint string `yaml:"jaeger_endpoint"`

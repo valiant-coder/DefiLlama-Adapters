@@ -7,6 +7,13 @@ mysql:
   loc: Local
   migrate: true
 
+clickhouse:
+  host: localhost
+  port: 9000
+  database: exapp-dev
+  user: default
+  pass: ""
+
 trace:
   exporter: jaeger
   jaeger_endpoint: http://localhost:14268/api/traces
