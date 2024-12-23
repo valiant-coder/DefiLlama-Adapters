@@ -1,14 +1,12 @@
-package db
+package ckhdb
 
 import (
+	"context"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // Pool represents a trading pool in the DEX
 type Pool struct {
-	gorm.Model
 	PoolID         uint64     `json:"pool_id"`
 	BaseSymbol     string     `json:"base_symbol"`
 	BaseContract   string     `json:"base_contract"`
@@ -34,4 +32,13 @@ const (
 // TableName overrides the table name
 func (Pool) TableName() string {
 	return "pools"
+}
+
+func (r *ClickHouseRepo) GetPool(ctx context.Context, poolID uint64) (*Pool, error) {
+	pool := Pool{}
+	err := r.DB.WithContext(ctx).Where("pool_id = ?", poolID).First(&pool).Error
+	if err != nil {
+		return nil, err
+	}
+	return &pool, nil
 }
