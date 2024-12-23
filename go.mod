@@ -33,6 +33,7 @@ require (
 	github.com/go-webauthn/webauthn v0.11.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/shopspring/decimal v1.4.0
 	github.com/swaggo/swag v1.16.3

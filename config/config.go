@@ -60,6 +60,12 @@ type Config struct {
 		PayerAccount    string `yaml:"payer_account"`
 		PayerPrivateKey string `yaml:"payer_private_key"`
 	} `yaml:"eos"`
+
+
+	Hyperion struct {
+		Endpoint string `yaml:"endpoint"`
+		StreamEndpoint string `yaml:"stream_endpoint"`
+	} `yaml:"hyperion"`
 }
 
 type JWTConfig struct {

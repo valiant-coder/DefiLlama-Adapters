@@ -45,3 +45,7 @@ eos:
   node_url: "https://eos.greymass.com"
   payer_account: "your_payer_account"   
   payer_private_key: "your_private_key" 
+
+hyperion:
+  endpoint: "https://eos.greymass.com"
+  stream_endpoint: "wss://eos.greymass.com"
