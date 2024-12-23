@@ -18,7 +18,7 @@ type Client struct {
 	tickMutex sync.RWMutex
 }
 
-func PublishClient(nsqdAddrs []string) *Client {
+func NewPublisher(nsqdAddrs []string) *Client {
 	nCfg := nsq.NewConfig()
 
 	var nps []*nsq.Producer
@@ -102,4 +102,11 @@ func (c *Client) deferredPublish(topic string, delay time.Duration, data []byte,
 	}
 
 	return nil
+}
+
+
+func (c *Client) Stop() {
+	for _, np := range c.nps {
+		np.Stop()
+	}
 }

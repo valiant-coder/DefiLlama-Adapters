@@ -62,23 +62,29 @@ type Config struct {
 		PayerPrivateKey string `yaml:"payer_private_key"`
 	} `yaml:"eos"`
 
-	Hyperion struct {
-		Endpoint       string `yaml:"endpoint"`
-		StreamEndpoint string `yaml:"stream_endpoint"`
-	} `yaml:"hyperion"`
+	Hyperion HyperionConfig `yaml:"hyperion"`
 
-	Nsq struct {
-		Nsqds     []string      `yaml:"nsqds"`
-		Lookupd   string        `yaml:"lookupd"`
-		LookupTTl time.Duration `yaml:"lookup_ttl"`
-	} `yaml:"nsq"`
+	Nsq NsqConfig `yaml:"nsq"`
 }
 
 type JWTConfig struct {
-	SecretKey string `mapstructure:"secret_key"`
-	Realm     string `mapstructure:"realm"`
+	SecretKey string `yaml:"secret_key"`
+	Realm     string `yaml:"realm"`
 	// hour
-	Timeout int `mapstructure:"timeout"`
+	Timeout int `yaml:"timeout"`
+}
+
+type HyperionConfig struct {
+	StartBlock     uint64 `yaml:"start_block"`
+	BatchSize      int    `yaml:"batch_size"`
+	Endpoint       string `yaml:"endpoint"`
+	StreamEndpoint string `yaml:"stream_endpoint"`
+}
+
+type NsqConfig struct {
+	Nsqds     []string      `yaml:"nsqds"`
+	Lookupd   string        `yaml:"lookupd"`
+	LookupTTl time.Duration `yaml:"lookup_ttl"`
 }
 
 var (
