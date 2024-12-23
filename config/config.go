@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -61,18 +62,23 @@ type Config struct {
 		PayerPrivateKey string `yaml:"payer_private_key"`
 	} `yaml:"eos"`
 
-
 	Hyperion struct {
-		Endpoint string `yaml:"endpoint"`
+		Endpoint       string `yaml:"endpoint"`
 		StreamEndpoint string `yaml:"stream_endpoint"`
 	} `yaml:"hyperion"`
+
+	Nsq struct {
+		Nsqds     []string      `yaml:"nsqds"`
+		Lookupd   string        `yaml:"lookupd"`
+		LookupTTl time.Duration `yaml:"lookup_ttl"`
+	} `yaml:"nsq"`
 }
 
 type JWTConfig struct {
 	SecretKey string `mapstructure:"secret_key"`
 	Realm     string `mapstructure:"realm"`
 	// hour
-	Timeout   int    `mapstructure:"timeout"` 
+	Timeout int `mapstructure:"timeout"`
 }
 
 var (
