@@ -47,7 +47,7 @@ func (s *Service) Start(ctx context.Context) error {
 		return fmt.Errorf("sync history failed: %w", err)
 	}
 
-	actionCh, err := s.streamClient.SubscribeAction(ctx, hyperion.ActionStreamRequest{})
+	actionCh, err := s.streamClient.SubscribeAction(hyperion.ActionStreamRequest{})
 
 	if err != nil {
 		return fmt.Errorf("subscribe actions failed: %w", err)
