@@ -28,7 +28,7 @@ require (
 )
 
 require (
-	github.com/ahollic/go-socket.io-client v0.0.0-20241224034930-f00d8faeeb6b
+	github.com/LiterMC/socket.io v0.2.5
 	github.com/appleboy/gin-jwt/v2 v2.9.2
 	github.com/eoscanada/eos-go v0.10.2
 	github.com/go-webauthn/webauthn v0.11.2
@@ -82,7 +82,7 @@ require (
 	github.com/google/go-tpm v0.9.1 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
@@ -115,7 +115,6 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	github.com/zhouhui8915/engine.io-go v0.0.0-20150910083302-02ea08f0971f // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect

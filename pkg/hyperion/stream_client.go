@@ -1,37 +1,51 @@
 package hyperion
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
-	socketio_client "github.com/ahollic/go-socket.io-client"
+	socketio_client "github.com/LiterMC/socket.io"
+	engine "github.com/LiterMC/socket.io/engine.io"
 )
 
 type StreamClient struct {
 	endpoint string
-	client   *socketio_client.Client
+	client   *socketio_client.Socket
 }
 
 func NewStreamClient(endpoint string) (*StreamClient, error) {
-	opts := &socketio_client.Options{
-		Transport: "websocket",
-		Path:      "/stream",
-		Query:     make(map[string]string),
-	}
-
-	client, err := socketio_client.NewClient(endpoint, opts)
+	engio, err := engine.NewSocket(
+		engine.Options{
+			Host: endpoint,
+			Path: "/stream/",
+		},
+	)
 	if err != nil {
-		return nil, fmt.Errorf("create socket.io client failed: %w", err)
+		return nil, fmt.Errorf("create engine.io socket failed: %w", err)
 	}
-	client.On("error", func() {
-		log.Printf("socket.io connection error")
-	})
 
-	client.On("connect", func() {
+	client := socketio_client.NewSocket(
+		engio,
+	)
+	client.OnConnect(func(s *socketio_client.Socket, namespace string) {
 		log.Printf("socket.io connected successfully")
 	})
 
-	
+	client.OnDisconnect(func(s *socketio_client.Socket, namespace string) {
+		log.Printf("socket.io disconnected")
+	})
+
+	log.Printf("Dialing %s", engio.URL().String())
+	if err := engio.Dial(context.Background()); err != nil {
+		return nil, fmt.Errorf("dial error: %w", err)
+	}
+	log.Printf("Connecting to socket.io namespace")
+	if err := client.Connect(""); err != nil {
+		return nil, fmt.Errorf("open namespace error: %w", err)
+	}
+
 	return &StreamClient{
 		endpoint: endpoint,
 		client:   client,
@@ -54,32 +68,50 @@ type RequestFilter struct {
 
 type ActionStreamResponse struct {
 	Type    string   `json:"type"`
+	Mode    string   `json:"mode"`
 	Message []Action `json:"message"`
 }
 
 func (c *StreamClient) SubscribeAction(req ActionStreamRequest) (<-chan Action, error) {
 	actionCh := make(chan Action, 100)
 
-
-	if err := c.client.Emit("action_stream_request", req); err != nil {
+	_, err := c.client.EmitWithAck("action_stream_request", req)
+	if err != nil {
 		return nil, fmt.Errorf("send subscribe request to hyperion failed: %w", err)
 	}
 
-	c.client.On("message", func(response ActionStreamResponse) {
-		if response.Type == "action_trace" {
-			for _, action := range response.Message {
-				select {
-				case actionCh <- action:
-				default:
-					log.Printf("action channel is full, dropping message")
-				}
-			}
+	c.client.OnMessage(func(event string, args []any) {
+		if event != "message" {
+			return
 		}
+
+		message := args[0].(map[string]any)
+		messageType, ok := message["type"].(string)
+		if !ok {
+			return
+		}
+		if messageType != "action_trace" {
+			return
+		}
+
+		var action Action
+		if err := json.Unmarshal([]byte(message["message"].(string)), &action); err != nil {
+			log.Printf("unmarshal response failed: %v", err)
+			return
+		}
+		log.Printf("action: %+v", action)
+
+		select {
+		case actionCh <- action:
+		default:
+			log.Printf("action channel is full, dropping message")
+		}
+
 	})
 
 	return actionCh, nil
 }
 
 func (c *StreamClient) Close() error {
-	return nil
+	return c.client.Close()
 }

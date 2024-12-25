@@ -36,7 +36,7 @@ type GetActionsRequest struct {
 }
 
 type Action struct {
-	Timestamp            string            `json:"timestamp"`
+	Timestamp            string            `json:"@timestamp"`
 	BlockNum             uint64            `json:"block_num"`
 	TrxID                string            `json:"trx_id"`
 	Act                  ActionData        `json:"act"`
