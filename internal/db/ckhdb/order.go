@@ -28,8 +28,10 @@ const (
 	OrderStatusCancelled
 )
 
-// Order represents a trading order in the DEX
-type Order struct {
+// HistoryOrder represents a trading order in the DEX
+type HistoryOrder struct {
+	CreateTxID       string          `json:"create_tx_id"`
+	CancelTxID       string          `json:"cancel_tx_id"`
 	PoolID           uint64          `json:"pool_id"`
 	OrderID          uint64          `json:"order_id"`
 	ClientOrderID    string          `json:"order_cid"`
@@ -41,17 +43,23 @@ type Order struct {
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
 	Status           OrderStatus     `json:"status"`
 	IsMarket         bool            `json:"is_market"`
-	CreatedAt        time.Time       `json:"created_at"`
-	UpdatedAt        time.Time       `json:"updated_at"`
+	CreateTime       time.Time       `json:"create_time"`
+	CancelTime       time.Time       `json:"cancel_time"`
 }
 
 // TableName overrides the table name
-func (Order) TableName() string {
-	return "orders"
+func (HistoryOrder) TableName() string {
+	return "history_orders"
 }
 
-func (r *ClickHouseRepo) QueryOrders(ctx context.Context, query *queryparams.QueryParams) ([]Order, int64, error) {
-	orders := []Order{}
+
+func (r *ClickHouseRepo) InsertHistoryOrder(ctx context.Context, order *HistoryOrder) error {
+	return r.DB.WithContext(ctx).Create(order).Error
+}
+
+
+func (r *ClickHouseRepo) QueryOrders(ctx context.Context, query *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
+	orders := []HistoryOrder{}
 	total, err := r.Query(ctx, &orders, query, "pool_id", "trader")
 	if err != nil {
 		return nil, 0, err
@@ -60,12 +68,12 @@ func (r *ClickHouseRepo) QueryOrders(ctx context.Context, query *queryparams.Que
 }
 
 type OrderWithTrades struct {
-	Order
+	HistoryOrder
 	Trades []Trade `json:"trades"`
 }
 
 func (r *ClickHouseRepo) GetOrder(ctx context.Context, orderID uint64) (*OrderWithTrades, error) {
-	order := Order{}
+	order := HistoryOrder{}
 	err := r.DB.WithContext(ctx).Where("order_id = ?", orderID).First(&order).Error
 	if err != nil {
 		return nil, err
@@ -75,11 +83,7 @@ func (r *ClickHouseRepo) GetOrder(ctx context.Context, orderID uint64) (*OrderWi
 		return nil, err
 	}
 	return &OrderWithTrades{
-		Order:  order,
-		Trades: trades,
+		HistoryOrder: order,
+		Trades:       trades,
 	}, nil
 }
-
-
-
-

@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 // OrderType represents the type of order
@@ -28,12 +27,13 @@ const (
 
 // Order represents a trading order in the DEX
 type OpenOrder struct {
-	gorm.Model
-	PoolID           uint64          `json:"pool_id"`
-	ClientOrderID    string          `json:"order_cid"`
-	Trader           string          `json:"trader"`
-	Type             OrderType       `json:"type"`
-	Price            uint64          `json:"price"`
+	TxID          string    `json:"tx_id"`
+	OrderID       uint64    `json:"order_id"`
+	PoolID        uint64    `json:"pool_id"`
+	ClientOrderID string    `json:"order_cid"`
+	Trader        string    `json:"trader"`
+	Type          OrderType `json:"type"`
+	Price         uint64    `json:"price"`
 	IsBid            bool            `json:"is_bid"`
 	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
@@ -44,6 +44,10 @@ type OpenOrder struct {
 // TableName overrides the table name
 func (OpenOrder) TableName() string {
 	return "open_orders"
+}
+
+func (r *Repo) InsertOpenOrder(ctx context.Context, order *OpenOrder) error {
+	return r.WithContext(ctx).Create(order).Error
 }
 
 type OrderBook struct {
@@ -77,7 +81,6 @@ func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*Ord
 	return &book, nil
 }
 
-
 func (r *Repo) GetOpenOrders(ctx context.Context, poolID uint64, user string) ([]OpenOrder, error) {
 	orders := []OpenOrder{}
 	err := r.WithContext(ctx).Where("pool_id = ? AND trader = ? AND status = ?", poolID, user, OrderStatusOpen).Find(&orders).Error
@@ -86,6 +89,3 @@ func (r *Repo) GetOpenOrders(ctx context.Context, poolID uint64, user string) ([
 	}
 	return orders, nil
 }
-
-
-

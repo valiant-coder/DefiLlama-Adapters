@@ -27,6 +27,8 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			cmd.MarketplaceApi,
+			cmd.SyncCmd,
+			cmd.HandlerCmd,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
