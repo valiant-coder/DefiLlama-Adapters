@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"exapp-go/config"
+	"exapp-go/internal/db/db"
 	"exapp-go/internal/services/syncer"
 	"log"
 	"os"
@@ -22,8 +23,9 @@ var SyncCmd = &cli.Command{
 			return err
 		}
 
-		cfg := config.Conf()
+		db.New()
 
+		cfg := config.Conf()
 		srv, err := syncer.NewService(cfg.Hyperion, cfg.Nsq)
 		if err != nil {
 			log.Printf("create syncer service failed: %v\n", err)
@@ -32,7 +34,7 @@ var SyncCmd = &cli.Command{
 
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
-		
+
 			if err := srv.Start(ctx); err != nil {
 				log.Printf("syncer service start failed: %v\n", err)
 			}

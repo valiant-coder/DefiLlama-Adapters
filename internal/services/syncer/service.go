@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"exapp-go/config"
+	"exapp-go/internal/db/ckhdb"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
 )
@@ -32,11 +33,19 @@ func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig) (*Se
 		return nil, fmt.Errorf("create stream client failed: %w", err)
 	}
 
+	ckhRepo := ckhdb.New()
+	lastBlockNum, err := ckhRepo.GetMaxBlockNumber(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("get max block number failed: %w", err)
+	}
+	if lastBlockNum == 0 {
+		lastBlockNum = hyperionCfg.StartBlock
+	}
 	return &Service{
 		hyperionClient: hyperionClient,
 		streamClient:   streamClient,
 		publisher:      nsqutil.NewPublisher(nsqCfg.Nsqds),
-		lastBlockNum:   hyperionCfg.StartBlock,
+		lastBlockNum:   lastBlockNum,
 		hyperionCfg:    hyperionCfg,
 		nsqCfg:         nsqCfg,
 	}, nil
@@ -73,7 +82,7 @@ func (s *Service) Start(ctx context.Context) error {
 }
 
 func (s *Service) Stop() error {
-	
+
 	s.publisher.Stop()
 	return s.streamClient.Close()
 }

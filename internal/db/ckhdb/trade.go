@@ -59,3 +59,11 @@ func (r *ClickHouseRepo) GetTrades(ctx context.Context, orderID uint64) ([]Trade
 	err := r.DB.WithContext(ctx).Where("maker_order_id = ? OR taker_order_id = ?", orderID, orderID).Find(&trades).Error
 	return trades, err
 }
+
+
+func (r *ClickHouseRepo) GetMaxBlockNumber(ctx context.Context) (uint64, error) {
+	var blockNumber uint64
+	err := r.DB.WithContext(ctx).Model(&Trade{}).Select("MAX(block_number)").Scan(&blockNumber).Error
+	return blockNumber, err
+}
+
