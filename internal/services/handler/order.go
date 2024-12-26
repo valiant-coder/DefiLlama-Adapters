@@ -14,6 +14,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func eosAssetToDecimal(a string) (decimal.Decimal, error) {
+	asset, err := eosgo.NewAssetFromString(a)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+	return decimal.New(int64(asset.Amount), int32(asset.Symbol.Precision)), nil
+}
+
 func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	var newOrder struct {
 		PoolID           uint64 `json:"pool_id"`
@@ -47,20 +55,18 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		s.poolCache[newOrder.PoolID] = pool
 	}
 
-	placedAsset, err := eosgo.NewAssetFromString(newOrder.PlacedQuantity)
+	placedQuantity, err := eosAssetToDecimal(newOrder.PlacedQuantity)
 	if err != nil {
 		log.Printf("new asset from string failed: %v", err)
 		return nil
 	}
 
-	executedAsset, err := eosgo.NewAssetFromString(newOrder.ExecutedQuantity)
+	executedQuantity, err := eosAssetToDecimal(newOrder.ExecutedQuantity)
 	if err != nil {
 		log.Printf("new asset from string failed: %v", err)
 		return nil
 	}
 
-	executedQuantity := decimal.New(int64(executedAsset.Amount), int32(executedAsset.Symbol.Precision))
-	placedQuantity := decimal.New(int64(placedAsset.Amount), int32(placedAsset.Symbol.Precision))
 	originalQuantity := placedQuantity.Add(executedQuantity)
 
 	time, err := time.Parse(time.RFC3339, newOrder.Time)
@@ -134,14 +140,164 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	var data struct {
-		MakerOrderID string `json:"maker_order_id"`
-		TakerOrderID string `json:"taker_order_id"`
-		Price        string `json:"price"`
-		Amount       string `json:"amount"`
-	}
+		PoolID        uint64 `json:"pool_id"`
+		Taker         string `json:"taker"`
+		Maker         string `json:"maker"`
+		MakerOrderID  uint64 `json:"maker_order_id"`
+		MakerOrderCID string `json:"maker_order_cid"`
+		TakerOrderID  uint64 `json:"taker_order_id"`
+		TakerOrderCID string `json:"taker_order_cid"`
+		Price         uint64 `json:"price"`
+		TakerIsBid    bool   `json:"taker_is_bid"`
+		BaseQuantity  string `json:"base_quantity"`
+		QuoteQuantity string `json:"quote_quantity"`
 
+		TakerFee             string `json:"taker_fee"`
+		MakerFee             string `json:"maker_fee"`
+		Time                 string `json:"time"`
+		MakerOrderStatus     uint8  `json:"maker_order_status"`
+		MakerOrderIsInserted bool   `json:"maker_order_is_inserted"`
+	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		return fmt.Errorf("unmarshal match order data failed: %w", err)
+	}
+
+	ctx := context.Background()
+	pool, ok := s.poolCache[data.PoolID]
+	if !ok {
+		pool, err := s.ckhRepo.GetPool(ctx, data.PoolID)
+		if err != nil {
+			log.Printf("get pool failed: %v", err)
+			return nil
+		}
+		s.poolCache[data.PoolID] = pool
+	}
+
+	baseQuantity, err := eosAssetToDecimal(data.BaseQuantity)
+	if err != nil {
+		log.Printf("new asset from string failed: %v", err)
+		return nil
+	}
+	quoteQuantity, err := eosAssetToDecimal(data.QuoteQuantity)
+	if err != nil {
+		log.Printf("new asset from string failed: %v", err)
+		return nil
+	}
+	takerFee, err := eosAssetToDecimal(data.TakerFee)
+	if err != nil {
+		log.Printf("new asset from string failed: %v", err)
+		return nil
+	}
+	makerFee, err := eosAssetToDecimal(data.MakerFee)
+	if err != nil {
+		log.Printf("new asset from string failed: %v", err)
+		return nil
+	}
+
+	time, err := time.Parse(time.RFC3339, data.Time)
+	if err != nil {
+		log.Printf("parse action time failed: %v", err)
+		return nil
+	}
+
+	trade := ckhdb.Trade{
+		TxID:          action.TrxID,
+		PoolID:        data.PoolID,
+		Price:         decimal.New(int64(data.Price), -int32(pool.PricePrecision)),
+		Timestamp:     time,
+		BlockNumber:   action.BlockNum,
+		Taker:         data.Taker,
+		Maker:         data.Maker,
+		MakerOrderID:  data.MakerOrderID,
+		MakerOrderCID: data.MakerOrderCID,
+		TakerOrderID:  data.TakerOrderID,
+		TakerOrderCID: data.TakerOrderCID,
+		BaseQuantity:  baseQuantity,
+		QuoteQuantity: quoteQuantity,
+		TakerFee:      takerFee,
+		MakerFee:      makerFee,
+		TakerIsBid:    data.TakerIsBid,
+	}
+	err = s.ckhRepo.InsertTrade(ctx, &trade)
+	if err != nil {
+		log.Printf("insert trade failed: %v", err)
+		return nil
+	}
+
+	// update depth
+	if data.TakerIsBid {
+		// Taker is buyer, decrease sell depth
+		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+			{
+				PoolID: data.PoolID,
+				Price:  trade.Price.InexactFloat64(),
+				Amount: -baseQuantity.InexactFloat64(),
+				IsBuy:  false,
+			},
+		})
+		if err != nil {
+			log.Printf("update depth failed: :%v", err)
+			return nil
+		}
+	} else {
+		// Taker is seller, decrease buy depth
+		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+			{
+				PoolID: data.PoolID,
+				Price:  trade.Price.InexactFloat64(),
+				Amount: -baseQuantity.InexactFloat64(),
+				IsBuy:  true,
+			},
+		})
+		if err != nil {
+			log.Printf("update depth failed: :%v", err)
+			return nil
+		}
+	}
+
+	makerOrder, err := s.repo.GetOpenOrder(ctx, data.MakerOrderID)
+	if err != nil {
+		log.Printf("get maker order failed: %v", err)
+		return nil
+	}
+
+	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(quoteQuantity)
+	makerOrder.Status = db.OrderStatus(data.MakerOrderStatus)
+
+	// update maker order
+	if data.MakerOrderIsInserted {
+		err = s.repo.UpdateOpenOrder(ctx, makerOrder)
+		if err != nil {
+			log.Printf("update open order failed: %v", err)
+			return nil
+		}
+	} else {
+		err = s.repo.DeleteOpenOrder(ctx, data.MakerOrderID)
+		if err != nil {
+			log.Printf("delete open order failed: %v", err)
+			return nil
+		}
+
+		historyOrder := ckhdb.HistoryOrder{
+			PoolID:           makerOrder.PoolID,
+			OrderID:          makerOrder.OrderID,
+			ClientOrderID:    makerOrder.ClientOrderID,
+			Trader:           makerOrder.Trader,
+			Price:            makerOrder.Price,
+			IsBid:            makerOrder.IsBid,
+			OriginalQuantity: makerOrder.OriginalQuantity,
+			ExecutedQuantity: makerOrder.ExecutedQuantity,
+			Status:           ckhdb.OrderStatus(makerOrder.Status),
+			IsMarket:         false,
+			CreateTxID:       makerOrder.TxID,
+			CreateBlockNum:   makerOrder.BlockNumber,
+		}
+		err = s.ckhRepo.InsertHistoryOrder(ctx, &historyOrder)
+		if err != nil {
+			log.Printf("insert history order failed: %v", err)
+			return nil
+		}
+
 	}
 
 	return nil

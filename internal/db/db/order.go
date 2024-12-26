@@ -31,8 +31,8 @@ type OpenOrder struct {
 	TxID             string          `json:"tx_id"`
 	CreatedAt        time.Time       `json:"created_at"`
 	BlockNumber      uint64          `json:"block_number"`
-	OrderID          uint64          `json:"order_id"`
-	PoolID           uint64          `json:"pool_id"`
+	PoolID           uint64          `json:"pool_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
+	OrderID          uint64          `json:"order_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
 	ClientOrderID    string          `json:"order_cid"`
 	Trader           string          `json:"trader"`
 	Type             OrderType       `json:"type"`
@@ -55,6 +55,19 @@ func (r *Repo) InsertOpenOrder(ctx context.Context, order *OpenOrder) error {
 
 func (r *Repo) DeleteOpenOrder(ctx context.Context, orderID uint64) error {
 	return r.WithContext(ctx).Where("order_id = ?", orderID).Delete(&OpenOrder{}).Error
+}
+
+func (r *Repo) UpdateOpenOrder(ctx context.Context, order *OpenOrder) error {
+	return r.WithContext(ctx).Save(order).Error
+}
+
+func (r *Repo) GetOpenOrder(ctx context.Context, orderID uint64) (*OpenOrder, error) {
+	order := OpenOrder{}
+	err := r.WithContext(ctx).Where("order_id = ?", orderID).First(&order).Error
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
 }
 
 type OrderBook struct {

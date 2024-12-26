@@ -10,6 +10,7 @@ import (
 
 // Trade represents a trade record in the DEX
 type Trade struct {
+	TxID          string          `json:"tx_id"`
 	PoolID        uint64          `json:"pool_id"`
 	Taker         string          `json:"taker" `
 	Maker         string          `json:"maker"`
@@ -17,7 +18,7 @@ type Trade struct {
 	MakerOrderCID string          `json:"maker_order_cid"`
 	TakerOrderID  uint64          `json:"taker_order_id"`
 	TakerOrderCID string          `json:"taker_order_cid"`
-	Price         uint64          `json:"price"`
+	Price         decimal.Decimal `json:"price"`
 	TakerIsBid    bool            `json:"taker_is_bid"`
 	BaseQuantity  decimal.Decimal `json:"base_quantity" gorm:"type:Decimal(36,18)"`
 	QuoteQuantity decimal.Decimal `json:"quote_quantity" gorm:"type:Decimal(36,18)"`
@@ -40,6 +41,10 @@ type TradeStat struct {
 	QuoteVolume decimal.Decimal `json:"quote_volume" gorm:"type:Decimal(36,18)"`
 }
 
+func (r *ClickHouseRepo) InsertTrade(ctx context.Context, trade *Trade) error {
+	return r.DB.WithContext(ctx).Create(trade).Error
+}
+
 func (r *ClickHouseRepo) GetTradeStat(ctx context.Context, poolID uint64) (*TradeStat, error) {
 	query := fmt.Sprintf("SELECT MAX(price) AS high, MIN(price) AS low, COUNT(*) AS trades, SUM(base_quantity) AS volume, SUM(quote_quantity) AS quote_volume FROM trades WHERE pool_id = %d AND timestamp >= NOW() - INTERVAL 24 HOUR", poolID)
 	row := r.DB.WithContext(ctx).Raw(query).Row()
@@ -60,10 +65,8 @@ func (r *ClickHouseRepo) GetTrades(ctx context.Context, orderID uint64) ([]Trade
 	return trades, err
 }
 
-
 func (r *ClickHouseRepo) GetMaxBlockNumber(ctx context.Context) (uint64, error) {
 	var blockNumber uint64
 	err := r.DB.WithContext(ctx).Model(&Trade{}).Select("MAX(block_number)").Scan(&blockNumber).Error
 	return blockNumber, err
 }
-
