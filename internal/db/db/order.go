@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/shopspring/decimal"
 )
@@ -28,12 +29,14 @@ const (
 // Order represents a trading order in the DEX
 type OpenOrder struct {
 	TxID             string          `json:"tx_id"`
+	CreatedAt        time.Time       `json:"created_at"`
+	BlockNumber      uint64          `json:"block_number"`
 	OrderID          uint64          `json:"order_id"`
 	PoolID           uint64          `json:"pool_id"`
 	ClientOrderID    string          `json:"order_cid"`
 	Trader           string          `json:"trader"`
 	Type             OrderType       `json:"type"`
-	Price            uint64          `json:"price"`
+	Price            decimal.Decimal `json:"price" gorm:"type:Decimal(36,18)"`
 	IsBid            bool            `json:"is_bid"`
 	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
@@ -48,6 +51,10 @@ func (OpenOrder) TableName() string {
 
 func (r *Repo) InsertOpenOrder(ctx context.Context, order *OpenOrder) error {
 	return r.WithContext(ctx).Create(order).Error
+}
+
+func (r *Repo) DeleteOpenOrder(ctx context.Context, orderID uint64) error {
+	return r.WithContext(ctx).Where("order_id = ?", orderID).Delete(&OpenOrder{}).Error
 }
 
 type OrderBook struct {
@@ -73,10 +80,10 @@ func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*Ord
 		}
 	}
 	sort.Slice(book.Bids, func(i, j int) bool {
-		return book.Bids[i].Price > book.Bids[j].Price
+		return book.Bids[i].Price.GreaterThan(book.Bids[j].Price)
 	})
 	sort.Slice(book.Asks, func(i, j int) bool {
-		return book.Asks[i].Price < book.Asks[j].Price
+		return book.Asks[i].Price.LessThan(book.Asks[j].Price)
 	})
 	return &book, nil
 }

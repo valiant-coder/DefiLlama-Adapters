@@ -19,10 +19,11 @@ const (
 )
 
 type Service struct {
-	nsqCfg  config.NsqConfig
-	ckhRepo *ckhdb.ClickHouseRepo
-	repo    *db.Repo
-	worker  *nsqutil.Worker
+	nsqCfg    config.NsqConfig
+	ckhRepo   *ckhdb.ClickHouseRepo
+	repo      *db.Repo
+	worker    *nsqutil.Worker
+	poolCache map[uint64]*ckhdb.Pool
 }
 
 func NewService() (*Service, error) {

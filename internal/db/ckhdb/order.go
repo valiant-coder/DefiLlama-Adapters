@@ -31,20 +31,22 @@ const (
 // HistoryOrder represents a trading order in the DEX
 type HistoryOrder struct {
 	CreateTxID       string          `json:"create_tx_id"`
+	CreateBlockNum   uint64          `json:"create_block_num"`
 	CancelTxID       string          `json:"cancel_tx_id"`
+	CancelBlockNum   uint64          `json:"cancel_block_num"`
 	PoolID           uint64          `json:"pool_id"`
 	OrderID          uint64          `json:"order_id"`
 	ClientOrderID    string          `json:"order_cid"`
 	Trader           string          `json:"trader"`
 	Type             OrderType       `json:"type"`
-	Price            uint64          `json:"price"`
+	Price            decimal.Decimal `json:"price" gorm:"type:Decimal(36,18)"`
 	IsBid            bool            `json:"is_bid"`
 	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
 	Status           OrderStatus     `json:"status"`
 	IsMarket         bool            `json:"is_market"`
-	CreateTime       time.Time       `json:"create_time"`
-	CancelTime       time.Time       `json:"cancel_time"`
+	CreatedAt        time.Time       `json:"created_at"`
+	CanceledAt       time.Time       `json:"canceled_at"`
 }
 
 // TableName overrides the table name

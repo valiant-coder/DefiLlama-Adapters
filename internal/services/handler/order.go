@@ -6,6 +6,7 @@ import (
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
+	"fmt"
 	"log"
 	"time"
 
@@ -34,6 +35,18 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		return nil
 	}
 
+	ctx := context.Background()
+
+	pool, ok := s.poolCache[newOrder.PoolID]
+	if !ok {
+		pool, err := s.ckhRepo.GetPool(ctx, newOrder.PoolID)
+		if err != nil {
+			log.Printf("get pool failed: %v", err)
+			return nil
+		}
+		s.poolCache[newOrder.PoolID] = pool
+	}
+
 	placedAsset, err := eosgo.NewAssetFromString(newOrder.PlacedQuantity)
 	if err != nil {
 		log.Printf("new asset from string failed: %v", err)
@@ -47,17 +60,25 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	}
 
 	executedQuantity := decimal.New(int64(executedAsset.Amount), int32(executedAsset.Symbol.Precision))
-	originalQuantity := decimal.New(int64(placedAsset.Amount), int32(placedAsset.Symbol.Precision)).Add(executedQuantity)
+	placedQuantity := decimal.New(int64(placedAsset.Amount), int32(placedAsset.Symbol.Precision))
+	originalQuantity := placedQuantity.Add(executedQuantity)
 
-	ctx := context.Background()
+	time, err := time.Parse(time.RFC3339, newOrder.Time)
+	if err != nil {
+		log.Printf("parse action time failed: %v", err)
+		return nil
+	}
+
 	if newOrder.IsInserted {
 		order := db.OpenOrder{
 			TxID:             action.TrxID,
+			CreatedAt:        time,
+			BlockNumber:      action.BlockNum,
 			OrderID:          newOrder.OrderID,
 			PoolID:           newOrder.PoolID,
 			ClientOrderID:    newOrder.OrderCID,
 			Trader:           newOrder.Trader,
-			Price:            newOrder.Price,
+			Price:            decimal.New(int64(newOrder.Price), -int32(pool.PricePrecision)),
 			IsBid:            newOrder.IsBid,
 			OriginalQuantity: originalQuantity,
 			ExecutedQuantity: executedQuantity,
@@ -69,31 +90,36 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			log.Printf("insert open order failed: %v", err)
 			return nil
 		}
-
-		// todo update depth
+		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+			{
+				PoolID: newOrder.PoolID,
+				Price:  order.Price.InexactFloat64(),
+				Amount: placedQuantity.InexactFloat64(),
+				IsBuy:  newOrder.IsBid,
+			},
+		})
+		if err != nil {
+			log.Printf("update depth failed: :%v", err)
+			return nil
+		}
 		return nil
 
 	} else {
 
-		time, err := time.Parse(time.RFC3339, newOrder.Time)
-		if err != nil {
-			log.Printf("parse time failed: %v", err)
-			return nil
-		}
-
 		order := ckhdb.HistoryOrder{
 			CreateTxID:       action.TrxID,
+			CreateBlockNum:   action.BlockNum,
 			PoolID:           newOrder.PoolID,
 			OrderID:          newOrder.OrderID,
 			ClientOrderID:    newOrder.OrderCID,
 			Trader:           newOrder.Trader,
-			Price:            newOrder.Price,
+			Price:            decimal.New(int64(newOrder.Price), -int32(pool.PricePrecision)),
 			IsBid:            newOrder.IsBid,
 			OriginalQuantity: originalQuantity,
 			ExecutedQuantity: executedQuantity,
 			Status:           ckhdb.OrderStatus(newOrder.Status),
 			IsMarket:         newOrder.IsMarket,
-			CreateTime:       time,
+			CreatedAt:        time,
 		}
 		err = s.ckhRepo.InsertHistoryOrder(ctx, &order)
 		if err != nil {
@@ -101,6 +127,33 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			return nil
 		}
 
+	}
+
+	return nil
+}
+
+func (s *Service) handleMatchOrder(action hyperion.Action) error {
+	var data struct {
+		MakerOrderID string `json:"maker_order_id"`
+		TakerOrderID string `json:"taker_order_id"`
+		Price        string `json:"price"`
+		Amount       string `json:"amount"`
+	}
+
+	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+		return fmt.Errorf("unmarshal match order data failed: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) handleCancelOrder(action hyperion.Action) error {
+	var data struct {
+		OrderID string `json:"order_id"`
+	}
+
+	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+		return fmt.Errorf("unmarshal cancel order data failed: %w", err)
 	}
 
 	return nil
