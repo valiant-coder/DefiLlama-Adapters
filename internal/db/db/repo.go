@@ -358,6 +358,14 @@ func (r *Repo) GetZScore(ctx context.Context, key string, member string) (float6
 	}
 }
 
+func (r *Repo) Watch(ctx context.Context, f func(tx *redis.Tx) error, keys ...string) error {
+	if r.rdb.isCluster {
+		return r.rdb.cluster.Watch(ctx, f, keys...)
+	} else {
+		return r.rdb.single.Watch(ctx, f, keys...)
+	}
+}
+
 func (r *Repo) RedisClient() *redis.Client {
 	return r.rdb.single
 }

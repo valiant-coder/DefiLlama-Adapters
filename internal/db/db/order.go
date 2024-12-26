@@ -27,13 +27,13 @@ const (
 
 // Order represents a trading order in the DEX
 type OpenOrder struct {
-	TxID          string    `json:"tx_id"`
-	OrderID       uint64    `json:"order_id"`
-	PoolID        uint64    `json:"pool_id"`
-	ClientOrderID string    `json:"order_cid"`
-	Trader        string    `json:"trader"`
-	Type          OrderType `json:"type"`
-	Price         uint64    `json:"price"`
+	TxID             string          `json:"tx_id"`
+	OrderID          uint64          `json:"order_id"`
+	PoolID           uint64          `json:"pool_id"`
+	ClientOrderID    string          `json:"order_cid"`
+	Trader           string          `json:"trader"`
+	Type             OrderType       `json:"type"`
+	Price            uint64          `json:"price"`
 	IsBid            bool            `json:"is_bid"`
 	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
