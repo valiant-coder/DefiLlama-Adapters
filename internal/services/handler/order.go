@@ -305,11 +305,102 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 
 func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	var data struct {
-		OrderID string `json:"order_id"`
+		PoolID               uint64 `json:"pool_id"`
+		OrderID              uint64 `json:"order_id"`
+		OrderCID             string `json:"order_cid"`
+		IsBid                bool   `json:"is_bid"`
+		Trader               string `json:"trader"`
+		OriginalQuantity     string `json:"original_quantity"`
+		CanceledBaseQuantity string `json:"canceled_base_quantity"`
+		Time                 string `json:"time"`
 	}
 
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		return fmt.Errorf("unmarshal cancel order data failed: %w", err)
+	}
+
+	ctx := context.Background()
+	canceledQuantity, err := eosAssetToDecimal(data.CanceledBaseQuantity)
+	if err != nil {
+		log.Printf("new asset from string failed: %v", err)
+		return nil
+	}
+
+	order, err := s.repo.GetOpenOrder(ctx, data.OrderID)
+	if err != nil {
+		log.Printf("get open order failed: %v", err)
+		return nil
+	}
+
+	// update depth
+	if data.IsBid {
+		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+			{
+				PoolID: data.PoolID,
+				Price:  order.Price.InexactFloat64(),
+				Amount: -canceledQuantity.InexactFloat64(),
+				IsBuy:  true,
+			},
+		})
+		if err != nil {
+			log.Printf("update depth failed: :%v", err)
+			return nil
+		}
+	} else {
+		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+			{
+				PoolID: data.PoolID,
+				Price:  order.Price.InexactFloat64(),
+				Amount: -canceledQuantity.InexactFloat64(),
+				IsBuy:  false,
+			},
+		})
+		if err != nil {
+			log.Printf("update depth failed: :%v", err)
+			return nil
+		}
+	}
+	// delete open order
+	err = s.repo.DeleteOpenOrder(ctx, data.OrderID)
+	if err != nil {
+		log.Printf("delete open order failed: %v", err)
+		return nil
+	}
+	time, err := time.Parse(time.RFC3339, data.Time)
+	if err != nil {
+		log.Printf("parse action time failed: %v", err)
+		return nil
+	}
+	var status ckhdb.OrderStatus
+	if order.Status == db.OrderStatusPartiallyFilled {
+		status = ckhdb.OrderStatusPartiallyFilled
+	} else {
+		status = ckhdb.OrderStatusCancelled
+	}
+	// insert history order
+	historyOrder := ckhdb.HistoryOrder{
+		PoolID:           order.PoolID,
+		OrderID:          order.OrderID,
+		ClientOrderID:    order.ClientOrderID,
+		Trader:           order.Trader,
+		Price:            order.Price,
+		IsBid:            order.IsBid,
+		OriginalQuantity: order.OriginalQuantity,
+		ExecutedQuantity: order.ExecutedQuantity,
+		Status:           status,
+		IsMarket:         false,
+		CreateTxID:       order.TxID,
+		CreatedAt:        order.CreatedAt,
+		CreateBlockNum:   order.BlockNumber,
+		CancelTxID:       action.TrxID,
+		CancelBlockNum:   action.BlockNum,
+		CanceledAt:       time,
+		Type:             ckhdb.OrderType(order.Type),
+	}
+	err = s.ckhRepo.InsertHistoryOrder(ctx, &historyOrder)
+	if err != nil {
+		log.Printf("insert history order failed: %v", err)
+		return nil
 	}
 
 	return nil
