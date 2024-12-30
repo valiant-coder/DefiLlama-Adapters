@@ -194,29 +194,31 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	time, err := time.Parse(time.RFC3339, data.Time)
+	timestamp, err := time.Parse(time.RFC3339, data.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
 	}
 
 	trade := ckhdb.Trade{
-		TxID:          action.TrxID,
-		PoolID:        data.PoolID,
-		Price:         decimal.New(int64(data.Price), -int32(pool.PricePrecision)),
-		Timestamp:     time,
-		BlockNumber:   action.BlockNum,
-		Taker:         data.Taker,
-		Maker:         data.Maker,
-		MakerOrderID:  data.MakerOrderID,
-		MakerOrderCID: data.MakerOrderCID,
-		TakerOrderID:  data.TakerOrderID,
-		TakerOrderCID: data.TakerOrderCID,
-		BaseQuantity:  baseQuantity,
-		QuoteQuantity: quoteQuantity,
-		TakerFee:      takerFee,
-		MakerFee:      makerFee,
-		TakerIsBid:    data.TakerIsBid,
+		TxID:           action.TrxID,
+		PoolID:         data.PoolID,
+		Price:          decimal.New(int64(data.Price), -int32(pool.PricePrecision)),
+		Timestamp:      timestamp,
+		BlockNumber:    action.BlockNum,
+		GlobalSequence: action.GlobalSequence,
+		Taker:          data.Taker,
+		Maker:          data.Maker,
+		MakerOrderID:   data.MakerOrderID,
+		MakerOrderCID:  data.MakerOrderCID,
+		TakerOrderID:   data.TakerOrderID,
+		TakerOrderCID:  data.TakerOrderCID,
+		BaseQuantity:   baseQuantity,
+		QuoteQuantity:  quoteQuantity,
+		TakerFee:       takerFee,
+		MakerFee:       makerFee,
+		TakerIsBid:     data.TakerIsBid,
+		CreatedAt:      time.Now(),
 	}
 	err = s.ckhRepo.InsertTrade(ctx, &trade)
 	if err != nil {
