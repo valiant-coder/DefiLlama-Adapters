@@ -46,25 +46,3 @@ func getPoolDetail(c *gin.Context) {
 	}
 	api.OK(c, pool)
 }
-
-
-
-
-
-
-
-// @Summary Get kline data
-// @Description Get kline data by pair id and interval
-// @Tags kline
-// @Accept json
-// @Produce json
-// @Param pool_id query string true "pool id"
-// @Param interval query string true "interval" Enums(1m,5m,15m,30m,1h,4h,1d,1w,1M)
-// @Param start query integer false "start timestamp"
-// @Param end query integer false "end timestamp"
-// @Param limit query integer false "limit count"
-// @Success 200 {array} entity.Kline "kline data"
-// @Router /api/v1/klines [get]
-func klines(c *gin.Context) {
-
-}

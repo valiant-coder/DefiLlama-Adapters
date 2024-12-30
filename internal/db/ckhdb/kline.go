@@ -39,7 +39,7 @@ func (Kline) TableName() string {
 	return "kline_view"
 }
 
-func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval KlineInterval, start time.Time, end time.Time) ([]Kline, error) {
+func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval string, start time.Time, end time.Time) ([]Kline, error) {
 	var klines []Kline
 	err := r.WithContext(ctx).Where("pool_id = ? AND interval = ? AND interval_start >= ? AND interval_start <= ?", poolID, interval, start, end).Find(&klines).Error
 	return klines, err

@@ -48,7 +48,7 @@ const docTemplatemarketplace = `{
         },
         "/api/v1/klines": {
             "get": {
-                "description": "Get kline data by pair id and interval",
+                "description": "Get kline data by pool id and interval",
                 "consumes": [
                     "application/json"
                 ],
@@ -95,12 +95,6 @@ const docTemplatemarketplace = `{
                         "type": "integer",
                         "description": "end timestamp",
                         "name": "end",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit count",
-                        "name": "limit",
                         "in": "query"
                     }
                 ],
@@ -159,7 +153,7 @@ const docTemplatemarketplace = `{
         },
         "/api/v1/orderbook": {
             "get": {
-                "description": "Get order book by pair id",
+                "description": "Get order book by pool id",
                 "consumes": [
                     "application/json"
                 ],

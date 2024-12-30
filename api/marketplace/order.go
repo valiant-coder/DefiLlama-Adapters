@@ -49,7 +49,7 @@ func getOrder(c *gin.Context) {
 
 
 // @Summary Get order book
-// @Description Get order book by pair id
+// @Description Get order book by pool id
 // @Tags order book
 // @Accept json
 // @Produce json
