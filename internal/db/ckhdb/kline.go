@@ -2,24 +2,10 @@ package ckhdb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
 )
-
-type Kline struct {
-	PoolID      uint64          `json:"pool_id"`
-	Timestamp   time.Time       `json:"timestamp"`
-	Open        uint64          `json:"open"`
-	High        uint64          `json:"high"`
-	Low         uint64          `json:"low"`
-	Close       uint64          `json:"close"`
-	Volume      decimal.Decimal `json:"volume" gorm:"type:Decimal(36,18)"`
-	QuoteVolume decimal.Decimal `json:"quote_volume" gorm:"type:Decimal(36,18)"`
-	Trades      uint64          `json:"trades"`
-	UpdateTime  time.Time       `json:"update_time"`
-}
 
 type KlineInterval string
 
@@ -33,27 +19,28 @@ const (
 	KlineInterval1d  KlineInterval = "1d"
 	KlineInterval1w  KlineInterval = "1w"
 	KlineInterval1M  KlineInterval = "1M"
-	KlineInterval1y  KlineInterval = "1y"
 )
 
-func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval KlineInterval, start time.Time, end time.Time) ([]Kline, error) {
-	query := fmt.Sprintf("SELECT * FROM kline_%s WHERE pool_id = %d AND timestamp >= %d AND timestamp <= %d", interval, poolID, start.Unix(), end.Unix())
-	rows, err := r.DB.WithContext(ctx).Raw(query).Rows()
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var klines []Kline
-	for rows.Next() {
-		var kline Kline
-		err := rows.Scan(&kline.PoolID, &kline.Timestamp, &kline.Open, &kline.High, &kline.Low, &kline.Close, &kline.Volume, &kline.QuoteVolume, &kline.Trades, &kline.UpdateTime)
-		if err != nil {
-			return nil, err
-		}
-		klines = append(klines, kline)
-	}
-	return klines, nil
+type Kline struct {
+	PoolID        uint64          `json:"pool_id"`
+	IntervalStart time.Time       `json:"interval_start"`
+	Interval      KlineInterval   `json:"interval"`
+	Open          decimal.Decimal `json:"open" gorm:"type:Decimal(36,18)"`
+	High          decimal.Decimal `json:"high" gorm:"type:Decimal(36,18)"`
+	Low           decimal.Decimal `json:"low" gorm:"type:Decimal(36,18)"`
+	Close         decimal.Decimal `json:"close" gorm:"type:Decimal(36,18)"`
+	Volume        decimal.Decimal `json:"volume" gorm:"type:Decimal(36,18)"`
+	QuoteVolume   decimal.Decimal `json:"quote_volume" gorm:"type:Decimal(36,18)"`
+	Trades        uint64          `json:"trades"`
+	UpdateTime    time.Time       `json:"update_time"`
 }
 
+func (Kline) TableName() string {
+	return "kline_view"
+}
 
+func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval KlineInterval, start time.Time, end time.Time) ([]Kline, error) {
+	var klines []Kline
+	err := r.WithContext(ctx).Where("pool_id = ? AND interval = ? AND interval_start >= ? AND interval_start <= ?", poolID, interval, start, end).Find(&klines).Error
+	return klines, err
+}
