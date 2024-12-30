@@ -64,7 +64,7 @@ func Run(addr string, release bool) error {
 
 	// Pool routes
 	v1.GET("/pools", pools)
-	v1.GET("/pools/:symbol", getPool)
+	v1.GET("/pools/:symbolOrId", getPoolDetail)
 	
 	v1.GET("/klines", klines)
 	v1.GET("/orderbook", getOrderBook)

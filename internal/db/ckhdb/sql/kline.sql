@@ -2,10 +2,10 @@ CREATE TABLE IF NOT EXISTS klines (
     pool_id UInt64,
     interval_start DateTime,
     interval String,
-    open_price AggregateFunction(argMin, Decimal(36,18), DateTime),    -- open (第一笔交易价格)
+    open_price AggregateFunction(argMin, Decimal(36,18), DateTime),    -- open
     max_price AggregateFunction(max, Decimal(36,18)),                  -- high
     min_price AggregateFunction(min, Decimal(36,18)),                  -- low
-    close_price AggregateFunction(argMax, Decimal(36,18), DateTime),   -- close (最后一笔交易价格)
+    close_price AggregateFunction(argMax, Decimal(36,18), DateTime),   -- close
     volume AggregateFunction(sum, Decimal(36,18)),                     -- volume
     quote_volume AggregateFunction(sum, Decimal(36,18)),              -- quote_volume
     trade_count AggregateFunction(count, UInt64)                      -- trade_count

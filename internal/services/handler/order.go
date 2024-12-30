@@ -47,7 +47,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 	pool, ok := s.poolCache[newOrder.PoolID]
 	if !ok {
-		pool, err := s.ckhRepo.GetPool(ctx, newOrder.PoolID)
+		pool, err := s.ckhRepo.GetPoolByID(ctx, newOrder.PoolID)
 		if err != nil {
 			log.Printf("get pool failed: %v", err)
 			return nil
@@ -165,7 +165,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	ctx := context.Background()
 	pool, ok := s.poolCache[data.PoolID]
 	if !ok {
-		pool, err := s.ckhRepo.GetPool(ctx, data.PoolID)
+		pool, err := s.ckhRepo.GetPoolByID(ctx, data.PoolID)
 		if err != nil {
 			log.Printf("get pool failed: %v", err)
 			return nil

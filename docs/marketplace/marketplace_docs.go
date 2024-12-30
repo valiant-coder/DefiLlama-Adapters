@@ -289,14 +289,14 @@ const docTemplatemarketplace = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "base coin symbol",
-                        "name": "base_symbol",
+                        "description": "base coin",
+                        "name": "base_coin",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "quote coin symbol",
-                        "name": "quote_symbol",
+                        "description": "quote coin",
+                        "name": "quote_coin",
                         "in": "query"
                     }
                 ],
@@ -306,14 +306,14 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.PoolInfo"
+                                "$ref": "#/definitions/entity.PoolStats"
                             }
                         }
                     }
                 }
             }
         },
-        "/api/v1/pools/{symbol}": {
+        "/api/v1/pools/{symbolOrId}": {
             "get": {
                 "description": "Get detailed information about a specific trading pool",
                 "consumes": [
@@ -329,8 +329,8 @@ const docTemplatemarketplace = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "pool symbol",
-                        "name": "symbol",
+                        "description": "pool symbol or pool id",
+                        "name": "symbolOrId",
                         "in": "path",
                         "required": true
                     }
@@ -703,14 +703,17 @@ const docTemplatemarketplace = `{
                 "asking_time": {
                     "type": "string"
                 },
+                "base_coin": {
+                    "type": "string"
+                },
+                "base_coin_precision": {
+                    "type": "integer"
+                },
                 "base_contract": {
                     "type": "string"
                 },
                 "base_symbol": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "maker_fee_rate": {
                     "type": "integer"
@@ -718,10 +721,19 @@ const docTemplatemarketplace = `{
                 "max_flct": {
                     "type": "integer"
                 },
-                "pool_info": {
-                    "$ref": "#/definitions/entity.PoolInfo"
+                "pool_id": {
+                    "type": "integer"
+                },
+                "pool_stats": {
+                    "$ref": "#/definitions/entity.PoolStats"
                 },
                 "price_precision": {
+                    "type": "integer"
+                },
+                "quote_coin": {
+                    "type": "string"
+                },
+                "quote_coin_precision": {
                     "type": "integer"
                 },
                 "quote_contract": {
@@ -733,6 +745,9 @@ const docTemplatemarketplace = `{
                 "status": {
                     "type": "integer"
                 },
+                "symbol": {
+                    "type": "string"
+                },
                 "taker_fee_rate": {
                     "type": "integer"
                 },
@@ -741,9 +756,12 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "entity.PoolInfo": {
+        "entity.PoolStats": {
             "type": "object",
             "properties": {
+                "base_coin": {
+                    "type": "string"
+                },
                 "change": {
                     "type": "number"
                 },
@@ -756,13 +774,19 @@ const docTemplatemarketplace = `{
                 "pool_id": {
                     "type": "integer"
                 },
+                "quote_coin": {
+                    "type": "string"
+                },
                 "symbol": {
                     "type": "string"
                 },
-                "trade_count": {
+                "trades": {
                     "type": "integer"
                 },
                 "turnover": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "volume": {

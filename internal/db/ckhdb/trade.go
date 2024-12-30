@@ -2,38 +2,12 @@ package ckhdb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
 )
 
-/*
-CREATE TABLE IF NOT EXISTS trades (
-    tx_id String,
-    pool_id UInt64,
-    taker String,
-    maker String,
-    maker_order_id UInt64,
-    maker_order_cid String,
-    taker_order_id UInt64,
-    taker_order_cid String,
-    price Decimal(36,18),
-    taker_is_bid Bool,
-    base_quantity Decimal(36,18),
-    quote_quantity Decimal(36,18),
-    taker_fee Decimal(36,18),
-    maker_fee Decimal(36,18),
-    time DateTime,
-    block_number UInt64,
-	global_sequence UInt64,
-	created_at DateTime
-) ENGINE = ReplacingMergeTree(created_at)
-PARTITION BY toYYYYMM(time)
-PRIMARY KEY (global_sequence)
-ORDER BY (global_sequence,pool_id, taker,maker, time)
-SETTINGS index_granularity = 8192;
-*/
+
 // Trade represents a trade record in the DEX
 type Trade struct {
 	TxID           string          `json:"tx_id"`
@@ -61,24 +35,8 @@ func (Trade) TableName() string {
 	return "trades"
 }
 
-type TradeStat struct {
-	High        uint64          `json:"high"`
-	Low         uint64          `json:"low"`
-	Trades      uint64          `json:"trades"`
-	Volume      decimal.Decimal `json:"volume" gorm:"type:Decimal(36,18)"`
-	QuoteVolume decimal.Decimal `json:"quote_volume" gorm:"type:Decimal(36,18)"`
-}
-
 func (r *ClickHouseRepo) InsertTrade(ctx context.Context, trade *Trade) error {
 	return r.DB.WithContext(ctx).Create(trade).Error
-}
-
-func (r *ClickHouseRepo) GetTradeStat(ctx context.Context, poolID uint64) (*TradeStat, error) {
-	query := fmt.Sprintf("SELECT MAX(price) AS high, MIN(price) AS low, COUNT(*) AS trades, SUM(base_quantity) AS volume, SUM(quote_quantity) AS quote_volume FROM trades WHERE pool_id = %d AND timestamp >= NOW() - INTERVAL 24 HOUR", poolID)
-	row := r.DB.WithContext(ctx).Raw(query).Row()
-	var stat TradeStat
-	err := row.Scan(&stat.High, &stat.Low, &stat.Trades, &stat.Volume, &stat.QuoteVolume)
-	return &stat, err
 }
 
 func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {
