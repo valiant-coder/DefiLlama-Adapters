@@ -60,9 +60,26 @@ func (r *ClickHouseRepo) InsertHistoryOrder(ctx context.Context, order *HistoryO
 }
 
 
-func (r *ClickHouseRepo) QueryOrders(ctx context.Context, query *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
+func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
+	queryParams.Order = "order_id desc"
+	side := queryParams.Get("side")
+	if side == "0" {
+		queryParams.Add("is_bid", "true")
+	} else if side == "1" {
+		queryParams.Add("is_bid", "false")
+	}
+	queryParams.Del("side")
+
+	orderType := queryParams.Get("type")
+	if orderType == "0" {
+		queryParams.Add("is_market", "true")
+	} else if orderType == "1" {
+		queryParams.Add("is_market", "false")
+	}
+	queryParams.Del("type")
+
 	orders := []HistoryOrder{}
-	total, err := r.Query(ctx, &orders, query, "pool_id", "trader")
+	total, err := r.Query(ctx, &orders, queryParams, "pool_id", "trader","status","is_bid")
 	if err != nil {
 		return nil, 0, err
 	}

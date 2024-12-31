@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"exapp-go/pkg/queryparams"
 	"sort"
 	"time"
 
@@ -34,14 +35,13 @@ type OpenOrder struct {
 	PoolID           uint64          `json:"pool_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
 	OrderID          uint64          `json:"order_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
 	ClientOrderID    string          `json:"order_cid"`
-	Trader           string          `json:"trader"`
+	Trader           string          `json:"trader" gorm:"index:idx_trader"`
 	Type             OrderType       `json:"type"`
 	Price            decimal.Decimal `json:"price" gorm:"type:Decimal(36,18)"`
 	IsBid            bool            `json:"is_bid"`
 	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
 	Status           OrderStatus     `json:"status"`
-	InOrderBook      bool            `json:"in_order_book"`
 }
 
 // TableName overrides the table name
@@ -69,6 +69,26 @@ func (r *Repo) GetOpenOrder(ctx context.Context, orderID uint64) (*OpenOrder, er
 	}
 	return &order, nil
 }
+
+func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]OpenOrder, int64, error) {
+	queryParams.Order = "order_id desc"
+	side := queryParams.Get("side")
+	if side == "0" {
+		queryParams.Add("is_bid", "true")
+	} else if side == "1" {
+		queryParams.Add("is_bid", "false")
+	}
+	queryParams.Del("side")
+	var orders []OpenOrder
+	total, err := r.Query(ctx, &orders, queryParams, "is_bid", "trader", "pool_id")
+	if err != nil {
+		return nil, 0, err
+	}
+	return orders, total, nil
+}
+
+
+
 
 type OrderBook struct {
 	PoolID uint64      `json:"pool_id"`
@@ -99,13 +119,4 @@ func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*Ord
 		return book.Asks[i].Price.LessThan(book.Asks[j].Price)
 	})
 	return &book, nil
-}
-
-func (r *Repo) GetOpenOrders(ctx context.Context, poolID uint64, user string) ([]OpenOrder, error) {
-	orders := []OpenOrder{}
-	err := r.WithContext(ctx).Where("pool_id = ? AND trader = ? AND status = ?", poolID, user, OrderStatusOpen).Find(&orders).Error
-	if err != nil {
-		return nil, err
-	}
-	return orders, nil
 }

@@ -4,22 +4,21 @@ import "exapp-go/internal/db/ckhdb"
 
 // Trade represents a trade record in the DEX
 type TradeDetail struct {
-	ID            uint64 `json:"id"`
 	PoolID        uint64 `json:"pool_id"`
-	TxHash        string `json:"tx_hash"`
+	TxID          string `json:"tx_id"`
 	Taker         string `json:"taker" `
 	Maker         string `json:"maker"`
 	MakerOrderID  uint64 `json:"maker_order_id" `
 	MakerOrderCID string `json:"maker_order_cid"`
 	TakerOrderID  uint64 `json:"taker_order_id"`
 	TakerOrderCID string `json:"taker_order_cid"`
-	Price         uint64 `json:"price"`
+	Price         string `json:"price"`
 	TakerIsBid    bool   `json:"taker_is_bid"`
 	BaseQuantity  string `json:"base_quantity"`
 	QuoteQuantity string `json:"quote_quantity"`
 	TakerFee      string `json:"taker_fee"`
 	MakerFee      string `json:"maker_fee"`
-	Timestamp     Time   `json:"time"`
+	Timestamp     Time   `json:"timestamp"`
 }
 
 type TradeSide string

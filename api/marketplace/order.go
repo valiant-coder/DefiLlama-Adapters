@@ -4,6 +4,8 @@ import (
 	"exapp-go/api"
 	"exapp-go/internal/services/marketplace"
 
+	"exapp-go/pkg/queryparams"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
@@ -14,11 +16,19 @@ import (
 // @Accept json
 // @Produce json
 // @Param pool_id query string false "pool_id"
-// @Param account query string false "eos account name"
-// @Success 200 {array} entity.Order "open order list"
+// @Param trader query string true "eos account name"
+// @Param side    query string false "0 buy 1 sell"
+// @Success 200 {array} entity.OpenOrder "open order list"
 // @Router /api/v1/open-orders [get]
 func getOpenOrders(c *gin.Context) {
+	queryParams := queryparams.NewQueryParams(c)
 
+	orders, total, err := marketplace.NewOrderService().GetOpenOrders(c.Request.Context(), queryParams)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.List(c, orders, total)
 }
 
 // @Summary Get history orders
@@ -27,27 +37,39 @@ func getOpenOrders(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param pool_id query string false "pool_id"
-// @Param account query string false "eos account name"
-// @Param order_type query string false "order_type"
+// @Param trader query string false "eos account name"
+// @Param type query string false "0market 1limit"
 // @Param status query string false "status"
-// @Success 200 {array} entity.Order "order list"
-// @Router /api/v1/orders [get]
-func getOrders(c *gin.Context) {
+// @Success 200 {array} entity.HistoryOrder "history orders"
+// @Router /api/v1/history-orders [get]
+func getHistoryOrders(c *gin.Context) {
+	queryParams := queryparams.NewQueryParams(c)
 
+	orders, total, err := marketplace.NewOrderService().GetHistoryOrders(c.Request.Context(), queryParams)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.List(c, orders, total)
 }
 
-// @Summary Get order detail
-// @Description Get order
+// @Summary Get history order detail
+// @Description Get history order detail
 // @Tags order
 // @Accept json
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} entity.OrderDetail "order detail"
+// @Success 200 {object} entity. "history order detail"
 // @Router /api/v1/orders/{id} [get]
-func getOrder(c *gin.Context) {
-
+func getHistoryOrderDetail(c *gin.Context) {
+	id := c.Param("id")
+	order, err := marketplace.NewOrderService().GetHistoryOrderDetail(c.Request.Context(), cast.ToUint64(id))
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, order)
 }
-
 
 // @Summary Get depth
 // @Description Get order book by pool id

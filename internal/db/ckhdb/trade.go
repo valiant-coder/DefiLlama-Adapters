@@ -40,7 +40,7 @@ func (r *ClickHouseRepo) InsertTrade(ctx context.Context, trade *Trade) error {
 
 func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {
 	trades := []Trade{}
-	err := r.DB.WithContext(ctx).Where("pool_id = ?", poolID).Order("time desc").Limit(limit).Find(&trades).Error
+	err := r.DB.WithContext(ctx).Where("pool_id = ?", poolID).Order("global_sequence desc").Limit(limit).Find(&trades).Error
 	return trades, err
 }
 

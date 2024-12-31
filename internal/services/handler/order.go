@@ -69,7 +69,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 	originalQuantity := placedQuantity.Add(executedQuantity)
 
-	time, err := time.Parse(time.RFC3339, newOrder.Time)
+	createTime, err := time.Parse(time.RFC3339, newOrder.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
@@ -78,7 +78,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	if newOrder.IsInserted {
 		order := db.OpenOrder{
 			TxID:             action.TrxID,
-			CreatedAt:        time,
+			CreatedAt:        createTime,
 			BlockNumber:      action.BlockNum,
 			OrderID:          newOrder.OrderID,
 			PoolID:           newOrder.PoolID,
@@ -89,7 +89,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			OriginalQuantity: originalQuantity,
 			ExecutedQuantity: executedQuantity,
 			Status:           db.OrderStatus(newOrder.Status),
-			InOrderBook:      true,
 		}
 		err := s.repo.InsertOpenOrder(ctx, &order)
 		if err != nil {
@@ -111,7 +110,25 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		return nil
 
 	} else {
-
+		var avgPrice decimal.Decimal
+		if newOrder.IsMarket {
+			trades, err := s.ckhRepo.GetTrades(ctx, newOrder.OrderID)
+			if err != nil {
+				log.Printf("get trades failed: %v", err)
+				return nil
+			}
+			if len(trades) == 0 {
+				return fmt.Errorf("no trades found for market order: %v", newOrder.OrderID)
+			}
+			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
+			for _, trade := range trades {
+				totalQuoteQuantity = totalQuoteQuantity.Add(trade.QuoteQuantity)
+				totalBaseQuantity = totalBaseQuantity.Add(trade.BaseQuantity)
+			}
+			avgPrice = totalQuoteQuantity.Div(totalBaseQuantity)
+		} else {
+			avgPrice = decimal.New(int64(newOrder.Price), -int32(pool.PricePrecision))
+		}
 		order := ckhdb.HistoryOrder{
 			CreateTxID:       action.TrxID,
 			CreateBlockNum:   action.BlockNum,
@@ -119,13 +136,13 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			OrderID:          newOrder.OrderID,
 			ClientOrderID:    newOrder.OrderCID,
 			Trader:           newOrder.Trader,
-			Price:            decimal.New(int64(newOrder.Price), -int32(pool.PricePrecision)),
+			Price:            avgPrice,
 			IsBid:            newOrder.IsBid,
 			OriginalQuantity: originalQuantity,
 			ExecutedQuantity: executedQuantity,
 			Status:           ckhdb.OrderStatus(newOrder.Status),
 			IsMarket:         newOrder.IsMarket,
-			CreatedAt:        time,
+			CreatedAt:        createTime,
 		}
 		err = s.ckhRepo.InsertHistoryOrder(ctx, &order)
 		if err != nil {
