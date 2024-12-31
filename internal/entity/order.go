@@ -25,9 +25,3 @@ type OrderDetail struct {
 	Trades []TradeDetail `json:"trades"`
 }
 
-type OrderBook struct {
-	PoolID    uint64     `json:"pool_id"`
-	Timestamp Time       `json:"timestamp"`
-	Bids      [][]string `json:"bids"`
-	Asks      [][]string `json:"asks"`
-}

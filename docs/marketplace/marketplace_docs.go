@@ -46,6 +46,38 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/api/v1/depth": {
+            "get": {
+                "description": "Get order book by pool id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "depth"
+                ],
+                "summary": "Get depth",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "order depth",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Depth"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/klines": {
             "get": {
                 "description": "Get kline data by pool id and interval",
@@ -146,38 +178,6 @@ const docTemplatemarketplace = `{
                             "items": {
                                 "$ref": "#/definitions/entity.Order"
                             }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orderbook": {
-            "get": {
-                "description": "Get order book by pool id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order book"
-                ],
-                "summary": "Get order book",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "order book",
-                        "schema": {
-                            "$ref": "#/definitions/entity.OrderBook"
                         }
                     }
                 }
@@ -528,6 +528,35 @@ const docTemplatemarketplace = `{
         }
     },
     "definitions": {
+        "entity.Depth": {
+            "type": "object",
+            "properties": {
+                "asks": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "bids": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Kline": {
             "type": "object",
             "properties": {
@@ -605,35 +634,6 @@ const docTemplatemarketplace = `{
                 "type": {
                     "description": "0: no restriction, 1: immediate or cancel, 2: fill or kill, 3: post only",
                     "type": "integer"
-                }
-            }
-        },
-        "entity.OrderBook": {
-            "type": "object",
-            "properties": {
-                "asks": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "bids": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "timestamp": {
-                    "type": "string"
                 }
             }
         },

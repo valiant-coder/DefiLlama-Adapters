@@ -67,7 +67,7 @@ func Run(addr string, release bool) error {
 	v1.GET("/pools/:symbolOrId", getPoolDetail)
 	
 	v1.GET("/klines", klines)
-	v1.GET("/orderbook", getOrderBook)
+	v1.GET("/depth", getDepth)
 	v1.GET("/trades", getTrades)
 	v1.GET("/open-orders", getOpenOrders)
 	v1.GET("/orders", getOrders)
