@@ -26,6 +26,7 @@ type PoolStats struct {
 	BaseCoin  string  `json:"base_coin,omitempty"`
 	QuoteCoin string  `json:"quote_coin,omitempty"`
 	Symbol    string  `json:"symbol,omitempty"`
+	LastPrice string  `json:"last_price,omitempty"`
 	Change    float64 `json:"change"`
 	High      string  `json:"high"`
 	Low       string  `json:"low"`

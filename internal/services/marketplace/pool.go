@@ -88,6 +88,7 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 			Symbol:    pool.Symbol,
 			BaseCoin:  pool.BaseCoin,
 			QuoteCoin: pool.QuoteCoin,
+			LastPrice: poolStats.LastPrice.String(),
 			Change:    poolStats.PriceChange,
 			High:      poolStats.High.String(),
 			Low:       poolStats.Low.String(),

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS pool_stats (
     high Decimal(36,18),
     low Decimal(36,18),
     trades UInt64,
+    last_price Decimal(36,18),
     volume Decimal(36,18),
     quote_volume Decimal(36,18),
     price_change Float64,

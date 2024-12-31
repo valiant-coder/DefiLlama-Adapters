@@ -61,6 +61,7 @@ func (r *ClickHouseRepo) GetPoolBySymbol(ctx context.Context, symbol string) (*P
 
 type PoolStats struct {
 	PoolID      uint64          `json:"pool_id"`
+	LastPrice   decimal.Decimal `json:"last_price" gorm:"type:Decimal(36,18)"`
 	PriceChange float64         `json:"price_change"`
 	High        decimal.Decimal `json:"high" gorm:"type:Decimal(36,18)"`
 	Low         decimal.Decimal `json:"low" gorm:"type:Decimal(36,18)"`
@@ -105,6 +106,7 @@ func (r *ClickHouseRepo) UpdatePoolStats(ctx context.Context) error {
             COUNT(*) as trades,
             SUM(base_quantity) as volume,
             SUM(quote_quantity) as quote_volume,
+			LAST_VALUE(price) as last_price,
             ((LAST_VALUE(price) OVER w) / (FIRST_VALUE(price) OVER w) - 1)  as price_change,
             now() as timestamp
         FROM trades t
