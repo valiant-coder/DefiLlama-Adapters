@@ -11,21 +11,18 @@ type UserCredential struct {
 	PublicKey    string `json:"public_key"`
 }
 
-type UserPoolBalance struct {
-	PoolID        uint64 `json:"pool_id"`
-	PoolSymbol    string `json:"pool_symbol"`
-	TokenContract string `json:"token_contract"`
-	TokenSymbol   string `json:"token_symbol"`
-	Balance       string `json:"balance"`
+
+type UserBalance struct {
+	Contract string        `json:"contract"`
+	Symbol   string        `json:"symbol"`
+	Balance  string        `json:"balance"`
+	Locks    []LockBalance `json:"locks"`
 }
 
-type UserTokenBalance struct {
+type LockBalance struct {
+	PoolID   uint64 `json:"pool_id"`
+	PoolSymbol string `json:"pool_symbol"`
 	Contract string `json:"contract"`
 	Symbol   string `json:"symbol"`
 	Balance  string `json:"balance"`
-}
-
-type UserBalance struct {
-	PoolBalances []UserPoolBalance `json:"pool_balances"`
-	TokenBalances []UserTokenBalance `json:"token_balances"`
 }

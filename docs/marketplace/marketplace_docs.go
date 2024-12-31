@@ -678,6 +678,26 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.LockBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "string"
+                },
+                "contract": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "pool_symbol": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.OpenOrder": {
             "type": "object",
             "properties": {
@@ -942,17 +962,20 @@ const docTemplatemarketplace = `{
         "entity.UserBalance": {
             "type": "object",
             "properties": {
-                "pool_balances": {
+                "balance": {
+                    "type": "string"
+                },
+                "contract": {
+                    "type": "string"
+                },
+                "locks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.UserPoolBalance"
+                        "$ref": "#/definitions/entity.LockBalance"
                     }
                 },
-                "token_balances": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.UserTokenBalance"
-                    }
+                "symbol": {
+                    "type": "string"
                 }
             }
         },
@@ -963,40 +986,6 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "public_key": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserPoolBalance": {
-            "type": "object",
-            "properties": {
-                "balance": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                },
-                "token_contract": {
-                    "type": "string"
-                },
-                "token_symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserTokenBalance": {
-            "type": "object",
-            "properties": {
-                "balance": {
-                    "type": "string"
-                },
-                "contract": {
-                    "type": "string"
-                },
-                "symbol": {
                     "type": "string"
                 }
             }
