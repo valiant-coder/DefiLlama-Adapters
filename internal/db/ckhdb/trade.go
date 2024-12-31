@@ -7,7 +7,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-
 // Trade represents a trade record in the DEX
 type Trade struct {
 	TxID           string          `json:"tx_id"`
@@ -24,7 +23,7 @@ type Trade struct {
 	QuoteQuantity  decimal.Decimal `json:"quote_quantity" gorm:"type:Decimal(36,18)"`
 	TakerFee       decimal.Decimal `json:"taker_fee" gorm:"type:Decimal(36,18)"`
 	MakerFee       decimal.Decimal `json:"maker_fee" gorm:"type:Decimal(36,18)"`
-	Timestamp      time.Time       `json:"time"`
+	Time           time.Time       `json:"time"`
 	BlockNumber    uint64          `json:"block_number"`
 	GlobalSequence uint64          `json:"global_sequence"`
 	CreatedAt      time.Time       `json:"created_at"`
@@ -41,7 +40,7 @@ func (r *ClickHouseRepo) InsertTrade(ctx context.Context, trade *Trade) error {
 
 func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {
 	trades := []Trade{}
-	err := r.DB.WithContext(ctx).Where("pool_id = ?", poolID).Order("timestamp desc").Limit(limit).Find(&trades).Error
+	err := r.DB.WithContext(ctx).Where("pool_id = ?", poolID).Order("time desc").Limit(limit).Find(&trades).Error
 	return trades, err
 }
 

@@ -194,7 +194,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	timestamp, err := time.Parse(time.RFC3339, data.Time)
+	tradeTime, err := time.Parse(time.RFC3339, data.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
@@ -204,7 +204,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		TxID:           action.TrxID,
 		PoolID:         data.PoolID,
 		Price:          decimal.New(int64(data.Price), -int32(pool.PricePrecision)),
-		Timestamp:      timestamp,
+		Time:           tradeTime,
 		BlockNumber:    action.BlockNum,
 		GlobalSequence: action.GlobalSequence,
 		Taker:          data.Taker,

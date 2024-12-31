@@ -143,6 +143,51 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/api/v1/latest-trades": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get latest trades",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trade"
+                ],
+                "summary": "Get latest trades",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit count",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "trade list",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Trade"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/open-orders": {
             "get": {
                 "description": "Get open orders",
@@ -334,63 +379,6 @@ const docTemplatemarketplace = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.Pool"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/trades": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get trades",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trade"
-                ],
-                "summary": "Get trades",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "start timestamp",
-                        "name": "start",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "end timestamp",
-                        "name": "end",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit count",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "trade list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Trade"
-                            }
                         }
                     }
                 }

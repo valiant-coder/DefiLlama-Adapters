@@ -1,5 +1,7 @@
 package entity
 
+import "exapp-go/internal/db/ckhdb"
+
 // Trade represents a trade record in the DEX
 type TradeDetail struct {
 	ID            uint64 `json:"id"`
@@ -20,8 +22,6 @@ type TradeDetail struct {
 	Timestamp     Time   `json:"time"`
 }
 
-
-
 type TradeSide string
 
 const (
@@ -37,4 +37,26 @@ type Trade struct {
 	Price    string    `json:"price"`
 	TradedAt Time      `json:"traded_at"`
 	Side     TradeSide `json:"side"`
+}
+
+func DbTradeToTrade(dbTrade ckhdb.Trade) Trade {
+	var buyer, seller string
+	side := TradeSideBuy
+	if dbTrade.TakerIsBid {
+		buyer = dbTrade.Taker
+		seller = dbTrade.Maker
+	} else {
+		buyer = dbTrade.Maker
+		seller = dbTrade.Taker
+		side = TradeSideSell
+	}
+	return Trade{
+		PoolID:   dbTrade.PoolID,
+		Buyer:    buyer,
+		Seller:   seller,
+		Quantity: dbTrade.BaseQuantity.String(),
+		Price:    dbTrade.Price.String(),
+		TradedAt: Time(dbTrade.Time),
+		Side:     side,
+	}
 }
