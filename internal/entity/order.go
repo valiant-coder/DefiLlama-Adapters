@@ -43,14 +43,6 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 	}
 }
 
-type OrderStatus uint8
-
-const (
-	OrderStatusOpen OrderStatus = iota
-	OrderStatusPartiallyFilled
-	OrderStatusFilled
-	OrderStatusCancelled
-)
 
 type HistoryOrder struct {
 	OrderTime     Time   `json:"order_time"`

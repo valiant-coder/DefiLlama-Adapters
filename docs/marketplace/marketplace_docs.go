@@ -78,6 +78,58 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/api/v1/history-orders": {
+            "get": {
+                "description": "Get history orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get history orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "eos account name",
+                        "name": "trader",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "0market 1limit",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "history orders",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.HistoryOrder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/klines": {
             "get": {
                 "description": "Get kline data by pool id and interval",
@@ -211,7 +263,14 @@ const docTemplatemarketplace = `{
                     {
                         "type": "string",
                         "description": "eos account name",
-                        "name": "account",
+                        "name": "trader",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "0 buy 1 sell",
+                        "name": "side",
                         "in": "query"
                     }
                 ],
@@ -221,59 +280,7 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Order"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders": {
-            "get": {
-                "description": "Get history orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get history orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "eos account name",
-                        "name": "account",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "order_type",
-                        "name": "order_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "status",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "order list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Order"
+                                "$ref": "#/definitions/entity.OpenOrder"
                             }
                         }
                     }
@@ -282,7 +289,7 @@ const docTemplatemarketplace = `{
         },
         "/api/v1/orders/{id}": {
             "get": {
-                "description": "Get order",
+                "description": "Get history order detail",
                 "consumes": [
                     "application/json"
                 ],
@@ -292,7 +299,7 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "order"
                 ],
-                "summary": "Get order detail",
+                "summary": "Get history order detail",
                 "parameters": [
                     {
                         "type": "integer",
@@ -304,9 +311,9 @@ const docTemplatemarketplace = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "order detail",
+                        "description": "history order detail",
                         "schema": {
-                            "$ref": "#/definitions/entity.OrderDetail"
+                            "$ref": "#/definitions/entity.HistoryOrderDetail"
                         }
                     }
                 }
@@ -545,6 +552,100 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.HistoryOrder": {
+            "type": "object",
+            "properties": {
+                "avg_price": {
+                    "type": "string"
+                },
+                "executed_amount": {
+                    "type": "string"
+                },
+                "filled_total": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_amount": {
+                    "type": "string"
+                },
+                "order_cid": {
+                    "type": "string"
+                },
+                "order_price": {
+                    "type": "string"
+                },
+                "order_time": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "side": {
+                    "description": "0 buy 1 sell",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "1partially_filled 2full_filled 3.canceled",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "0 market 1 limit",
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.HistoryOrderDetail": {
+            "type": "object",
+            "properties": {
+                "avg_price": {
+                    "type": "string"
+                },
+                "executed_amount": {
+                    "type": "string"
+                },
+                "filled_total": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "order_amount": {
+                    "type": "string"
+                },
+                "order_cid": {
+                    "type": "string"
+                },
+                "order_price": {
+                    "type": "string"
+                },
+                "order_time": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "side": {
+                    "description": "0 buy 1 sell",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "1partially_filled 2full_filled 3.canceled",
+                    "type": "integer"
+                },
+                "trades": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TradeDetail"
+                    }
+                },
+                "type": {
+                    "description": "0 market 1 limit",
+                    "type": "integer"
+                }
+            }
+        },
         "entity.Kline": {
             "type": "object",
             "properties": {
@@ -577,104 +678,45 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "entity.Order": {
+        "entity.OpenOrder": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "avg_price": {
                     "type": "string"
                 },
-                "cumulative_quote_quantity": {
-                    "type": "string"
-                },
-                "executed_quantity": {
+                "executed_amount": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_bid": {
-                    "type": "boolean"
-                },
-                "is_market": {
-                    "type": "boolean"
+                "order_amount": {
+                    "type": "string"
                 },
                 "order_cid": {
                     "type": "string"
                 },
-                "original_quantity": {
+                "order_price": {
                     "type": "string"
                 },
-                "paid_fees": {
+                "order_time": {
+                    "type": "string"
+                },
+                "order_total": {
                     "type": "string"
                 },
                 "pool_id": {
                     "type": "integer"
                 },
-                "price": {
+                "side": {
+                    "description": "0 buy 1 sell",
                     "type": "integer"
-                },
-                "status": {
-                    "type": "string"
                 },
                 "trader": {
                     "type": "string"
                 },
                 "type": {
-                    "description": "0: no restriction, 1: immediate or cancel, 2: fill or kill, 3: post only",
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.OrderDetail": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "cumulative_quote_quantity": {
-                    "type": "string"
-                },
-                "executed_quantity": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_bid": {
-                    "type": "boolean"
-                },
-                "is_market": {
-                    "type": "boolean"
-                },
-                "order_cid": {
-                    "type": "string"
-                },
-                "original_quantity": {
-                    "type": "string"
-                },
-                "paid_fees": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "trader": {
-                    "type": "string"
-                },
-                "trades": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TradeDetail"
-                    }
-                },
-                "type": {
-                    "description": "0: no restriction, 1: immediate or cancel, 2: fill or kill, 3: post only",
+                    "description": "0 market 1 limit",
                     "type": "integer"
                 }
             }
@@ -748,6 +790,9 @@ const docTemplatemarketplace = `{
                     "type": "number"
                 },
                 "high": {
+                    "type": "string"
+                },
+                "last_price": {
                     "type": "string"
                 },
                 "low": {
@@ -839,9 +884,6 @@ const docTemplatemarketplace = `{
                 "base_quantity": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "maker": {
                     "type": "string"
                 },
@@ -858,7 +900,7 @@ const docTemplatemarketplace = `{
                     "type": "integer"
                 },
                 "price": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "quote_quantity": {
                     "type": "string"
@@ -878,10 +920,10 @@ const docTemplatemarketplace = `{
                 "taker_order_id": {
                     "type": "integer"
                 },
-                "time": {
+                "timestamp": {
                     "type": "string"
                 },
-                "tx_hash": {
+                "tx_id": {
                     "type": "string"
                 }
             }
