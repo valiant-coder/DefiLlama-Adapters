@@ -27,3 +27,15 @@ func RemoveDuplicate(slice []string) []string {
 	}
 	return list
 }
+
+func RemoveDuplicateUint64(slice []uint64) []uint64 {
+	allKeys := make(map[uint64]bool)
+	list := []uint64{}
+	for _, item := range slice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
