@@ -43,8 +43,6 @@ func authorizator(data interface{}, c *gin.Context) bool {
 	return true
 }
 
-
-
 // @Summary Create user credentials
 // @Description Create user credentials
 // @Security ApiKeyAuth
@@ -86,15 +84,21 @@ func getUserCredentials(c *gin.Context) {
 	api.OK(c, credentials)
 }
 
-
 // @Summary Get user balances
 // @Description Get user balances
 // @Tags user
 // @Accept json
 // @Produce json
 // @Param account query string false "eos account name"
-// @Success 200 {object} entity.UserBalance "user balances"
+// @Success 200 {array} entity.UserBalance "user balances"
 // @Router /api/v1/balances [get]
 func getUserBalances(c *gin.Context) {
-
+	accountName := c.Query("account")
+	userService := marketplace.NewUserService()
+	balances, err := userService.GetUserBalance(c.Request.Context(), accountName)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, balances)
 }

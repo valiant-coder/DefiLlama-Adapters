@@ -37,7 +37,10 @@
                     "200": {
                         "description": "user balances",
                         "schema": {
-                            "$ref": "#/definitions/entity.UserBalance"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.UserBalance"
+                            }
                         }
                     }
                 }
@@ -681,9 +684,6 @@
                 "balance": {
                     "type": "string"
                 },
-                "contract": {
-                    "type": "string"
-                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -963,6 +963,9 @@
                     "type": "string"
                 },
                 "contract": {
+                    "type": "string"
+                },
+                "locked": {
                     "type": "string"
                 },
                 "locks": {

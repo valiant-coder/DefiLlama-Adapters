@@ -40,7 +40,10 @@ const docTemplatemarketplace = `{
                     "200": {
                         "description": "user balances",
                         "schema": {
-                            "$ref": "#/definitions/entity.UserBalance"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.UserBalance"
+                            }
                         }
                     }
                 }
@@ -684,9 +687,6 @@ const docTemplatemarketplace = `{
                 "balance": {
                     "type": "string"
                 },
-                "contract": {
-                    "type": "string"
-                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -966,6 +966,9 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "contract": {
+                    "type": "string"
+                },
+                "locked": {
                     "type": "string"
                 },
                 "locks": {

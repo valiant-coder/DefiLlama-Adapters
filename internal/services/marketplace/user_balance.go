@@ -2,11 +2,15 @@ package marketplace
 
 import (
 	"context"
+	"errors"
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/utils"
 )
 
 func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([]entity.UserBalance, error) {
+	if accountName == "" {
+		return nil, errors.New("account is required")
+	}
 	userBalances, err := s.db.GetUserBalances(ctx, accountName)
 	if err != nil {
 		return nil, err
