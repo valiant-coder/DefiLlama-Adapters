@@ -13,18 +13,16 @@ type Client struct {
 	httpClient *http.Client
 }
 
-
-
 type GetActionsRequest struct {
 	// Notified account
-	Account        string `json:"account"`
+	Account string `json:"account"`
 	// Filter by code:name
-	Filter         string `json:"filter,omitempty"`
-	Track          int    `json:"track,omitempty"`
-	Skip           int    `json:"skip,omitempty"`
-	Limit          int    `json:"limit,omitempty"`
+	Filter string `json:"filter,omitempty"`
+	Track  int    `json:"track,omitempty"`
+	Skip   int    `json:"skip,omitempty"`
+	Limit  int    `json:"limit,omitempty"`
 	// Sort direction ('desc', 'asc', '1' or '-1')
-	Sort           string `json:"sort,omitempty"`
+	Sort string `json:"sort,omitempty"`
 	// Filter actions by block_num range [from]-[to]
 	BlockNum       string `json:"block_num,omitempty"`
 	GlobalSequence string `json:"global_sequence,omitempty"`
@@ -49,30 +47,27 @@ type Action struct {
 	CreatorActionOrdinal int               `json:"creator_action_ordinal"`
 }
 
-
 type Authorization struct {
 	Actor      string `json:"actor"`
 	Permission string `json:"permission"`
 }
 type ActionData struct {
-	Account string `json:"account"`
-	Name string `json:"name"`
+	Account       string          `json:"account"`
+	Name          string          `json:"name"`
 	Authorization []Authorization `json:"authorization"`
-	Data json.RawMessage `json:"data"`
+	Data          json.RawMessage `json:"data"`
 }
 
 type SimpleAction struct {
-	Block uint64 `json:"block"`
-	Timestamp string `json:"timestamp"`
-	Contract string `json:"contract"`
-	Action string `json:"action"`
-	Actors string `json:"actors"`
-	Notified string `json:"notified"`
-	TransactionID string `json:"transaction_id"`
-	Data json.RawMessage `json:"data"`
+	Block         uint64          `json:"block"`
+	Timestamp     string          `json:"timestamp"`
+	Contract      string          `json:"contract"`
+	Action        string          `json:"action"`
+	Actors        string          `json:"actors"`
+	Notified      string          `json:"notified"`
+	TransactionID string          `json:"transaction_id"`
+	Data          json.RawMessage `json:"data"`
 }
-
-
 
 type GetActionsResponse struct {
 	QueryTimeMs          float64 `json:"query_time_ms"`
@@ -85,7 +80,7 @@ type GetActionsResponse struct {
 		Relation string `json:"relation"`
 	} `json:"total"`
 	SimpleActions []SimpleAction `json:"simple_actions"`
-	Actions       []Action `json:"actions"`
+	Actions       []Action       `json:"actions"`
 }
 
 func NewClient(endpoint string) *Client {
@@ -160,4 +155,41 @@ func (c *Client) GetActions(ctx context.Context, req GetActionsRequest) (*GetAct
 	}
 
 	return &result, nil
+}
+
+type GetTokensResponse struct {
+	Tokens []Token `json:"tokens"`
+}
+
+type Token struct {
+	Symbol    string  `json:"symbol"`
+	Precision uint8   `json:"precision"`
+	Amount    float64 `json:"amount"`
+	Contract  string  `json:"contract"`
+}
+
+
+func (c *Client) GetTokens(ctx context.Context, account string) ([]Token, error) {
+	url := fmt.Sprintf("%s/v2/history/get_tokens?account=%s", c.endpoint, account)
+
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request failed: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("do request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var result GetTokensResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decode response failed: %w", err)
+	}
+	return result.Tokens, nil
 }
