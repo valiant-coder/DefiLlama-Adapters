@@ -24,9 +24,10 @@ type Service struct {
 	lastBlockNum   uint64
 	hyperionCfg    config.HyperionConfig
 	nsqCfg         config.NsqConfig
+	cdexCfg        config.CdexConfig
 }
 
-func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig) (*Service, error) {
+func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig, cdexCfg config.CdexConfig) (*Service, error) {
 	hyperionClient := hyperion.NewClient(hyperionCfg.Endpoint)
 	streamClient, err := hyperion.NewStreamClient(hyperionCfg.StreamEndpoint)
 	if err != nil {
@@ -48,6 +49,7 @@ func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig) (*Se
 		lastBlockNum:   lastBlockNum,
 		hyperionCfg:    hyperionCfg,
 		nsqCfg:         nsqCfg,
+		cdexCfg:        cdexCfg,
 	}, nil
 }
 
@@ -56,7 +58,21 @@ func (s *Service) Start(ctx context.Context) error {
 		return fmt.Errorf("sync history failed: %w", err)
 	}
 
-	actionCh, err := s.streamClient.SubscribeAction(hyperion.ActionStreamRequest{})
+	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
+		{
+			Contract: s.cdexCfg.DexContract,
+			StartFrom: int64(s.hyperionCfg.StartBlock),
+		},
+		{
+			Contract: s.cdexCfg.PoolContract,
+			StartFrom: int64(s.hyperionCfg.StartBlock),
+
+		},
+		{
+			Contract: s.cdexCfg.EventContract,
+			StartFrom: int64(s.hyperionCfg.StartBlock),
+		},
+	})
 
 	if err != nil {
 		return fmt.Errorf("subscribe actions failed: %w", err)
@@ -90,8 +106,8 @@ func (s *Service) Stop() error {
 func (s *Service) syncHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
-			Account: "*",
-			Filter:  "cdex:*",
+			Account: "",
+			Filter:  fmt.Sprintf("%s:*,%s:*,%s:*,%s:*", s.cdexCfg.DexContract, s.cdexCfg.PoolContract, s.cdexCfg.EXAppContract, s.cdexCfg.EventContract),
 			Limit:   s.hyperionCfg.BatchSize,
 			Sort:    "asc",
 			After:   strconv.FormatUint(s.lastBlockNum, 10),

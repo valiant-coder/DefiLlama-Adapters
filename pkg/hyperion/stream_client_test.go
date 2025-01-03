@@ -12,13 +12,15 @@ func TestNewStreamClient(t *testing.T) {
 		t.Fatalf("NewStreamClient() error = %v", err)
 	}
 
-	actionCh, err := client.SubscribeAction(ActionStreamRequest{
-		Account:  "",
-		Contract: "",
-		Action:   "",
-		Filters:  []RequestFilter{},
-		StartFrom: 0,
-		ReadUntil: 0,
+	actionCh, err := client.SubscribeAction([]ActionStreamRequest{
+		{
+			Account:  "",
+			Contract: "",
+			Action:   "",
+			Filters:  []RequestFilter{},
+			StartFrom: 0,
+			ReadUntil: 0,
+		},
 	})
 	if err != nil {
 		t.Fatalf("SubscribeAction() error = %v", err)

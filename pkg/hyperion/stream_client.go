@@ -72,12 +72,14 @@ type ActionStreamResponse struct {
 	Message []Action `json:"message"`
 }
 
-func (c *StreamClient) SubscribeAction(req ActionStreamRequest) (<-chan Action, error) {
+func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Action, error) {
 	actionCh := make(chan Action, 100)
 
-	_, err := c.client.EmitWithAck("action_stream_request", req)
-	if err != nil {
-		return nil, fmt.Errorf("send subscribe request to hyperion failed: %w", err)
+	for _, req := range reqs {
+		_, err := c.client.EmitWithAck("action_stream_request", req)
+		if err != nil {
+			return nil, fmt.Errorf("send subscribe request to hyperion failed: %w, req: %+v", err, req)
+		}
 	}
 
 	c.client.OnMessage(func(event string, args []any) {
