@@ -65,6 +65,8 @@ type Config struct {
 	Hyperion HyperionConfig `yaml:"hyperion"`
 
 	Nsq NsqConfig `yaml:"nsq"`
+	
+	Cdex CdexConfig `yaml:"cdex"`
 }
 
 type JWTConfig struct {
@@ -85,6 +87,14 @@ type NsqConfig struct {
 	Nsqds     []string      `yaml:"nsqds"`
 	Lookupd   string        `yaml:"lookupd"`
 	LookupTTl time.Duration `yaml:"lookup_ttl"`
+}
+
+type CdexConfig struct {
+	DexContract string `yaml:"dex_contract"`
+	PoolContract string `yaml:"pool_contract"`
+	EXAppContract string `yaml:"exapp_contract"`
+	HistoryContract string `yaml:"history_contract"`
+	EventContract string `yaml:"event_contract"`
 }
 
 var (
