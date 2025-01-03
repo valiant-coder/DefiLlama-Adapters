@@ -114,6 +114,68 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 	return actionCh, nil
 }
 
+
+
+
+type DeltaStreamRequest struct {
+	Code string `json:"code"`
+	Table string `json:"table"`
+	Scope string `json:"scope"`
+	Payer string `json:"payer"`
+	StartFrom int64 `json:"start_from"`
+	ReadUntil int64 `json:"read_until"`
+}
+
+
+type DeltaStreamResponse struct {
+	Type string `json:"type"`
+	Mode string `json:"mode"`
+	Message []Delta `json:"message"`
+}
+
+func (c *StreamClient) SubscribeDeltas(reqs []DeltaStreamRequest) (<-chan Delta, error) {
+	deltaCh := make(chan Delta, 100)
+
+	for _, req := range reqs {
+		_, err := c.client.EmitWithAck("delta_stream_request", req)
+		if err != nil {
+			return nil, fmt.Errorf("send subscribe request to hyperion failed: %w, req: %+v", err, req)
+		}
+	}
+
+	c.client.OnMessage(func(event string, args []any) {
+		if event != "message" {
+			return
+		}
+
+		message := args[0].(map[string]any)
+		messageType, ok := message["type"].(string)
+		if !ok {
+			return
+		}
+		if messageType != "delta_trace" {
+			return
+		}
+
+		var delta Delta
+		if err := json.Unmarshal([]byte(message["message"].(string)), &delta); err != nil {
+			log.Printf("unmarshal response failed: %v", err)
+			return
+		}
+
+		select {
+		case deltaCh <- delta:
+		default:
+			log.Printf("delta channel is full, dropping message")
+		}
+	})
+
+	return deltaCh, nil
+}
+
+
+
+
 func (c *StreamClient) Close() error {
 	return c.client.Close()
 }

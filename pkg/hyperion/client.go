@@ -83,6 +83,37 @@ type GetActionsResponse struct {
 	Actions       []Action       `json:"actions"`
 }
 
+
+
+type GetDeltasResponse struct {
+	QueryTimeMs float64 `json:"query_time_ms"`
+	LastIndexedBlock     uint64  `json:"last_indexed_block"`
+	LastIndexedBlockTime string  `json:"last_indexed_block_time"`
+	Total                struct {
+		Value    int    `json:"value"`
+		Relation string `json:"relation"`
+	} `json:"total"`
+	Deltas []Delta `json:"deltas"`
+}
+
+
+
+
+type Delta struct {
+	Timestamp string `json:"timestamp"`
+	Present int `json:"present"`
+	Code string `json:"code"`
+	Scope string `json:"scope"`
+	Table string `json:"table"`
+	PrimaryKey string `json:"primary_key"`
+	Payer string `json:"payer"`
+	BlockNum uint64 `json:"block_num"`
+	BlockID string `json:"block_id"`
+	Data json.RawMessage `json:"data"`
+}
+
+
+
 func NewClient(endpoint string) *Client {
 	return &Client{
 		endpoint: endpoint,
