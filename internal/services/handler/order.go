@@ -166,7 +166,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	return nil
 }
 
-
 func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	var data struct {
 		EV struct {
@@ -177,30 +176,29 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 				Actor      string `json:"actor"`
 				Permission string `json:"permission"`
 			} `json:"taker"`
-			Maker    struct {
+			Maker struct {
 				Actor      string `json:"actor"`
 				Permission string `json:"permission"`
 			} `json:"maker"`
-			MakerOrderID string `json:"maker_order_id"`
+			MakerOrderID  string `json:"maker_order_id"`
 			MakerOrderCID string `json:"maker_order_cid"`
-			TakerOrderID string `json:"taker_order_id"`
+			TakerOrderID  string `json:"taker_order_id"`
 			TakerOrderCID string `json:"taker_order_cid"`
-			Price string `json:"price"`
-			TakerIsBid bool `json:"taker_is_bid"`
-			BaseQuantity string `json:"base_quantity"`
+			Price         string `json:"price"`
+			TakerIsBid    bool   `json:"taker_is_bid"`
+			BaseQuantity  string `json:"base_quantity"`
 			QuoteQuantity string `json:"quote_quantity"`
-			TakerFee struct {
+			TakerFee      struct {
 				BaseFee string `json:"base_fee"`
-				AppFee string `json:"app_fee"`
+				AppFee  string `json:"app_fee"`
 			} `json:"taker_fee"`
 			MakerFee struct {
 				BaseFee string `json:"base_fee"`
-				AppFee string `json:"app_fee"`
+				AppFee  string `json:"app_fee"`
 			} `json:"maker_fee"`
-			Time string `json:"time"`
-			MakerRemoved bool `json:"maker_removed"`
-			MakerStatus uint8 `json:"maker_status"`
-			
+			Time         string `json:"time"`
+			MakerRemoved bool   `json:"maker_removed"`
+			MakerStatus  uint8  `json:"maker_status"`
 		} `json:"ev"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
@@ -225,7 +223,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		return nil
 	}
 	quoteQuantity, err := eosAssetToDecimal(data.EV.QuoteQuantity)
-		if err != nil {
+	if err != nil {
 		log.Printf("new asset from string failed: %v", err)
 		return nil
 	}
@@ -366,16 +364,23 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	return nil
 }
 
+
 func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	var data struct {
-		PoolID               uint64 `json:"pool_id"`
-		OrderID              uint64 `json:"order_id"`
-		OrderCID             string `json:"order_cid"`
-		IsBid                bool   `json:"is_bid"`
-		Trader               string `json:"trader"`
-		OriginalQuantity     string `json:"original_quantity"`
-		CanceledBaseQuantity string `json:"canceled_base_quantity"`
-		Time                 string `json:"time"`
+		EV struct {
+			App      string `json:"app"`
+			PoolID   string `json:"pool_id"`
+			OrderID  string `json:"order_id"`
+			OrderCID string `json:"order_cid"`
+			IsBid    bool   `json:"is_bid"`
+			Trader   struct {
+				Actor      string `json:"actor"`
+				Permission string `json:"permission"`
+			} `json:"trader"`
+			OriginalQuantity     string `json:"original_quantity"`
+			CanceledBaseQuantity string `json:"canceled_base_quantity"`
+			Time                 string `json:"time"`
+		} `json:"ev"`
 	}
 
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
@@ -383,23 +388,25 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 
 	ctx := context.Background()
-	canceledQuantity, err := eosAssetToDecimal(data.CanceledBaseQuantity)
+	canceledQuantity, err := eosAssetToDecimal(data.EV.CanceledBaseQuantity)
 	if err != nil {
 		log.Printf("new asset from string failed: %v", err)
 		return nil
 	}
 
-	order, err := s.repo.GetOpenOrder(ctx, data.OrderID)
+	orderID := cast.ToUint64(data.EV.OrderID)
+	poolID := cast.ToUint64(data.EV.PoolID)
+	order, err := s.repo.GetOpenOrder(ctx, orderID)
 	if err != nil {
 		log.Printf("get open order failed: %v", err)
 		return nil
 	}
 
 	// update depth
-	if data.IsBid {
+	if data.EV.IsBid {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
-				PoolID: data.PoolID,
+				PoolID: poolID,
 				Price:  order.Price.InexactFloat64(),
 				Amount: -canceledQuantity.InexactFloat64(),
 				IsBuy:  true,
@@ -412,7 +419,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	} else {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
-				PoolID: data.PoolID,
+				PoolID: poolID,
 				Price:  order.Price.InexactFloat64(),
 				Amount: -canceledQuantity.InexactFloat64(),
 				IsBuy:  false,
@@ -424,12 +431,12 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		}
 	}
 	// delete open order
-	err = s.repo.DeleteOpenOrder(ctx, data.OrderID)
+	err = s.repo.DeleteOpenOrder(ctx, orderID)
 	if err != nil {
 		log.Printf("delete open order failed: %v", err)
 		return nil
 	}
-	time, err := time.Parse(time.RFC3339, data.Time)
+	canceledTime, err := time.Parse(time.RFC3339, data.EV.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
@@ -442,6 +449,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 	// insert history order
 	historyOrder := ckhdb.HistoryOrder{
+		App:              order.App,
 		PoolID:           order.PoolID,
 		OrderID:          order.OrderID,
 		ClientOrderID:    order.ClientOrderID,
@@ -457,7 +465,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		CreateBlockNum:   order.BlockNumber,
 		CancelTxID:       action.TrxID,
 		CancelBlockNum:   action.BlockNum,
-		CanceledAt:       time,
+		CanceledAt:       canceledTime,
 		Type:             ckhdb.OrderType(order.Type),
 	}
 	err = s.ckhRepo.InsertHistoryOrder(ctx, &historyOrder)
