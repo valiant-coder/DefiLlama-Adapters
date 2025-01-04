@@ -13,6 +13,8 @@ type Trade struct {
 	PoolID         uint64          `json:"pool_id"`
 	Taker          string          `json:"taker" `
 	Maker          string          `json:"maker"`
+	MakerApp       string          `json:"maker_app"`
+	TakerApp       string          `json:"taker_app"`
 	MakerOrderID   uint64          `json:"maker_order_id" `
 	MakerOrderCID  string          `json:"maker_order_cid"`
 	TakerOrderID   uint64          `json:"taker_order_id"`
@@ -23,6 +25,8 @@ type Trade struct {
 	QuoteQuantity  decimal.Decimal `json:"quote_quantity" gorm:"type:Decimal(36,18)"`
 	TakerFee       decimal.Decimal `json:"taker_fee" gorm:"type:Decimal(36,18)"`
 	MakerFee       decimal.Decimal `json:"maker_fee" gorm:"type:Decimal(36,18)"`
+	TakerAppFee    decimal.Decimal `json:"taker_app_fee" gorm:"type:Decimal(36,18)"`
+	MakerAppFee    decimal.Decimal `json:"maker_app_fee" gorm:"type:Decimal(36,18)"`
 	Time           time.Time       `json:"time"`
 	BlockNumber    uint64          `json:"block_number"`
 	GlobalSequence uint64          `json:"global_sequence"`

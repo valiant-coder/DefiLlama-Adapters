@@ -30,6 +30,7 @@ const (
 
 // HistoryOrder represents a trading order in the DEX
 type HistoryOrder struct {
+	App              string          `json:"app"`
 	CreateTxID       string          `json:"create_tx_id"`
 	CreateBlockNum   uint64          `json:"create_block_num"`
 	CancelTxID       string          `json:"cancel_tx_id"`

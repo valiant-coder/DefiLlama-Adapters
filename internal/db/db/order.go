@@ -30,6 +30,7 @@ const (
 // Order represents a trading order in the DEX
 type OpenOrder struct {
 	TxID             string          `json:"tx_id"`
+	App              string          `json:"app"`
 	CreatedAt        time.Time       `json:"created_at"`
 	BlockNumber      uint64          `json:"block_number"`
 	PoolID           uint64          `json:"pool_id" gorm:"uniqueIndex:idx_pool_id_order_id"`

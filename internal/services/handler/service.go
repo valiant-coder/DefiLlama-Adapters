@@ -24,15 +24,19 @@ type Service struct {
 	repo      *db.Repo
 	worker    *nsqutil.Worker
 	poolCache map[uint64]*ckhdb.Pool
+	cdexCfg   config.CdexConfig
 }
 
 func NewService() (*Service, error) {
 	ckhRepo := ckhdb.New()
 	repo := db.New()
+	cfg := config.Conf()
 
 	return &Service{
 		ckhRepo: ckhRepo,
 		repo:    repo,
+		nsqCfg:  cfg.Nsq,
+		cdexCfg: cfg.Cdex,
 	}, nil
 }
 
@@ -53,6 +57,9 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 	var action hyperion.Action
 	if err := json.Unmarshal(msg.Body, &action); err != nil {
 		log.Printf("Unmarshal action failed: %v", err)
+		return nil
+	}
+	if action.Act.Account != s.cdexCfg.EventContract {
 		return nil
 	}
 	switch action.Act.Name {
