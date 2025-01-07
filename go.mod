@@ -31,6 +31,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/redis/go-redis/v9 v9.5.1
+	github.com/robfig/cron v1.2.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/swaggo/swag v1.16.3
 	go.opentelemetry.io/otel v1.33.0

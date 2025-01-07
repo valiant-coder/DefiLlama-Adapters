@@ -29,6 +29,7 @@ func main() {
 			cmd.MarketplaceApi,
 			cmd.SyncCmd,
 			cmd.HandlerCmd,
+			cmd.CronCmd,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
