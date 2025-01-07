@@ -760,7 +760,7 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "maker_fee_rate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "max_flct": {
                     "type": "integer"
@@ -793,7 +793,7 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "taker_fee_rate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "trading_time": {
                     "type": "string"

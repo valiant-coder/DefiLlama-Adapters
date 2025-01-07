@@ -20,8 +20,8 @@ type Pool struct {
 	TradingTime        time.Time  `json:"trading_time"`
 	MaxFluctuation     uint64     `json:"max_flct"`
 	PricePrecision     uint8      `json:"price_precision"`
-	TakerFeeRate       uint64     `json:"taker_fee_rate"`
-	MakerFeeRate       uint64     `json:"maker_fee_rate"`
+	TakerFeeRate       float64    `json:"taker_fee_rate"`
+	MakerFeeRate       float64    `json:"maker_fee_rate"`
 	Status             PoolStatus `json:"status"`
 }
 
@@ -37,6 +37,26 @@ func (Pool) TableName() string {
 	return "pools"
 }
 
+func (r *Repo) CreatePool(ctx context.Context, pool *Pool) error {
+	return r.WithContext(ctx).Create(pool).Error
+}
+
+func (r *Repo) GetPoolBySymbol(ctx context.Context, symbol string) (*Pool, error) {
+	var pool Pool
+	if err := r.WithContext(ctx).Where("symbol = ?", symbol).First(&pool).Error; err != nil {
+		return nil, err
+	}
+	return &pool, nil
+}
+
+func (r *Repo) GetPoolByID(ctx context.Context, poolID uint64) (*Pool, error) {
+	var pool Pool
+	if err := r.WithContext(ctx).Where("pool_id = ?", poolID).First(&pool).Error; err != nil {
+		return nil, err
+	}
+	return &pool, nil
+}
+
 func (r *Repo) GetPoolSymbolsByIDs(ctx context.Context, poolID []uint64) (map[uint64]string, error) {
 	var pools []Pool
 	if err := r.WithContext(ctx).Where("pool_id IN (?)", poolID).Find(&pools).Error; err != nil {
@@ -48,4 +68,3 @@ func (r *Repo) GetPoolSymbolsByIDs(ctx context.Context, poolID []uint64) (map[ui
 	}
 	return poolSymbols, nil
 }
-

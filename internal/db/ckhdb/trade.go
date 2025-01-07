@@ -11,6 +11,9 @@ import (
 type Trade struct {
 	TxID           string          `json:"tx_id"`
 	PoolID         uint64          `json:"pool_id"`
+	BaseCoin       string          `json:"base_coin"`
+	QuoteCoin      string          `json:"quote_coin"`
+	Symbol         string          `json:"symbol"`
 	Taker          string          `json:"taker" `
 	Maker          string          `json:"maker"`
 	MakerApp       string          `json:"maker_app"`

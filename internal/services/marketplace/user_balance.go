@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"exapp-go/internal/entity"
-	"exapp-go/pkg/utils"
 )
 
 func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([]entity.UserBalance, error) {
@@ -15,18 +14,7 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 	if err != nil {
 		return nil, err
 	}
-	var poolIDs []uint64
-	for _, userBalance := range userBalances {
-		for _, poolBalance := range userBalance.PoolBalances {
-			poolIDs = append(poolIDs, poolBalance.PoolID)
-		}
-	}
-	poolIDs = utils.RemoveDuplicateUint64(poolIDs)
 
-	poolSymbols, err := s.db.GetPoolSymbolsByIDs(ctx, poolIDs)
-	if err != nil {
-		return nil, err
-	}
 	var result []entity.UserBalance
 	for _, ub := range userBalances {
 		var userBalance entity.UserBalance
@@ -36,13 +24,9 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		userBalance.Locked = ub.Locked.String()
 		userBalance.Locks = []entity.LockBalance{}
 		for _, poolBalance := range ub.PoolBalances {
-			poolSymbol, ok := poolSymbols[poolBalance.PoolID]
-			if !ok {
-				continue
-			}
 			userBalance.Locks = append(userBalance.Locks, entity.LockBalance{
 				PoolID:     poolBalance.PoolID,
-				PoolSymbol: poolSymbol,
+				PoolSymbol: poolBalance.PoolSymbol,
 				Balance:    poolBalance.Balance.String(),
 			})
 		}

@@ -56,7 +56,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 	pool, ok := s.poolCache[poolID]
 	if !ok {
-		pool, err := s.ckhRepo.GetPoolByID(ctx, poolID)
+		pool, err := s.repo.GetPoolByID(ctx, poolID)
 		if err != nil {
 			log.Printf("get pool failed: %v", err)
 			return nil
@@ -209,7 +209,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	poolID := cast.ToUint64(data.EV.PoolID)
 	pool, ok := s.poolCache[poolID]
 	if !ok {
-		pool, err := s.ckhRepo.GetPoolByID(ctx, poolID)
+		pool, err := s.repo.GetPoolByID(ctx, poolID)
 		if err != nil {
 			log.Printf("get pool failed: %v", err)
 			return nil
@@ -257,6 +257,9 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	trade := ckhdb.Trade{
 		TxID:           action.TrxID,
 		PoolID:         poolID,
+		BaseCoin:       pool.BaseCoin,
+		QuoteCoin:      pool.QuoteCoin,
+		Symbol:         pool.Symbol,
 		Price:          decimal.New(int64(cast.ToInt64(data.EV.Price)), -int32(pool.PricePrecision)),
 		Time:           tradeTime,
 		BlockNumber:    action.BlockNum,
@@ -363,7 +366,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 
 	return nil
 }
-
 
 func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	var data struct {

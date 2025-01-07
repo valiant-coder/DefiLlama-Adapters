@@ -52,11 +52,11 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 	if poolSymbolOrID == "" {
 		return entity.Pool{}, errors.New("pool symbol or id is required")
 	}
-	var pool *ckhdb.Pool
+	var pool *db.Pool
 	if poolID, err = strconv.ParseUint(poolSymbolOrID, 10, 64); err != nil {
-		pool, err = s.ckhRepo.GetPoolBySymbol(ctx, poolSymbolOrID)
+		pool, err = s.repo.GetPoolBySymbol(ctx, poolSymbolOrID)
 	} else {
-		pool, err = s.ckhRepo.GetPoolByID(ctx, poolID)
+		pool, err = s.repo.GetPoolByID(ctx, poolID)
 	}
 	if err != nil {
 		return entity.Pool{}, err

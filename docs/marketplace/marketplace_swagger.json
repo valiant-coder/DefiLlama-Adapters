@@ -757,7 +757,7 @@
                     "type": "string"
                 },
                 "maker_fee_rate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "max_flct": {
                     "type": "integer"
@@ -790,7 +790,7 @@
                     "type": "string"
                 },
                 "taker_fee_rate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "trading_time": {
                     "type": "string"

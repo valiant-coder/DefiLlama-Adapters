@@ -1,11 +1,13 @@
-package dex
+package cdex
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/eoscanada/eos-go"
+	"github.com/spf13/cast"
 )
 
 type Client struct {
@@ -24,31 +26,42 @@ func NewClient(nodeUrl string, dexContract string, poolContract string) *Client 
 }
 
 type EOSExtendedAsset struct {
-	Symbol string `json:"sym"`
+	Symbol   string `json:"sym"`
 	Contract string `json:"contract"`
 }
 
+func (e *EOSExtendedAsset) SymbolAndPrecision() (string, uint8) {
+	parts := strings.Split(e.Symbol, ",")
+	if len(parts) != 2 {
+		return "", 0
+	}
+	precision := cast.ToUint8(parts[0])
+	symbol := parts[1]
+	return symbol, precision
+}
+
+
 type Pool struct {
-	ID             uint64            `json:"id"`
-	Base           EOSExtendedAsset  `json:"base"`
-	Quote          EOSExtendedAsset  `json:"quote"`
-	AskingTime     string            `json:"asking_time"`
-	TradingTime    string            `json:"trading_time"`
-	MinAmount      uint64            `json:"min_amount"`
-	MaxFlct        uint64            `json:"max_flct"`
-	PricePrecision uint8             `json:"price_precision"`
-	TakerFeeRate   string            `json:"taker_fee_rate"`
-	MakerFeeRate   string            `json:"maker_fee_rate"`
-	Status         uint8             `json:"status"`
+	ID             uint64           `json:"id"`
+	Base           EOSExtendedAsset `json:"base"`
+	Quote          EOSExtendedAsset `json:"quote"`
+	AskingTime     string           `json:"asking_time"`
+	TradingTime    string           `json:"trading_time"`
+	MinAmount      uint64           `json:"min_amount"`
+	MaxFlct        uint64           `json:"max_flct"`
+	PricePrecision uint8            `json:"price_precision"`
+	TakerFeeRate   string           `json:"taker_fee_rate"`
+	MakerFeeRate   string           `json:"maker_fee_rate"`
+	Status         uint8            `json:"status"`
 }
 
 
 type Order struct {
-	ID       uint64    `json:"id"`
-	App      eos.Name  `json:"app"`
-	CID      string    `json:"cid"`
-	Trader   struct {
-		Actor eos.AccountName `json:"actor"`
+	ID     uint64   `json:"id"`
+	App    eos.Name `json:"app"`
+	CID    string   `json:"cid"`
+	Trader struct {
+		Actor      eos.AccountName    `json:"actor"`
 		Permission eos.PermissionName `json:"permission"`
 	} `json:"trader"`
 	Price    uint64    `json:"price"`
@@ -62,7 +75,6 @@ type Fund struct {
 	Base   eos.Asset `json:"base"`
 	Quote  eos.Asset `json:"quote"`
 }
-
 
 func (c *Client) GetPools(ctx context.Context) ([]Pool, error) {
 	request := eos.GetTableRowsRequest{

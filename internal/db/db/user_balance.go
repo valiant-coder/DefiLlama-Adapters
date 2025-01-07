@@ -9,10 +9,10 @@ import (
 )
 
 type UserPoolBalance struct {
-	PoolID  uint64          `json:"pool_id"`
-	Balance decimal.Decimal `json:"balance"`
+	PoolID     uint64          `json:"pool_id"`
+	PoolSymbol string          `json:"pool_symbol"`
+	Balance    decimal.Decimal `json:"balance"`
 }
-
 
 type UserBalance struct {
 	gorm.Model
@@ -29,6 +29,7 @@ func (UserBalance) TableName() string {
 }
 
 
+
 func (r *Repo) GetUserBalances(ctx context.Context, accountName string) ([]UserBalance, error) {
 	var userBalances []UserBalance
 	if err := r.WithContext(ctx).Where("account = ?", accountName).Find(&userBalances).Error; err != nil {
@@ -36,4 +37,3 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string) ([]UserB
 	}
 	return userBalances, nil
 }
-

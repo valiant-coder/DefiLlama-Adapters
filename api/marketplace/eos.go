@@ -29,9 +29,9 @@ func payCPU(c *gin.Context) {
 	}
 	response, err := pkeos.SignAndBroadcastByPayer(
 		c.Request.Context(),
-		eos.New(config.Conf().EOS.NodeURL),
+		eos.New(config.Conf().Eos.NodeURL),
 		request.SingleSignedTransaction,
-		config.Conf().EOS.PayerPrivateKey,
+		config.Conf().Eos.PayerPrivateKey,
 	)
 	if err != nil {
 		api.Error(c, err)

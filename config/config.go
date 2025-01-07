@@ -56,17 +56,19 @@ type Config struct {
 		} `yaml:"apple"`
 	} `yaml:"oauth2"`
 
-	EOS struct {
-		NodeURL         string `yaml:"node_url"`
-		PayerAccount    string `yaml:"payer_account"`
-		PayerPrivateKey string `yaml:"payer_private_key"`
-	} `yaml:"eos"`
+	Eos EosConfig `yaml:"eos"`
 
 	Hyperion HyperionConfig `yaml:"hyperion"`
 
 	Nsq NsqConfig `yaml:"nsq"`
 	
 	Cdex CdexConfig `yaml:"cdex"`
+}
+
+type EosConfig struct {
+	NodeURL         string `yaml:"node_url"`
+	PayerAccount    string `yaml:"payer_account"`
+	PayerPrivateKey string `yaml:"payer_private_key"`
 }
 
 type JWTConfig struct {
@@ -95,6 +97,8 @@ type CdexConfig struct {
 	EXAppContract string `yaml:"exapp_contract"`
 	HistoryContract string `yaml:"history_contract"`
 	EventContract string `yaml:"event_contract"`
+	DefaultPoolTakerFeeRate float64 `yaml:"default_pool_taker_fee_rate"`
+	DefaultPoolMakerFeeRate float64 `yaml:"default_pool_maker_fee_rate"`
 }
 
 var (

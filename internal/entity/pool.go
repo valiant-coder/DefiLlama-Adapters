@@ -15,8 +15,8 @@ type Pool struct {
 	TradingTime        Time      `json:"trading_time"`
 	MaxFluctuation     uint64    `json:"max_flct"`
 	PricePrecision     uint8     `json:"price_precision"`
-	TakerFeeRate       uint64    `json:"taker_fee_rate"`
-	MakerFeeRate       uint64    `json:"maker_fee_rate"`
+	TakerFeeRate       float64   `json:"taker_fee_rate"`
+	MakerFeeRate       float64   `json:"maker_fee_rate"`
 	Status             uint8     `json:"status"`
 	PoolStats          PoolStats `json:"pool_stats"`
 }

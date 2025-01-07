@@ -23,8 +23,9 @@ type Service struct {
 	ckhRepo   *ckhdb.ClickHouseRepo
 	repo      *db.Repo
 	worker    *nsqutil.Worker
-	poolCache map[uint64]*ckhdb.Pool
+	poolCache map[uint64]*db.Pool
 	cdexCfg   config.CdexConfig
+	eosCfg    config.EosConfig
 }
 
 func NewService() (*Service, error) {
@@ -37,6 +38,7 @@ func NewService() (*Service, error) {
 		repo:    repo,
 		nsqCfg:  cfg.Nsq,
 		cdexCfg: cfg.Cdex,
+		eosCfg:  cfg.Eos,
 	}, nil
 }
 
@@ -59,7 +61,7 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		log.Printf("Unmarshal action failed: %v", err)
 		return nil
 	}
-	if action.Act.Account != s.cdexCfg.EventContract {
+	if action.Act.Account != s.cdexCfg.EventContract && action.Act.Account != s.cdexCfg.PoolContract {
 		return nil
 	}
 	switch action.Act.Name {
@@ -69,6 +71,8 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return s.handleCancelOrder(action)
 	case "emitfilled":
 		return s.handleMatchOrder(action)
+	case "create":
+		return s.handleCreatePool(action)
 	default:
 		log.Printf("Unknown action: %s", action.Act.Name)
 		return nil

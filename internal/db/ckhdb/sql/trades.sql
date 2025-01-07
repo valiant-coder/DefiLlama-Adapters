@@ -1,6 +1,9 @@
 CREATE TABLE IF NOT EXISTS trades (
     tx_id String,
     pool_id UInt64,
+    base_coin String,
+    quote_coin String,
+    symbol String,
     taker String,
     maker String,
     maker_order_id UInt64,
