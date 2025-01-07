@@ -9,6 +9,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func init() {
+	addMigrateFunc(func(r *Repo) error {
+		return r.AutoMigrate(&OpenOrder{})
+	})
+}
+
 // OrderType represents the type of order
 type OrderType uint8
 
@@ -35,6 +41,9 @@ type OpenOrder struct {
 	BlockNumber      uint64          `json:"block_number"`
 	PoolID           uint64          `json:"pool_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
 	OrderID          uint64          `json:"order_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
+	PoolSymbol       string          `json:"pool_symbol"`
+	PoolBaseCoin     string          `json:"pool_base_coin"`
+	PoolQuoteCoin    string          `json:"pool_quote_coin"`
 	ClientOrderID    string          `json:"order_cid"`
 	Trader           string          `json:"trader" gorm:"index:idx_trader"`
 	Type             OrderType       `json:"type"`
@@ -87,9 +96,6 @@ func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.Query
 	}
 	return orders, total, nil
 }
-
-
-
 
 type OrderBook struct {
 	PoolID uint64      `json:"pool_id"`

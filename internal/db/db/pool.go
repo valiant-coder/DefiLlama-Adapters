@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+func init() {
+	addMigrateFunc(func(r *Repo) error {
+		return r.AutoMigrate(&Pool{})
+	})
+}
+
 type Pool struct {
 	PoolID             uint64     `json:"pool_id"`
 	BaseSymbol         string     `json:"base_symbol"`

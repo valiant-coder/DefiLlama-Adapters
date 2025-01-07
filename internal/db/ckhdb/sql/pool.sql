@@ -2,8 +2,6 @@
 
 
 
-
-
 CREATE TABLE IF NOT EXISTS pool_stats (
     pool_id UInt64,
     base_coin String,

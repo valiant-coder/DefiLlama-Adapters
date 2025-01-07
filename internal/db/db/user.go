@@ -9,6 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
+func init() {
+	addMigrateFunc(func(r *Repo) error {
+		return r.AutoMigrate(&User{})
+	})
+}
+
 type LoginMethod string
 
 const (
@@ -25,7 +31,7 @@ type User struct {
 }
 
 func (User) TableName() string {
-	return "td_users"
+	return "users"
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

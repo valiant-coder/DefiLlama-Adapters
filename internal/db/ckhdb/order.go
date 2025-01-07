@@ -36,6 +36,9 @@ type HistoryOrder struct {
 	CancelTxID       string          `json:"cancel_tx_id"`
 	CancelBlockNum   uint64          `json:"cancel_block_num"`
 	PoolID           uint64          `json:"pool_id"`
+	PoolSymbol       string          `json:"pool_symbol"`
+	PoolBaseCoin     string          `json:"pool_base_coin"`
+	PoolQuoteCoin    string          `json:"pool_quote_coin"`
 	OrderID          uint64          `json:"order_id"`
 	ClientOrderID    string          `json:"order_cid"`
 	Trader           string          `json:"trader"`
@@ -55,11 +58,9 @@ func (HistoryOrder) TableName() string {
 	return "history_orders"
 }
 
-
 func (r *ClickHouseRepo) InsertHistoryOrder(ctx context.Context, order *HistoryOrder) error {
 	return r.DB.WithContext(ctx).Create(order).Error
 }
-
 
 func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
 	queryParams.Order = "order_id desc"
@@ -80,7 +81,7 @@ func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *qu
 	queryParams.Del("type")
 
 	orders := []HistoryOrder{}
-	total, err := r.Query(ctx, &orders, queryParams, "pool_id", "trader","status","is_bid")
+	total, err := r.Query(ctx, &orders, queryParams, "pool_id", "trader", "status", "is_bid")
 	if err != nil {
 		return nil, 0, err
 	}

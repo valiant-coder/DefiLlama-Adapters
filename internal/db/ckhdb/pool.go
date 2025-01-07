@@ -9,7 +9,6 @@ import (
 )
 
 
-
 type PoolStats struct {
 	PoolID      uint64          `json:"pool_id"`
 	BaseCoin    string          `json:"base_coin"`
@@ -28,7 +27,6 @@ type PoolStats struct {
 func (PoolStats) TableName() string {
 	return "pool_stats"
 }
-
 
 
 func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryparams.QueryParams) ([]PoolStats, int64, error) {
@@ -76,6 +74,7 @@ func (r *ClickHouseRepo) UpdatePoolStats(ctx context.Context) error {
     `
 	return r.DB.WithContext(ctx).Exec(query).Error
 }
+
 
 func (r *ClickHouseRepo) GetPoolStats(ctx context.Context, poolID uint64) (*PoolStats, error) {
 	var stats PoolStats

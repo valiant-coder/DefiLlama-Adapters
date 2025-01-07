@@ -8,6 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+func init() {
+	addMigrateFunc(func(r *Repo) error {
+		return r.AutoMigrate(&UserBalance{})
+	})
+}
+
 type UserPoolBalance struct {
 	PoolID     uint64          `json:"pool_id"`
 	PoolSymbol string          `json:"pool_symbol"`
