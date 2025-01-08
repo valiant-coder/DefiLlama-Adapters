@@ -41,53 +41,53 @@ func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryp
 
 func (r *ClickHouseRepo) UpdatePoolStats(ctx context.Context) error {
 	query := `
-	INSERT INTO pool_stats (
-            pool_id,
-            base_coin,
-            quote_coin,
-            symbol,
-            high,
-            low,
-            trades,
-            volume,
-            quote_volume,
-            last_price,
-            change,
-			change_rate,
-            timestamp
-        )
-        WITH aggregated AS (
-            SELECT
-                t.pool_id,
-                t.base_coin,
-                t.quote_coin,
-                t.symbol,
-                MAX(price) as high,
-                MIN(price) as low,
-                COUNT(*) as trades,
-                SUM(base_quantity) as volume,
-                SUM(quote_quantity) as quote_volume,
-                LAST_VALUE(price) as last_price
-            FROM trades t
-            WHERE time >= NOW() - INTERVAL 24 HOUR
-            GROUP BY pool_id, base_coin, quote_coin, symbol
-        )
-        SELECT
-            pool_id,
-            base_coin,
-            quote_coin,
-            symbol,
-            high,
-            low,
-            trades,
-            volume,
-            quote_volume,
-            last_price,
-			(LAST_VALUE(last_price) OVER w) - (FIRST_VALUE(last_price) OVER w) as change,
-            ((LAST_VALUE(last_price) OVER w) / (FIRST_VALUE(last_price) OVER w) - 1) as change_rate,
-            now() as timestamp
-        FROM aggregated
-        WINDOW w AS (PARTITION BY pool_id ORDER BY pool_id);
+INSERT INTO pool_stats (
+    pool_id,
+    base_coin,
+    quote_coin,
+    symbol,
+    high,
+    low,
+    trades,
+    volume,
+    quote_volume,
+    last_price,
+    change,
+    change_rate,
+    timestamp
+)
+WITH aggregated AS (
+    SELECT
+        t.pool_id,
+        t.base_coin,
+        t.quote_coin,
+        t.symbol,
+        MAX(price) as high,
+        MIN(price) as low,
+        COUNT(*) as trades,
+        SUM(base_quantity) as volume,
+        SUM(quote_quantity) as quote_volume,
+        argMax(price, global_sequence) as last_price,
+        argMin(price, global_sequence) as first_price
+    FROM trades t
+    WHERE time >= NOW() - INTERVAL 24 HOUR 
+    GROUP BY pool_id, base_coin, quote_coin, symbol
+)
+SELECT
+    pool_id,
+    base_coin,
+    quote_coin,
+    symbol,
+    high,
+    low,
+    trades,
+    volume,
+    quote_volume,
+    last_price,
+    (last_price - first_price) as change,
+    (last_price / first_price - 1) as change_rate,
+    now() as timestamp
+FROM aggregated;
     `
 	return r.DB.WithContext(ctx).Exec(query).Error
 }
