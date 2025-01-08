@@ -14,7 +14,8 @@ type PoolStats struct {
 	QuoteCoin   string          `json:"quote_coin"`
 	Symbol      string          `json:"symbol"`
 	LastPrice   decimal.Decimal `json:"last_price" gorm:"type:Decimal(36,18)"`
-	PriceChange float64         `json:"price_change"`
+	Change      float64         `json:"change"`
+	ChangeRate  float64         `json:"change_rate"`
 	High        decimal.Decimal `json:"high" gorm:"type:Decimal(36,18)"`
 	Low         decimal.Decimal `json:"low" gorm:"type:Decimal(36,18)"`
 	Volume      decimal.Decimal `json:"volume" gorm:"type:Decimal(36,18)"`
@@ -51,7 +52,8 @@ func (r *ClickHouseRepo) UpdatePoolStats(ctx context.Context) error {
             volume,
             quote_volume,
             last_price,
-            price_change,
+            change,
+			change_rate,
             timestamp
         )
         WITH aggregated AS (
@@ -81,7 +83,8 @@ func (r *ClickHouseRepo) UpdatePoolStats(ctx context.Context) error {
             volume,
             quote_volume,
             last_price,
-            ((LAST_VALUE(last_price) OVER w) / (FIRST_VALUE(last_price) OVER w) - 1) as price_change,
+			(LAST_VALUE(last_price) OVER w) - (FIRST_VALUE(last_price) OVER w) as change,
+            ((LAST_VALUE(last_price) OVER w) / (FIRST_VALUE(last_price) OVER w) - 1) as change_rate,
             now() as timestamp
         FROM aggregated
         WINDOW w AS (PARTITION BY pool_id ORDER BY pool_id);

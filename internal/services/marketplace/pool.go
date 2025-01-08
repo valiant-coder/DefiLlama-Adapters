@@ -30,18 +30,19 @@ func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.Que
 	var result []entity.PoolStats
 	for _, pool := range pools {
 		result = append(result, entity.PoolStats{
-			PoolID:    pool.PoolID,
-			BaseCoin:  pool.BaseCoin,
-			QuoteCoin: pool.QuoteCoin,
-			Symbol:    pool.Symbol,
-			Change:    pool.PriceChange,
-			High:      pool.High.String(),
-			Low:       pool.Low.String(),
-			Volume:    pool.Volume.String(),
-			Turnover:  pool.QuoteVolume.String(),
-			Trades:    pool.Trades,
-			LastPrice: pool.LastPrice.String(),
-			UpdatedAt: entity.Time(pool.Timestamp),
+			PoolID:     pool.PoolID,
+			BaseCoin:   pool.BaseCoin,
+			QuoteCoin:  pool.QuoteCoin,
+			Symbol:     pool.Symbol,
+			Change:     pool.Change,
+			ChangeRate: pool.ChangeRate,
+			High:       pool.High.String(),
+			Low:        pool.Low.String(),
+			Volume:     pool.Volume.String(),
+			Turnover:   pool.QuoteVolume.String(),
+			Trades:     pool.Trades,
+			LastPrice:  pool.LastPrice.String(),
+			UpdatedAt:  entity.Time(pool.Timestamp),
 		})
 	}
 	return result, total, nil
@@ -90,7 +91,8 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 			BaseCoin:  pool.BaseCoin,
 			QuoteCoin: pool.QuoteCoin,
 			LastPrice: poolStats.LastPrice.String(),
-			Change:    poolStats.PriceChange,
+			Change:    poolStats.Change,
+			ChangeRate: poolStats.ChangeRate,
 			High:      poolStats.High.String(),
 			Low:       poolStats.Low.String(),
 			Volume:    poolStats.Volume.String(),

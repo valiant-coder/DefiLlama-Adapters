@@ -28,6 +28,7 @@ type PoolStats struct {
 	Symbol    string  `json:"symbol,omitempty"`
 	LastPrice string  `json:"last_price,omitempty"`
 	Change    float64 `json:"change"`
+	ChangeRate float64 `json:"change_rate"`
 	High      string  `json:"high"`
 	Low       string  `json:"low"`
 	Volume    string  `json:"volume"`
