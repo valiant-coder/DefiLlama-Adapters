@@ -109,7 +109,13 @@ const docTemplatemarketplace = `{
                     },
                     {
                         "type": "string",
-                        "description": "0market 1limit",
+                        "description": "0 buy 1 sell",
+                        "name": "side",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "0 market 1limit",
                         "name": "type",
                         "in": "query"
                     },
@@ -306,7 +312,7 @@ const docTemplatemarketplace = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Order ID",
+                        "description": "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -568,13 +574,16 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "order_amount": {
                     "type": "string"
                 },
                 "order_cid": {
                     "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
                 },
                 "order_price": {
                     "type": "string"
@@ -592,6 +601,9 @@ const docTemplatemarketplace = `{
                 "status": {
                     "description": "1partially_filled 2full_filled 3.canceled",
                     "type": "integer"
+                },
+                "trader": {
+                    "type": "string"
                 },
                 "type": {
                     "description": "0 market 1 limit",
@@ -612,13 +624,16 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "order_amount": {
                     "type": "string"
                 },
                 "order_cid": {
                     "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
                 },
                 "order_price": {
                     "type": "string"
@@ -636,6 +651,9 @@ const docTemplatemarketplace = `{
                 "status": {
                     "description": "1partially_filled 2full_filled 3.canceled",
                     "type": "integer"
+                },
+                "trader": {
+                    "type": "string"
                 },
                 "trades": {
                     "type": "array",
@@ -708,13 +726,16 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "order_amount": {
                     "type": "string"
                 },
                 "order_cid": {
                     "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
                 },
                 "order_price": {
                     "type": "string"
@@ -907,6 +928,9 @@ const docTemplatemarketplace = `{
                 "maker": {
                     "type": "string"
                 },
+                "maker_app_fee": {
+                    "type": "string"
+                },
                 "maker_fee": {
                     "type": "string"
                 },
@@ -926,6 +950,9 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "taker": {
+                    "type": "string"
+                },
+                "taker_app_fee": {
                     "type": "string"
                 },
                 "taker_fee": {
