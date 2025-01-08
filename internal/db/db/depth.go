@@ -21,6 +21,7 @@ const (
 // UpdateDepthParams parameters for updating depth
 type UpdateDepthParams struct {
 	PoolID uint64
+	UniqID string
 	IsBuy  bool
 	Price  float64
 	// Positive means add, negative means subtract
@@ -58,8 +59,19 @@ func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 
 // UpdateDepth updates depth data
 func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) error {
-	keys := []string{}
+	for _, param := range params {
+		if param.UniqID != "" {
+			exists, err := s.IsMember(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID)
+			if err != nil {
+				return fmt.Errorf("check uniq id error: %w", err)
+			}
+			if exists {
+				return nil
+			}
+		}
+	}
 
+	keys := []string{}
 	for _, param := range params {
 		side := "asks"
 		if param.IsBuy {
@@ -76,6 +88,13 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 
 	return s.Watch(ctx, func(tx *redis.Tx) error {
 		pipe := tx.Pipeline()
+
+		for _, param := range params {
+			if param.UniqID != "" {
+				pipe.SAdd(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID)
+			}
+		}
+
 		for _, param := range params {
 			side := "asks"
 			if param.IsBuy {
@@ -174,4 +193,14 @@ func parseDepth(result []string) ([][]string, error) {
 	}
 
 	return depths, nil
+}
+
+// ClearDepths clears depth data
+func (s *Repo) ClearDepths(ctx context.Context, poolID uint64) error {
+	keys := []string{
+		fmt.Sprintf("depth:%d:bids", poolID),
+		fmt.Sprintf("depth:%d:asks", poolID),
+		fmt.Sprintf("depth:%d:processed_ids", poolID),
+	}
+	return s.CacheDel(ctx, keys...)
 }

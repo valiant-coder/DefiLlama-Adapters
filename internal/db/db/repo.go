@@ -293,11 +293,11 @@ func (r *Repo) CacheExist(ctx context.Context, key string) (bool, error) {
 	}
 }
 
-func (r *Repo) CacheDel(ctx context.Context, key string) error {
+func (r *Repo) CacheDel(ctx context.Context, keys ...string) error {
 	if r.rdb.isCluster {
-		return r.rdb.cluster.Del(ctx, key).Err()
+		return r.rdb.cluster.Del(ctx, keys...).Err()
 	} else {
-		return r.rdb.single.Del(ctx, key).Err()
+		return r.rdb.single.Del(ctx, keys...).Err()
 	}
 }
 func (r *Repo) CacheSAdd(ctx context.Context, key string, members ...interface{}) error {
@@ -366,8 +366,12 @@ func (r *Repo) Watch(ctx context.Context, f func(tx *redis.Tx) error, keys ...st
 	}
 }
 
-func (r *Repo) RedisClient() *redis.Client {
-	return r.rdb.single
+func (r *Repo) IsMember(ctx context.Context, key string, member interface{}) (bool, error) {
+	if r.rdb.isCluster {
+		return r.rdb.cluster.SIsMember(ctx, key, member).Result()
+	} else {
+		return r.rdb.single.SIsMember(ctx, key, member).Result()
+	}
 }
 
 type MigrateFunc func(r *Repo) error

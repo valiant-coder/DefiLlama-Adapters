@@ -113,6 +113,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
+				UniqID: cast.ToString(action.GlobalSequence),
 				Price:  order.Price.InexactFloat64(),
 				Amount: placedQuantity.InexactFloat64(),
 				IsBuy:  newOrder.EV.IsBid,
@@ -311,6 +312,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
+				UniqID: cast.ToString(action.GlobalSequence),
 				Price:  trade.Price.InexactFloat64(),
 				Amount: -baseQuantity.InexactFloat64(),
 				IsBuy:  false,
@@ -325,6 +327,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
+				UniqID: cast.ToString(action.GlobalSequence),
 				Price:  trade.Price.InexactFloat64(),
 				Amount: -baseQuantity.InexactFloat64(),
 				IsBuy:  true,
@@ -431,6 +434,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
+				UniqID: cast.ToString(action.GlobalSequence),
 				Price:  order.Price.InexactFloat64(),
 				Amount: -canceledQuantity.InexactFloat64(),
 				IsBuy:  true,
@@ -444,6 +448,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
+				UniqID: cast.ToString(action.GlobalSequence),
 				Price:  order.Price.InexactFloat64(),
 				Amount: -canceledQuantity.InexactFloat64(),
 				IsBuy:  false,
