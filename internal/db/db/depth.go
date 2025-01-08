@@ -46,6 +46,7 @@ func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 				IsBuy:  param.IsBuy,
 				Price:  param.Price,
 				Amount: param.Amount,
+				UniqID: param.UniqID,
 			}
 		} else {
 			paramsMap[key].Amount += param.Amount
