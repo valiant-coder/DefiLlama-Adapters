@@ -828,7 +828,7 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "change": {
-                    "type": "number"
+                    "type": "string"
                 },
                 "change_rate": {
                     "type": "number"

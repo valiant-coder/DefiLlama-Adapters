@@ -14,7 +14,7 @@ type PoolStats struct {
 	QuoteCoin   string          `json:"quote_coin"`
 	Symbol      string          `json:"symbol"`
 	LastPrice   decimal.Decimal `json:"last_price" gorm:"type:Decimal(36,18)"`
-	Change      float64         `json:"change"`
+	Change      decimal.Decimal `json:"change" gorm:"type:Decimal(36,18)"`
 	ChangeRate  float64         `json:"change_rate"`
 	High        decimal.Decimal `json:"high" gorm:"type:Decimal(36,18)"`
 	Low         decimal.Decimal `json:"low" gorm:"type:Decimal(36,18)"`

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS pool_stats (
     last_price Decimal(36,18),
     volume Decimal(36,18),
     quote_volume Decimal(36,18),
-    change Float64,
+    change Decimal(36,18),
     change_rate Float64,
     timestamp DateTime,
 ) ENGINE = ReplacingMergeTree(timestamp)

@@ -22,17 +22,17 @@ type Pool struct {
 }
 
 type PoolStats struct {
-	PoolID    uint64  `json:"pool_id"`
-	BaseCoin  string  `json:"base_coin,omitempty"`
-	QuoteCoin string  `json:"quote_coin,omitempty"`
-	Symbol    string  `json:"symbol,omitempty"`
-	LastPrice string  `json:"last_price,omitempty"`
-	Change    float64 `json:"change"`
+	PoolID     uint64  `json:"pool_id"`
+	BaseCoin   string  `json:"base_coin,omitempty"`
+	QuoteCoin  string  `json:"quote_coin,omitempty"`
+	Symbol     string  `json:"symbol,omitempty"`
+	LastPrice  string  `json:"last_price,omitempty"`
+	Change     string  `json:"change"`
 	ChangeRate float64 `json:"change_rate"`
-	High      string  `json:"high"`
-	Low       string  `json:"low"`
-	Volume    string  `json:"volume"`
-	Turnover  string  `json:"turnover"`
-	Trades    uint64  `json:"trades"`
-	UpdatedAt Time    `json:"updated_at"`
+	High       string  `json:"high"`
+	Low        string  `json:"low"`
+	Volume     string  `json:"volume"`
+	Turnover   string  `json:"turnover"`
+	Trades     uint64  `json:"trades"`
+	UpdatedAt  Time    `json:"updated_at"`
 }
