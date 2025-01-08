@@ -55,10 +55,10 @@ func NewStreamClient(endpoint string) (*StreamClient, error) {
 type ActionStreamRequest struct {
 	Contract  string          `json:"contract"`
 	Action    string          `json:"action"`
-	Account   string          `json:"account,omitempty"`
-	StartFrom int64           `json:"start_from,omitempty"`
-	ReadUntil int64           `json:"read_until,omitempty"`
-	Filters   []RequestFilter `json:"filters,omitempty"`
+	Account   string          `json:"account"`
+	StartFrom int64           `json:"start_from"`
+	ReadUntil int64           `json:"read_until"`
+	Filters   []RequestFilter `json:"filters"`
 }
 
 type RequestFilter struct {
