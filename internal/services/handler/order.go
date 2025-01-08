@@ -114,8 +114,8 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			{
 				PoolID: poolID,
 				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  order.Price.InexactFloat64(),
-				Amount: placedQuantity.InexactFloat64(),
+				Price:  order.Price,
+				Amount: placedQuantity,
 				IsBuy:  newOrder.EV.IsBid,
 			},
 		})
@@ -313,14 +313,13 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			{
 				PoolID: poolID,
 				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  trade.Price.InexactFloat64(),
-				Amount: -baseQuantity.InexactFloat64(),
+				Price:  trade.Price,
+				Amount: baseQuantity.Neg(),
 				IsBuy:  false,
 			},
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
-			return nil
 		}
 	} else {
 		// Taker is seller, decrease buy depth
@@ -328,14 +327,13 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			{
 				PoolID: poolID,
 				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  trade.Price.InexactFloat64(),
-				Amount: -baseQuantity.InexactFloat64(),
+				Price:  trade.Price,
+				Amount: baseQuantity.Neg(),
 				IsBuy:  true,
 			},
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
-			return nil
 		}
 	}
 
@@ -435,8 +433,8 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 			{
 				PoolID: poolID,
 				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  order.Price.InexactFloat64(),
-				Amount: -canceledQuantity.InexactFloat64(),
+				Price:  order.Price,
+				Amount: canceledQuantity.Neg(),
 				IsBuy:  true,
 			},
 		})
@@ -449,8 +447,8 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 			{
 				PoolID: poolID,
 				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  order.Price.InexactFloat64(),
-				Amount: -canceledQuantity.InexactFloat64(),
+				Price:  order.Price,
+				Amount: canceledQuantity.Neg(),
 				IsBuy:  false,
 			},
 		})

@@ -6,6 +6,8 @@ import (
 	"exapp-go/pkg/utils"
 	"fmt"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestRepo_UpdateDepth(t *testing.T) {
@@ -13,7 +15,7 @@ func TestRepo_UpdateDepth(t *testing.T) {
 	config.Load("config/config_dev.yaml")
 	r := New()
 	err := r.UpdateDepth(context.Background(), []UpdateDepthParams{
-		{PoolID: 1, IsBuy: false, Price: 100.0, Amount: -20, },
+		{PoolID: 1, IsBuy: false, Price: decimal.NewFromFloat(100.0), Amount: decimal.NewFromInt(-20), UniqID: "1"},
 	})
 	if err != nil {
 		t.Fatal(err)

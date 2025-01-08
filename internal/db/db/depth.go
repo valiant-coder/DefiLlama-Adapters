@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/spf13/cast"
+	"github.com/shopspring/decimal"
 )
 
 type ActionType string
@@ -23,9 +23,9 @@ type UpdateDepthParams struct {
 	PoolID uint64
 	UniqID string
 	IsBuy  bool
-	Price  float64
+	Price  decimal.Decimal
 	// Positive means add, negative means subtract
-	Amount float64
+	Amount decimal.Decimal
 }
 
 type Depth struct {
@@ -39,7 +39,7 @@ func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 	var newParams []UpdateDepthParams
 	var paramsMap = make(map[string]*UpdateDepthParams)
 	for _, param := range params {
-		key := fmt.Sprintf("%d:%s:%f", param.PoolID, map[bool]string{true: "1", false: "0"}[param.IsBuy], param.Price)
+		key := fmt.Sprintf("%d:%s:%s", param.PoolID, map[bool]string{true: "1", false: "0"}[param.IsBuy], param.Price.String())
 		if _, ok := paramsMap[key]; !ok {
 			paramsMap[key] = &UpdateDepthParams{
 				PoolID: param.PoolID,
@@ -49,7 +49,7 @@ func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 				UniqID: param.UniqID,
 			}
 		} else {
-			paramsMap[key].Amount += param.Amount
+			paramsMap[key].Amount = paramsMap[key].Amount.Add(param.Amount)
 		}
 	}
 	for _, param := range paramsMap {
@@ -103,9 +103,9 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 			}
 			key := fmt.Sprintf("depth:%d:%s", param.PoolID, side)
 			// Use price as score, price string as query member
-			priceStr := cast.ToString(param.Price)
+			priceStr := param.Price.String()
 			// Get current amount at this price level
-			existingAmount := 0.0
+			var existingAmount decimal.Decimal
 			result, err := tx.ZRangeByScore(ctx, key, &redis.ZRangeBy{
 				Min: priceStr,
 				Max: priceStr,
@@ -116,27 +116,27 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 			}
 			// If existing data found, parse the amount
 			if len(result) > 0 {
-				existingAmount = cast.ToFloat64(strings.Split(result[0], ":")[1])
+				existingAmount = decimal.RequireFromString((strings.Split(result[0], ":")[1]))
 			}
 
 			// Calculate new amount
-			var newAmount float64
-			newAmount = existingAmount + param.Amount
-			if newAmount < 0 {
-				return fmt.Errorf("insufficient amount at price %.8f: existing %.8f, trying to reduce %.8f",
-					param.Price, existingAmount, param.Amount)
+			var newAmount decimal.Decimal
+			newAmount = existingAmount.Add(param.Amount)
+			if newAmount.LessThan(decimal.Zero) {
+				return fmt.Errorf("insufficient amount at price %s, existing %s, trying to reduce %s",
+					param.Price.String(), existingAmount.String(), param.Amount.String())
 			}
 			if len(result) > 0 {
 				member := result[0]
 				pipe.ZRem(ctx, key, member)
 			}
 
-			if newAmount > 0 {
+			if newAmount.GreaterThan(decimal.Zero) {
 				// Update depth, member format: "price:amount"
-				member := fmt.Sprintf("%s:%s", priceStr, cast.ToString(newAmount))
+				member := fmt.Sprintf("%s:%s", priceStr, newAmount.String())
 				pipe.ZAdd(ctx, key, redis.Z{
-					Score:  param.Price, // Use price as score for sorting
-					Member: member,      // Store data in "price:amount" format
+					Score:  param.Price.InexactFloat64(), // Use price as score for sorting
+					Member: member,                       // Store data in "price:amount" format
 				})
 			}
 
