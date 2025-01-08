@@ -6,6 +6,7 @@ import (
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
+	"exapp-go/pkg/utils"
 	"fmt"
 	"log"
 	"time"
@@ -20,7 +21,7 @@ func eosAssetToDecimal(a string) (decimal.Decimal, error) {
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
-	return decimal.New(int64(asset.Amount), int32(asset.Symbol.Precision)), nil
+	return decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)), nil
 }
 
 func (s *Service) handleCreateOrder(action hyperion.Action) error {
@@ -54,9 +55,10 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	poolID := cast.ToUint64(newOrder.EV.PoolID)
 	orderID := cast.ToUint64(newOrder.EV.OrderID)
 
+	var err error
 	pool, ok := s.poolCache[poolID]
 	if !ok {
-		pool, err := s.repo.GetPoolByID(ctx, poolID)
+		pool, err = s.repo.GetPoolByID(ctx, poolID)
 		if err != nil {
 			log.Printf("get pool failed: %v", err)
 			return nil
@@ -78,7 +80,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 	originalQuantity := placedQuantity.Add(executedQuantity)
 
-	createTime, err := time.Parse(time.RFC3339, newOrder.EV.Time)
+	createTime, err := utils.ParseTime(newOrder.EV.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
@@ -103,7 +105,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			ExecutedQuantity: executedQuantity,
 			Status:           db.OrderStatus(newOrder.EV.Status),
 		}
-		err := s.repo.InsertOpenOrder(ctx, &order)
+		err := s.repo.InsertOpenOrderIfNotExist(ctx, &order)
 		if err != nil {
 			log.Printf("insert open order failed: %v", err)
 			return nil
@@ -123,9 +125,15 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		return nil
 
 	} else {
-		var avgPrice decimal.Decimal
+		var avgPrice,price decimal.Decimal
 		if newOrder.EV.IsMarket {
-			trades, err := s.ckhRepo.GetTrades(ctx, orderID)
+			var orderTag string
+			if newOrder.EV.IsBid {
+				orderTag = fmt.Sprintf("%d-%d-%d", poolID, orderID, 0)
+			} else {
+				orderTag = fmt.Sprintf("%d-%d-%d", poolID, orderID, 1)
+			}
+			trades, err := s.ckhRepo.GetTrades(ctx, orderTag)
 			if err != nil {
 				log.Printf("get trades failed: %v", err)
 				return nil
@@ -139,8 +147,10 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				totalBaseQuantity = totalBaseQuantity.Add(trade.BaseQuantity)
 			}
 			avgPrice = totalQuoteQuantity.Div(totalBaseQuantity)
+			price = avgPrice
 		} else {
 			avgPrice = decimal.New(cast.ToInt64(newOrder.EV.Price), -int32(pool.PricePrecision))
+			price = avgPrice
 		}
 		order := ckhdb.HistoryOrder{
 			App:              newOrder.EV.App,
@@ -153,7 +163,8 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			OrderID:          orderID,
 			ClientOrderID:    newOrder.EV.OrderCID,
 			Trader:           newOrder.EV.Trader.Actor,
-			Price:            avgPrice,
+			Price:            price,
+			AvgPrice:         avgPrice,
 			IsBid:            newOrder.EV.IsBid,
 			OriginalQuantity: originalQuantity,
 			ExecutedQuantity: executedQuantity,
@@ -161,7 +172,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			IsMarket:         newOrder.EV.IsMarket,
 			CreatedAt:        createTime,
 		}
-		err = s.ckhRepo.InsertHistoryOrder(ctx, &order)
+		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &order)
 		if err != nil {
 			log.Printf("insert history order failed: %v", err)
 			return nil
@@ -212,10 +223,11 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	}
 
 	ctx := context.Background()
+	var err error
 	poolID := cast.ToUint64(data.EV.PoolID)
 	pool, ok := s.poolCache[poolID]
 	if !ok {
-		pool, err := s.repo.GetPoolByID(ctx, poolID)
+		pool, err = s.repo.GetPoolByID(ctx, poolID)
 		if err != nil {
 			log.Printf("get pool failed: %v", err)
 			return nil
@@ -254,7 +266,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	tradeTime, err := time.Parse(time.RFC3339, data.EV.Time)
+	tradeTime, err := utils.ParseTime(data.EV.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
@@ -287,7 +299,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		TakerIsBid:     data.EV.TakerIsBid,
 		CreatedAt:      time.Now(),
 	}
-	err = s.ckhRepo.InsertTrade(ctx, &trade)
+	err = s.ckhRepo.InsertTradeIfNotExist(ctx, &trade)
 	if err != nil {
 		log.Printf("insert trade failed: %v", err)
 		return nil
@@ -324,13 +336,13 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		}
 	}
 
-	makerOrder, err := s.repo.GetOpenOrder(ctx, cast.ToUint64(data.EV.MakerOrderID))
+	makerOrder, err := s.repo.GetOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
 	if err != nil {
 		log.Printf("get maker order failed: %v", err)
 		return nil
 	}
 
-	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(quoteQuantity)
+	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
 
 	// update maker order
@@ -341,7 +353,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			return nil
 		}
 	} else {
-		err = s.repo.DeleteOpenOrder(ctx, cast.ToUint64(data.EV.MakerOrderID))
+		err = s.repo.DeleteOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), makerOrder.IsBid)
 		if err != nil {
 			log.Printf("delete open order failed: %v", err)
 			return nil
@@ -357,6 +369,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			ClientOrderID:    makerOrder.ClientOrderID,
 			Trader:           makerOrder.Trader,
 			Price:            makerOrder.Price,
+			AvgPrice:         makerOrder.Price,
 			IsBid:            makerOrder.IsBid,
 			OriginalQuantity: makerOrder.OriginalQuantity,
 			ExecutedQuantity: makerOrder.ExecutedQuantity,
@@ -365,7 +378,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			CreateTxID:       makerOrder.TxID,
 			CreateBlockNum:   makerOrder.BlockNumber,
 		}
-		err = s.ckhRepo.InsertHistoryOrder(ctx, &historyOrder)
+		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
 		if err != nil {
 			log.Printf("insert history order failed: %v", err)
 			return nil
@@ -407,7 +420,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 
 	orderID := cast.ToUint64(data.EV.OrderID)
 	poolID := cast.ToUint64(data.EV.PoolID)
-	order, err := s.repo.GetOpenOrder(ctx, orderID)
+	order, err := s.repo.GetOpenOrder(ctx, poolID, orderID, data.EV.IsBid)
 	if err != nil {
 		log.Printf("get open order failed: %v", err)
 		return nil
@@ -442,12 +455,12 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		}
 	}
 	// delete open order
-	err = s.repo.DeleteOpenOrder(ctx, orderID)
+	err = s.repo.DeleteOpenOrder(ctx, poolID, orderID, order.IsBid)
 	if err != nil {
 		log.Printf("delete open order failed: %v", err)
 		return nil
 	}
-	canceledTime, err := time.Parse(time.RFC3339, data.EV.Time)
+	canceledTime, err := utils.ParseTime(data.EV.Time)
 	if err != nil {
 		log.Printf("parse action time failed: %v", err)
 		return nil
@@ -469,6 +482,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		ClientOrderID:    order.ClientOrderID,
 		Trader:           order.Trader,
 		Price:            order.Price,
+		AvgPrice:         order.Price,
 		IsBid:            order.IsBid,
 		OriginalQuantity: order.OriginalQuantity,
 		ExecutedQuantity: order.ExecutedQuantity,
@@ -482,7 +496,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		CanceledAt:       canceledTime,
 		Type:             ckhdb.OrderType(order.Type),
 	}
-	err = s.ckhRepo.InsertHistoryOrder(ctx, &historyOrder)
+	err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
 	if err != nil {
 		log.Printf("insert history order failed: %v", err)
 		return nil

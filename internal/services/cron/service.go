@@ -33,6 +33,10 @@ func (s *Service) SyncPoolStats() {
 	if err != nil {
 		log.Println("failed to update pool stats", err)
 	}
+	err = s.ckhdb.OptimizePoolStats(ctx)
+	if err != nil {
+		log.Println("failed to optimize pool stats", err)
+	}
 
 }
 

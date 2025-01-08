@@ -6,9 +6,9 @@ import (
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/cdex"
 	"exapp-go/pkg/hyperion"
+	"exapp-go/pkg/utils"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/spf13/cast"
 )
@@ -56,11 +56,11 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 	baseSymbol, basePrecision := pool.Base.SymbolAndPrecision()
 	quoteSymbol, quotePrecision := pool.Quote.SymbolAndPrecision()
 
-	askingTime, err := time.Parse(time.RFC3339, pool.AskingTime)
+	askingTime, err := utils.ParseTime(pool.AskingTime)
 	if err != nil {
 		return err
 	}
-	tradingTime, err := time.Parse(time.RFC3339, pool.TradingTime)
+	tradingTime, err := utils.ParseTime(pool.TradingTime)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		makerFeeRate = cast.ToFloat64(pool.MakerFeeRate) / 10000
 	}
 
-	err = s.repo.CreatePool(ctx, &db.Pool{
+	err = s.repo.CreatePoolIfNotExist(ctx, &db.Pool{
 		PoolID:             pool.ID,
 		BaseSymbol:         baseSymbol,
 		BaseContract:       pool.Base.Contract,
@@ -86,7 +86,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		QuoteContract:      pool.Quote.Contract,
 		QuoteCoin:          fmt.Sprintf("%s-%s", pool.Quote.Contract, quoteSymbol),
 		QuoteCoinPrecision: quotePrecision,
-		Symbol:             fmt.Sprintf("%s-%s-%s-%s", pool.Base.Contract, pool.Base.Symbol, pool.Quote.Contract, pool.Quote.Symbol),
+		Symbol:             fmt.Sprintf("%s-%s-%s-%s", pool.Base.Contract, baseSymbol, pool.Quote.Contract, quoteSymbol),
 		AskingTime:         askingTime,
 		TradingTime:        tradingTime,
 		MaxFluctuation:     pool.MaxFlct,

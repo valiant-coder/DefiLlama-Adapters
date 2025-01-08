@@ -8,7 +8,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-
 type PoolStats struct {
 	PoolID      uint64          `json:"pool_id"`
 	BaseCoin    string          `json:"base_coin"`
@@ -28,8 +27,9 @@ func (PoolStats) TableName() string {
 	return "pool_stats"
 }
 
-
 func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryparams.QueryParams) ([]PoolStats, int64, error) {
+	queryParams.TableName = "pool_stats"
+	queryParams.Order = "pool_id desc"
 	pools := []PoolStats{}
 	total, err := r.Query(ctx, &pools, queryParams, "base_coin", "quote_coin")
 	if err != nil {
@@ -40,41 +40,64 @@ func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryp
 
 func (r *ClickHouseRepo) UpdatePoolStats(ctx context.Context) error {
 	query := `
-        INSERT INTO pool_stats (
+	INSERT INTO pool_stats (
             pool_id,
-			base_coin,
-			quote_coin,
-			symbol,
-			high,
-			low,
-			trades,
-			volume,
-			quote_volume,
-			last_price,
-			price_change,
-			timestamp
+            base_coin,
+            quote_coin,
+            symbol,
+            high,
+            low,
+            trades,
+            volume,
+            quote_volume,
+            last_price,
+            price_change,
+            timestamp
+        )
+        WITH aggregated AS (
+            SELECT
+                t.pool_id,
+                t.base_coin,
+                t.quote_coin,
+                t.symbol,
+                MAX(price) as high,
+                MIN(price) as low,
+                COUNT(*) as trades,
+                SUM(base_quantity) as volume,
+                SUM(quote_quantity) as quote_volume,
+                LAST_VALUE(price) as last_price
+            FROM trades t
+            WHERE time >= NOW() - INTERVAL 24 HOUR
+            GROUP BY pool_id, base_coin, quote_coin, symbol
         )
         SELECT
-            t.pool_id,
-			t.base_coin,
-			t.quote_coin,
-			t.symbol,
-            MAX(price) as high,
-            MIN(price) as low,
-            COUNT(*) as trades,
-            SUM(base_quantity) as volume,
-            SUM(quote_quantity) as quote_volume,
-			LAST_VALUE(price) as last_price,
-            ((LAST_VALUE(price) OVER w) / (FIRST_VALUE(price) OVER w) - 1)  as price_change,
+            pool_id,
+            base_coin,
+            quote_coin,
+            symbol,
+            high,
+            low,
+            trades,
+            volume,
+            quote_volume,
+            last_price,
+            ((LAST_VALUE(last_price) OVER w) / (FIRST_VALUE(last_price) OVER w) - 1) as price_change,
             now() as timestamp
-        FROM trades t
-        WHERE time >= NOW() - INTERVAL 24 HOUR
-        GROUP BY pool_id
-        WINDOW w AS (PARTITION BY pool_id ORDER BY time)
+        FROM aggregated
+        WINDOW w AS (PARTITION BY pool_id ORDER BY pool_id);
     `
 	return r.DB.WithContext(ctx).Exec(query).Error
 }
 
+/*
+OPTIMIZE TABLE pool_stats FINAL;
+*/
+func (r *ClickHouseRepo) OptimizePoolStats(ctx context.Context) error {
+	query := `
+		OPTIMIZE TABLE pool_stats FINAL;
+	`
+	return r.DB.WithContext(ctx).Exec(query).Error
+}
 
 func (r *ClickHouseRepo) GetPoolStats(ctx context.Context, poolID uint64) (*PoolStats, error) {
 	var stats PoolStats

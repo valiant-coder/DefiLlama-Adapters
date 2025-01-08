@@ -36,7 +36,7 @@ type Kline struct {
 }
 
 func (Kline) TableName() string {
-	return "kline_view"
+	return "klines_view"
 }
 
 func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval string, start time.Time, end time.Time) ([]Kline, error) {

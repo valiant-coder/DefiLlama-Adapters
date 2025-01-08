@@ -38,7 +38,8 @@ func getOpenOrders(c *gin.Context) {
 // @Produce json
 // @Param pool_id query string false "pool_id"
 // @Param trader query string false "eos account name"
-// @Param type query string false "0market 1limit"
+// @Param side  query string false "0 buy 1 sell"
+// @Param type  query string false "0 market 1limit"
 // @Param status query string false "status"
 // @Success 200 {array} entity.HistoryOrder "history orders"
 // @Router /api/v1/history-orders [get]
@@ -58,12 +59,12 @@ func getHistoryOrders(c *gin.Context) {
 // @Tags order
 // @Accept json
 // @Produce json
-// @Param id path int true "Order ID"
+// @Param id path int true "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy"
 // @Success 200 {object} entity.HistoryOrderDetail "history order detail"
 // @Router /api/v1/orders/{id} [get]
 func getHistoryOrderDetail(c *gin.Context) {
 	id := c.Param("id")
-	order, err := marketplace.NewOrderService().GetHistoryOrderDetail(c.Request.Context(), cast.ToUint64(id))
+	order, err := marketplace.NewOrderService().GetHistoryOrderDetail(c.Request.Context(), id)
 	if err != nil {
 		api.Error(c, err)
 		return

@@ -40,6 +40,7 @@ func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.Que
 			Volume:    pool.Volume.String(),
 			Turnover:  pool.QuoteVolume.String(),
 			Trades:    pool.Trades,
+			LastPrice: pool.LastPrice.String(),
 			UpdatedAt: entity.Time(pool.Timestamp),
 		})
 	}

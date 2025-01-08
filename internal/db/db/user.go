@@ -27,7 +27,7 @@ type User struct {
 	Username    string      `gorm:"column:username;type:varchar(255);not null;"`
 	UID         string      `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid"`
 	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
-	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id	"`
+	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
 }
 
 func (User) TableName() string {

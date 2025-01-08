@@ -3,6 +3,7 @@ package ckhdb
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
+	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -30,27 +31,28 @@ const (
 
 // HistoryOrder represents a trading order in the DEX
 type HistoryOrder struct {
-	App              string          `json:"app"`
-	CreateTxID       string          `json:"create_tx_id"`
-	CreateBlockNum   uint64          `json:"create_block_num"`
-	CancelTxID       string          `json:"cancel_tx_id"`
-	CancelBlockNum   uint64          `json:"cancel_block_num"`
-	PoolID           uint64          `json:"pool_id"`
-	PoolSymbol       string          `json:"pool_symbol"`
-	PoolBaseCoin     string          `json:"pool_base_coin"`
-	PoolQuoteCoin    string          `json:"pool_quote_coin"`
-	OrderID          uint64          `json:"order_id"`
-	ClientOrderID    string          `json:"order_cid"`
-	Trader           string          `json:"trader"`
-	Type             OrderType       `json:"type"`
-	Price            decimal.Decimal `json:"price" gorm:"type:Decimal(36,18)"`
-	IsBid            bool            `json:"is_bid"`
-	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
-	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
-	Status           OrderStatus     `json:"status"`
-	IsMarket         bool            `json:"is_market"`
-	CreatedAt        time.Time       `json:"created_at"`
-	CanceledAt       time.Time       `json:"canceled_at"`
+	App              string          `gorm:"column:app;type:varchar(255)"`
+	CreateTxID       string          `gorm:"column:create_tx_id;type:varchar(255)"`
+	CreateBlockNum   uint64          `gorm:"column:create_block_num;type:bigint(20)"`
+	CancelTxID       string          `gorm:"column:cancel_tx_id;type:varchar(255)"`
+	CancelBlockNum   uint64          `gorm:"column:cancel_block_num;type:bigint(20)"`
+	PoolID           uint64          `gorm:"column:pool_id;type:bigint(20)"`
+	PoolSymbol       string          `gorm:"column:pool_symbol;type:varchar(255)"`
+	PoolBaseCoin     string          `gorm:"column:pool_base_coin;type:varchar(255)"`
+	PoolQuoteCoin    string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
+	OrderID          uint64          `gorm:"column:order_id;type:bigint(20)"`
+	ClientOrderID    string          `gorm:"column:order_cid;type:varchar(255)"`
+	Trader           string          `gorm:"column:trader;type:varchar(255)"`
+	Type             OrderType       `gorm:"column:type;type:tinyint(4)"`
+	Price            decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	AvgPrice         decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	IsBid            bool            `gorm:"column:is_bid;type:tinyint(1)"`
+	OriginalQuantity decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	ExecutedQuantity decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	Status           OrderStatus     `gorm:"column:status;type:tinyint(4)"`
+	IsMarket         bool            `gorm:"column:is_market;type:tinyint(1)"`
+	CreatedAt        time.Time       `gorm:"column:created_at;type:datetime"`
+	CanceledAt       time.Time       `gorm:"column:canceled_at;type:datetime"`
 }
 
 // TableName overrides the table name
@@ -58,12 +60,14 @@ func (HistoryOrder) TableName() string {
 	return "history_orders"
 }
 
-func (r *ClickHouseRepo) InsertHistoryOrder(ctx context.Context, order *HistoryOrder) error {
-	return r.DB.WithContext(ctx).Create(order).Error
+func (r *ClickHouseRepo) InsertOrderIfNotExist(ctx context.Context, order *HistoryOrder) error {
+
+	return r.DB.WithContext(ctx).Model(&HistoryOrder{}).Where("pool_id = ? and order_id = ? and is_bid = ?", order.PoolID, order.OrderID, order.IsBid).FirstOrCreate(order).Error
 }
 
 func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
-	queryParams.Order = "order_id desc"
+	queryParams.TableName = "history_orders"
+	queryParams.Order = "created_at desc"
 	side := queryParams.Get("side")
 	if side == "0" {
 		queryParams.Add("is_bid", "true")
@@ -93,13 +97,20 @@ type OrderWithTrades struct {
 	Trades []Trade `json:"trades"`
 }
 
-func (r *ClickHouseRepo) GetOrder(ctx context.Context, orderID uint64) (*OrderWithTrades, error) {
+func (r *ClickHouseRepo) GetOrder(ctx context.Context, poolID uint64, orderID uint64, isBid bool) (*OrderWithTrades, error) {
 	order := HistoryOrder{}
-	err := r.DB.WithContext(ctx).Where("order_id = ?", orderID).First(&order).Error
+	err := r.DB.WithContext(ctx).Where("pool_id = ? and order_id = ? and is_bid = ?", poolID, orderID, isBid).First(&order).Error
 	if err != nil {
 		return nil, err
 	}
-	trades, err := r.GetTrades(ctx, orderID)
+	var side uint8
+	if isBid {
+		side = 0
+	} else {
+		side = 1
+	}
+	orderTag := fmt.Sprintf("%d-%d-%d", poolID, orderID, side)
+	trades, err := r.GetTrades(ctx, orderTag)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,8 @@
 package entity
 
-import "exapp-go/internal/db/ckhdb"
+import (
+	"exapp-go/internal/db/ckhdb"
+)
 
 type Kline struct {
 	PoolID    uint64  `json:"pool_id"`

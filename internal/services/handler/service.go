@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	TopicActionSync   = "dex_action_sync"
-	ChannelActionSync = "dex_action_sync"
+	TopicActionSync   = "cdex_action_sync"
+	ChannelActionSync = "channel_cdex_action_sync"
 )
 
 type Service struct {
@@ -37,6 +37,7 @@ func NewService() (*Service, error) {
 		ckhRepo: ckhRepo,
 		repo:    repo,
 		nsqCfg:  cfg.Nsq,
+		poolCache: make(map[uint64]*db.Pool),
 		cdexCfg: cfg.Cdex,
 		eosCfg:  cfg.Eos,
 	}, nil
@@ -45,7 +46,11 @@ func NewService() (*Service, error) {
 func (s *Service) Start(ctx context.Context) error {
 	worker := nsqutil.NewWorker(ChannelActionSync, s.nsqCfg.Lookupd, s.nsqCfg.LookupTTl)
 	s.worker = worker
-	s.worker.Consume(TopicActionSync, s.HandleMessage)
+	err := s.worker.Consume(TopicActionSync, s.HandleMessage)
+	if err != nil {
+		log.Printf("Consume action sync failed: %v", err)
+		return err
+	}
 	<-ctx.Done()
 	return nil
 }

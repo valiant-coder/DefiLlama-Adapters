@@ -17,7 +17,9 @@ type TradeDetail struct {
 	BaseQuantity  string `json:"base_quantity"`
 	QuoteQuantity string `json:"quote_quantity"`
 	TakerFee      string `json:"taker_fee"`
+	TakerAppFee   string `json:"taker_app_fee"`
 	MakerFee      string `json:"maker_fee"`
+	MakerAppFee   string `json:"maker_app_fee"`
 	Timestamp     Time   `json:"timestamp"`
 }
 

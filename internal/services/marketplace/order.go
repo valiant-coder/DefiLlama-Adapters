@@ -2,10 +2,14 @@ package marketplace
 
 import (
 	"context"
+	"errors"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/queryparams"
+	"strings"
+
+	"github.com/spf13/cast"
 )
 
 type OrderService struct {
@@ -45,8 +49,12 @@ func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryp
 	return result, total, nil
 }
 
-func (s *OrderService) GetHistoryOrderDetail(ctx context.Context, id uint64) (entity.HistoryOrderDetail, error) {
-	order, err := s.ckhdbRepo.GetOrder(ctx, id)
+func (s *OrderService) GetHistoryOrderDetail(ctx context.Context, id string) (entity.HistoryOrderDetail, error) {
+	params := strings.Split(id, "-")
+	if len(params) != 3 {
+		return entity.HistoryOrderDetail{}, errors.New("invalid id")
+	}
+	order, err := s.ckhdbRepo.GetOrder(ctx, cast.ToUint64(params[0]), cast.ToUint64(params[1]), params[2] == "0")
 	if err != nil {
 		return entity.HistoryOrderDetail{}, err
 	}

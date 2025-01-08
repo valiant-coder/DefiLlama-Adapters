@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS trades (
     maker_order_cid String,
     taker_order_id UInt64,
     taker_order_cid String,
+    maker_order_tag String,
+    taker_order_tag String,
     maker_app String,
     taker_app String,
     price Decimal(36,18),

@@ -35,23 +35,23 @@ const (
 
 // Order represents a trading order in the DEX
 type OpenOrder struct {
-	TxID             string          `json:"tx_id"`
-	App              string          `json:"app"`
-	CreatedAt        time.Time       `json:"created_at"`
-	BlockNumber      uint64          `json:"block_number"`
-	PoolID           uint64          `json:"pool_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
-	OrderID          uint64          `json:"order_id" gorm:"uniqueIndex:idx_pool_id_order_id"`
-	PoolSymbol       string          `json:"pool_symbol"`
-	PoolBaseCoin     string          `json:"pool_base_coin"`
-	PoolQuoteCoin    string          `json:"pool_quote_coin"`
-	ClientOrderID    string          `json:"order_cid"`
-	Trader           string          `json:"trader" gorm:"index:idx_trader"`
-	Type             OrderType       `json:"type"`
-	Price            decimal.Decimal `json:"price" gorm:"type:Decimal(36,18)"`
-	IsBid            bool            `json:"is_bid"`
-	OriginalQuantity decimal.Decimal `json:"original_quantity" gorm:"type:Decimal(36,18)"`
-	ExecutedQuantity decimal.Decimal `json:"executed_quantity" gorm:"type:Decimal(36,18)"`
-	Status           OrderStatus     `json:"status"`
+	TxID             string          `gorm:"column:tx_id;type:varchar(255)"`
+	App              string          `gorm:"column:app;type:varchar(255)"`
+	CreatedAt        time.Time       `gorm:"column:created_at;type:timestamp"`
+	BlockNumber      uint64          `gorm:"column:block_number;type:bigint(20)"`
+	PoolID           uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:pool_id;type:bigint(20)"`
+	OrderID          uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:order_id;type:bigint(20)"`
+	PoolSymbol       string          `gorm:"column:pool_symbol;type:varchar(255)"`
+	PoolBaseCoin     string          `gorm:"column:pool_base_coin;type:varchar(255)"`
+	PoolQuoteCoin    string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
+	ClientOrderID    string          `gorm:"column:order_cid;type:varchar(255)"`
+	Trader           string          `gorm:"index:idx_trader;type:varchar(255)"`
+	Type             OrderType       `gorm:"column:type;type:tinyint(4)"`
+	Price            decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	IsBid            bool            `gorm:"column:is_bid;type:tinyint(1);uniqueIndex:idx_pool_id_order_id_is_bid"`
+	OriginalQuantity decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	ExecutedQuantity decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	Status           OrderStatus     `gorm:"column:status;type:tinyint(4)"`
 }
 
 // TableName overrides the table name
@@ -59,21 +59,21 @@ func (OpenOrder) TableName() string {
 	return "open_orders"
 }
 
-func (r *Repo) InsertOpenOrder(ctx context.Context, order *OpenOrder) error {
-	return r.WithContext(ctx).Create(order).Error
+func (r *Repo) InsertOpenOrderIfNotExist(ctx context.Context, order *OpenOrder) error {
+	return r.WithContext(ctx).Model(&OpenOrder{}).Where("pool_id = ? and order_id = ? and is_bid = ?", order.PoolID, order.OrderID, order.IsBid).FirstOrCreate(order).Error
 }
 
-func (r *Repo) DeleteOpenOrder(ctx context.Context, orderID uint64) error {
-	return r.WithContext(ctx).Where("order_id = ?", orderID).Delete(&OpenOrder{}).Error
+func (r *Repo) DeleteOpenOrder(ctx context.Context, poolID uint64, orderID uint64, isBid bool) error {
+	return r.WithContext(ctx).Where("pool_id = ? and order_id = ? and is_bid = ?", poolID, orderID, isBid).Delete(&OpenOrder{}).Error
 }
 
 func (r *Repo) UpdateOpenOrder(ctx context.Context, order *OpenOrder) error {
-	return r.WithContext(ctx).Save(order).Error
+	return r.WithContext(ctx).Model(&OpenOrder{}).Where("pool_id = ? and order_id = ? and is_bid = ?", order.PoolID, order.OrderID, order.IsBid).Updates(order).Error
 }
 
-func (r *Repo) GetOpenOrder(ctx context.Context, orderID uint64) (*OpenOrder, error) {
+func (r *Repo) GetOpenOrder(ctx context.Context, poolID uint64, orderID uint64, isBid bool) (*OpenOrder, error) {
 	order := OpenOrder{}
-	err := r.WithContext(ctx).Where("order_id = ?", orderID).First(&order).Error
+	err := r.WithContext(ctx).Where("pool_id = ? and order_id = ? and is_bid = ?", poolID, orderID, isBid).First(&order).Error
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (r *Repo) GetOpenOrder(ctx context.Context, orderID uint64) (*OpenOrder, er
 }
 
 func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]OpenOrder, int64, error) {
-	queryParams.Order = "order_id desc"
+	queryParams.Order = "created_at desc"
 	side := queryParams.Get("side")
 	if side == "0" {
 		queryParams.Add("is_bid", "true")
@@ -105,7 +105,7 @@ type OrderBook struct {
 
 func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*OrderBook, error) {
 	orders := []OpenOrder{}
-	err := r.WithContext(ctx).Where("pool_id = ? AND in_order_book = true", poolID).Find(&orders).Error
+	err := r.WithContext(ctx).Where("pool_id = ?", poolID).Find(&orders).Error
 	if err != nil {
 		return nil, err
 	}

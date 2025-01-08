@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS history_orders (
     trader String,
     type UInt8,
     price Decimal(36,18),
+    avg_price Decimal(36,18),
     is_bid Bool,
     original_quantity Decimal(36,18),
     executed_quantity Decimal(36,18),
@@ -21,7 +22,7 @@ CREATE TABLE IF NOT EXISTS history_orders (
     created_at DateTime,
     canceled_at DateTime
 ) ENGINE = ReplacingMergeTree()
-PRIMARY KEY (pool_id, order_id)
-ORDER BY (pool_id, order_id)
+PRIMARY KEY (pool_id, order_id, is_bid)
+ORDER BY (pool_id, order_id, is_bid)
 SETTINGS index_granularity = 8192;
 

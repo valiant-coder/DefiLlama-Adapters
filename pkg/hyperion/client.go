@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -83,10 +85,8 @@ type GetActionsResponse struct {
 	Actions       []Action       `json:"actions"`
 }
 
-
-
 type GetDeltasResponse struct {
-	QueryTimeMs float64 `json:"query_time_ms"`
+	QueryTimeMs          float64 `json:"query_time_ms"`
 	LastIndexedBlock     uint64  `json:"last_indexed_block"`
 	LastIndexedBlockTime string  `json:"last_indexed_block_time"`
 	Total                struct {
@@ -96,23 +96,18 @@ type GetDeltasResponse struct {
 	Deltas []Delta `json:"deltas"`
 }
 
-
-
-
 type Delta struct {
-	Timestamp string `json:"timestamp"`
-	Present int `json:"present"`
-	Code string `json:"code"`
-	Scope string `json:"scope"`
-	Table string `json:"table"`
-	PrimaryKey string `json:"primary_key"`
-	Payer string `json:"payer"`
-	BlockNum uint64 `json:"block_num"`
-	BlockID string `json:"block_id"`
-	Data json.RawMessage `json:"data"`
+	Timestamp  string          `json:"timestamp"`
+	Present    int             `json:"present"`
+	Code       string          `json:"code"`
+	Scope      string          `json:"scope"`
+	Table      string          `json:"table"`
+	PrimaryKey string          `json:"primary_key"`
+	Payer      string          `json:"payer"`
+	BlockNum   uint64          `json:"block_num"`
+	BlockID    string          `json:"block_id"`
+	Data       json.RawMessage `json:"data"`
 }
-
-
 
 func NewClient(endpoint string) *Client {
 	return &Client{
@@ -124,46 +119,51 @@ func NewClient(endpoint string) *Client {
 }
 
 func (c *Client) GetActions(ctx context.Context, req GetActionsRequest) (*GetActionsResponse, error) {
-	url := fmt.Sprintf("%s/v2/history/get_actions", c.endpoint)
+	baseUrl := fmt.Sprintf("%s/v2/history/get_actions", c.endpoint)
+
+	params := url.Values{}
+
 	if req.Account != "" {
-		url += fmt.Sprintf("?account=%s", req.Account)
+		params.Add("account", req.Account)
 	}
 	if req.Filter != "" {
-		url += fmt.Sprintf("&filter=%s", req.Filter)
+		params.Add("filter", req.Filter)
 	}
 	if req.Track != 0 {
-		url += fmt.Sprintf("&track=%d", req.Track)
+		params.Add("track", strconv.Itoa(req.Track))
 	}
 	if req.Skip != 0 {
-		url += fmt.Sprintf("&skip=%d", req.Skip)
+		params.Add("skip", strconv.Itoa(req.Skip))
 	}
 	if req.Limit != 0 {
-		url += fmt.Sprintf("&limit=%d", req.Limit)
+		params.Add("limit", strconv.Itoa(req.Limit))
 	}
 	if req.Sort != "" {
-		url += fmt.Sprintf("&sort=%s", req.Sort)
+		params.Add("sort", req.Sort)
 	}
 	if req.BlockNum != "" {
-		url += fmt.Sprintf("&block_num=%s", req.BlockNum)
+		params.Add("block_num", req.BlockNum)
 	}
 	if req.GlobalSequence != "" {
-		url += fmt.Sprintf("&global_sequence=%s", req.GlobalSequence)
+		params.Add("global_sequence", req.GlobalSequence)
 	}
 	if req.After != "" {
-		url += fmt.Sprintf("&after=%s", req.After)
+		params.Add("after", req.After)
 	}
 	if req.Before != "" {
-		url += fmt.Sprintf("&before=%s", req.Before)
+		params.Add("before", req.Before)
 	}
 	if req.Simple {
-		url += "&simple=true"
+		params.Add("simple", "true")
 	}
 	if req.NoBinary {
-		url += "&noBinary=true"
+		params.Add("noBinary", "true")
 	}
 	if req.CheckLib {
-		url += "&checkLib=true"
+		params.Add("checkLib", "true")
 	}
+
+	url := fmt.Sprintf("%s?%s", baseUrl, params.Encode())
 
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -198,7 +198,6 @@ type Token struct {
 	Amount    float64 `json:"amount"`
 	Contract  string  `json:"contract"`
 }
-
 
 func (c *Client) GetTokens(ctx context.Context, account string) ([]Token, error) {
 	url := fmt.Sprintf("%s/v2/history/get_tokens?account=%s", c.endpoint, account)

@@ -12,23 +12,23 @@ func init() {
 }
 
 type Pool struct {
-	PoolID             uint64     `json:"pool_id"`
-	BaseSymbol         string     `json:"base_symbol"`
-	BaseContract       string     `json:"base_contract"`
-	BaseCoin           string     `json:"base_coin"`
-	BaseCoinPrecision  uint8      `json:"base_coin_precision"`
-	QuoteSymbol        string     `json:"quote_symbol"`
-	QuoteContract      string     `json:"quote_contract"`
-	QuoteCoin          string     `json:"quote_coin"`
-	QuoteCoinPrecision uint8      `json:"quote_coin_precision"`
-	Symbol             string     `json:"symbol"`
-	AskingTime         time.Time  `json:"asking_time"`
-	TradingTime        time.Time  `json:"trading_time"`
-	MaxFluctuation     uint64     `json:"max_flct"`
-	PricePrecision     uint8      `json:"price_precision"`
-	TakerFeeRate       float64    `json:"taker_fee_rate"`
-	MakerFeeRate       float64    `json:"maker_fee_rate"`
-	Status             PoolStatus `json:"status"`
+	PoolID             uint64     `gorm:"column:pool_id;type:bigint(20);primaryKey;autoIncrement:false"`
+	BaseSymbol         string     `gorm:"column:base_symbol;type:varchar(255)"`
+	BaseContract       string     `gorm:"column:base_contract;type:varchar(255)"`
+	BaseCoin           string     `gorm:"column:base_coin;type:varchar(255)"`
+	BaseCoinPrecision  uint8      `gorm:"column:base_coin_precision;type:tinyint(4)"`
+	QuoteSymbol        string     `gorm:"column:quote_symbol;type:varchar(255)"`
+	QuoteContract      string     `gorm:"column:quote_contract;type:varchar(255)"`
+	QuoteCoin          string     `gorm:"column:quote_coin;type:varchar(255)"`
+	QuoteCoinPrecision uint8      `gorm:"column:quote_coin_precision;type:tinyint(4)"`
+	Symbol             string     `gorm:"column:symbol;type:varchar(255);index:idx_symbol"`
+	AskingTime         time.Time  `gorm:"column:asking_time;type:timestamp"`
+	TradingTime        time.Time  `gorm:"column:trading_time;type:timestamp"`
+	MaxFluctuation     uint64     `gorm:"column:max_flct;type:bigint(20)"`
+	PricePrecision     uint8      `gorm:"column:price_precision;type:tinyint(4)"`
+	TakerFeeRate       float64    `gorm:"column:taker_fee_rate;type:decimal(10,4)"`
+	MakerFeeRate       float64    `gorm:"column:maker_fee_rate;type:decimal(10,4)"`
+	Status             PoolStatus `gorm:"column:status;type:tinyint(4)"`
 }
 
 type PoolStatus uint8
@@ -43,8 +43,12 @@ func (Pool) TableName() string {
 	return "pools"
 }
 
-func (r *Repo) CreatePool(ctx context.Context, pool *Pool) error {
-	return r.WithContext(ctx).Create(pool).Error
+func (r *Repo) CreatePoolIfNotExist(ctx context.Context, pool *Pool) error {
+	var existPool Pool
+	if err := r.WithContext(ctx).Where("pool_id = ?", pool.PoolID).First(&existPool).Error; err != nil {
+		return r.WithContext(ctx).Create(pool).Error
+	}
+	return nil
 }
 
 func (r *Repo) GetPoolBySymbol(ctx context.Context, symbol string) (*Pool, error) {

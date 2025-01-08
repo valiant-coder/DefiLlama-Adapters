@@ -3,10 +3,12 @@ package entity
 import (
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
+	"fmt"
 )
 
 type OpenOrder struct {
-	ID            uint64 `json:"id"`
+	ID            string `json:"id"`
+	OrderID       uint64 `json:"order_id"`
 	PoolID        uint64 `json:"pool_id"`
 	ClientOrderID string `json:"order_cid"`
 	Trader        string `json:"trader"`
@@ -28,7 +30,8 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 		side = 0
 	}
 	return OpenOrder{
-		ID:             openOrder.OrderID,
+		ID:             fmt.Sprintf("%d-%d-%d", openOrder.PoolID, openOrder.OrderID, side),
+		OrderID:        openOrder.OrderID,
 		PoolID:         openOrder.PoolID,
 		ClientOrderID:  openOrder.ClientOrderID,
 		Trader:         openOrder.Trader,
@@ -43,12 +46,13 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 	}
 }
 
-
 type HistoryOrder struct {
 	OrderTime     Time   `json:"order_time"`
-	ID            uint64 `json:"id"`
+	ID            string `json:"id"`
+	OrderID       uint64 `json:"order_id"`
 	PoolID        uint64 `json:"pool_id"`
 	ClientOrderID string `json:"order_cid"`
+	Trader        string `json:"trader"`
 	// 0 buy 1 sell
 	Side uint8 `json:"side"`
 	// 0 market 1 limit
@@ -71,18 +75,21 @@ func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
 	if order.IsMarket {
 		orderType = 0
 	}
+
 	return HistoryOrder{
 		OrderTime:      Time(order.CreatedAt),
-		ID:             order.OrderID,
+		ID:             fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
+		OrderID:        order.OrderID,
 		PoolID:         order.PoolID,
 		ClientOrderID:  order.ClientOrderID,
+		Trader:         order.Trader,
 		Side:           side,
 		Type:           orderType,
 		OrderPrice:     order.Price.String(),
-		AvgPrice:       order.Price.String(),
+		AvgPrice:       order.AvgPrice.String(),
 		OrderAmount:    order.OriginalQuantity.String(),
 		ExecutedAmount: order.ExecutedQuantity.String(),
-		FilledTotal:    order.ExecutedQuantity.Mul(order.Price).String(),
+		FilledTotal:    order.ExecutedQuantity.Mul(order.AvgPrice).String(),
 		Status:         uint8(order.Status),
 	}
 }
@@ -91,7 +98,6 @@ type HistoryOrderDetail struct {
 	HistoryOrder
 	Trades []TradeDetail `json:"trades"`
 }
-
 
 func HistoryOrderDetailFromDB(order *ckhdb.OrderWithTrades) HistoryOrderDetail {
 	return HistoryOrderDetail{
@@ -117,7 +123,9 @@ func TradeDetailFromDB(trades []ckhdb.Trade) []TradeDetail {
 			BaseQuantity:  trade.BaseQuantity.String(),
 			QuoteQuantity: trade.QuoteQuantity.String(),
 			TakerFee:      trade.TakerFee.String(),
+			TakerAppFee:   trade.TakerAppFee.String(),
 			MakerFee:      trade.MakerFee.String(),
+			MakerAppFee:   trade.MakerAppFee.String(),
 			Timestamp:     Time(trade.Time),
 		})
 	}
