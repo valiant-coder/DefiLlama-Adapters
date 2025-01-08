@@ -34,7 +34,7 @@ var SyncCmd = &cli.Command{
 
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
-
+			log.Println("syncer service start ...")
 			if err := srv.Start(ctx); err != nil {
 				log.Printf("syncer service start failed: %v\n", err)
 			}

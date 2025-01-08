@@ -24,6 +24,7 @@ var CronCmd = &cli.Command{
 		ckhdb.New()
 
 		service := cron.NewService()
+		log.Println("cron service start ...")
 		return service.Run()
 	},
 }
