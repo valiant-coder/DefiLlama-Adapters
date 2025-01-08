@@ -16,7 +16,7 @@ type Kline struct {
 	Count     int64   `json:"count"`
 }
 
-func DbKlineToEntity(kline ckhdb.Kline) Kline {
+func DbKlineToEntity(kline *ckhdb.Kline) Kline {
 	return Kline{
 		PoolID:    kline.PoolID,
 		Timestamp: Time(kline.IntervalStart),

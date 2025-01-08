@@ -39,8 +39,21 @@ func (Kline) TableName() string {
 	return "klines_view"
 }
 
-func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval string, start time.Time, end time.Time) ([]Kline, error) {
-	var klines []Kline
+func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval string, start time.Time, end time.Time) ([]*Kline, error) {
+	var klines []*Kline
 	err := r.WithContext(ctx).Where("pool_id = ? AND interval = ? AND interval_start >= ? AND interval_start <= ?", poolID, interval, start, end).Find(&klines).Error
 	return klines, err
+}
+
+
+func (r *ClickHouseRepo) GetRecentClosePrice(ctx context.Context, poolID uint64, interval string, start time.Time) (decimal.Decimal, error) {
+	var klines []Kline
+	err := r.WithContext(ctx).Where("pool_id = ? AND interval = ? AND interval_start < ?", poolID, interval, start).Order("interval_start DESC").Limit(1).Find(&klines).Error
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+	if len(klines) == 0 {
+		return decimal.Decimal{}, nil
+	}
+	return klines[0].Close, nil
 }
