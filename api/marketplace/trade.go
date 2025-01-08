@@ -22,6 +22,9 @@ func getLatestTrades(c *gin.Context) {
 
 	poolID := cast.ToUint64(c.Query("pool_id"))
 	limit := cast.ToInt(c.Query("limit"))
+	if limit == 0 {
+		limit = 10
+	}
 
 	tradeService := marketplace.NewTradeService()
 	trades, err := tradeService.GetLatestTrades(c.Request.Context(), poolID, limit)
