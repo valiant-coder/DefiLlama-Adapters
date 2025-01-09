@@ -98,8 +98,8 @@ func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.Query
 }
 
 
-func (r *Repo) GetOpenOrderByTrader(ctx context.Context, trader string) ([]OpenOrder, error) {
-	var orders []OpenOrder
+func (r *Repo) GetOpenOrderByTrader(ctx context.Context, trader string) ([]*OpenOrder, error) {
+	var orders []*OpenOrder
 	err := r.WithContext(ctx).Where("trader = ?", trader).Find(&orders).Error
 	if err != nil {
 		return nil, err

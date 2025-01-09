@@ -45,101 +45,97 @@ type UserBalanceWithLock struct {
 	PoolBalance []*UserPoolBalance
 }
 
+func (r *Repo) updateLockedCoins(lockedCoins map[string][]*UserPoolBalance, coin string, poolID uint64, poolSymbol string, lockedAmount decimal.Decimal) {
+	poolBalances, exists := lockedCoins[coin]
+	if !exists {
+		lockedCoins[coin] = []*UserPoolBalance{{
+			PoolID:     poolID,
+			PoolSymbol: poolSymbol,
+			Balance:    lockedAmount,
+		}}
+		return
+	}
+
+	for _, balance := range poolBalances {
+		if balance.PoolID == poolID {
+			balance.Balance = balance.Balance.Add(lockedAmount)
+			return
+		}
+	}
+
+	lockedCoins[coin] = append(poolBalances, &UserPoolBalance{
+		PoolID:     poolID,
+		PoolSymbol: poolSymbol,
+		Balance:    lockedAmount,
+	})
+}
+
+func (r *Repo) calculateOrderLock(order *OpenOrder) (string, decimal.Decimal) {
+	if order.IsBid {
+		return order.PoolQuoteCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity).Mul(order.Price)
+	}
+	return order.PoolBaseCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity)
+}
+
 func (r *Repo) GetUserBalances(ctx context.Context, accountName string) ([]UserBalanceWithLock, error) {
+	// 1. Get user balances
 	var userBalances []UserBalance
 	if err := r.WithContext(ctx).Where("account = ?", accountName).Find(&userBalances).Error; err != nil {
 		return nil, err
 	}
-	userBalanceMap := make(map[string]decimal.Decimal)
+
+	// Build balance mapping
+	userBalanceMap := make(map[string]decimal.Decimal, len(userBalances))
 	for _, balance := range userBalances {
 		userBalanceMap[balance.Coin] = balance.Balance
 	}
 
+	// 2. Get open orders
 	openOrders, err := r.GetOpenOrderByTrader(ctx, accountName)
 	if err != nil {
 		return nil, err
 	}
+
+	// 3. Calculate locked amounts
 	lockedCoins := make(map[string][]*UserPoolBalance)
 	for _, order := range openOrders {
-		if order.IsBid {
-			poolBalances, ok := lockedCoins[order.PoolQuoteCoin]
-			if !ok {
-				lockedCoins[order.PoolQuoteCoin] = append(lockedCoins[order.PoolQuoteCoin], &UserPoolBalance{
-					PoolID:     order.PoolID,
-					PoolSymbol: order.PoolSymbol,
-					Balance:    order.OriginalQuantity.Sub(order.ExecutedQuantity).Mul(order.Price),
-				})
-			} else {
-				found := false
-				for _, poolBalance := range poolBalances {
-					if poolBalance.PoolID == order.PoolID {
-						poolBalance.Balance = poolBalance.Balance.Add(order.OriginalQuantity.Sub(order.ExecutedQuantity).Mul(order.Price))
-						found = true
-					}
-				}
-				if !found {
-					lockedCoins[order.PoolQuoteCoin] = append(lockedCoins[order.PoolQuoteCoin], &UserPoolBalance{
-						PoolID:     order.PoolID,
-						PoolSymbol: order.PoolSymbol,
-						Balance:    order.OriginalQuantity.Sub(order.ExecutedQuantity).Mul(order.Price),
-					})
-				}
-			}
-			
-		} else {
-			poolBalances, ok := lockedCoins[order.PoolBaseCoin]
-			if !ok {
-				lockedCoins[order.PoolBaseCoin] = append(lockedCoins[order.PoolBaseCoin], &UserPoolBalance{
-					PoolID:     order.PoolID,
-					PoolSymbol: order.PoolSymbol,
-					Balance:    order.OriginalQuantity.Sub(order.ExecutedQuantity),
-				})
-			} else {
-				found := false
-				for _, poolBalance := range poolBalances {
-					if poolBalance.PoolID == order.PoolID {
-						poolBalance.Balance = poolBalance.Balance.Add(order.OriginalQuantity.Sub(order.ExecutedQuantity))
-						found = true
-					}
-				}
-				if !found {
-					lockedCoins[order.PoolBaseCoin] = append(lockedCoins[order.PoolBaseCoin], &UserPoolBalance{
-						PoolID:     order.PoolID,
-						PoolSymbol: order.PoolSymbol,
-						Balance:    order.OriginalQuantity.Sub(order.ExecutedQuantity),
-					})
-				}
-			}
-		}
+		coin, lockedAmount := r.calculateOrderLock(order)
+		r.updateLockedCoins(lockedCoins, coin, order.PoolID, order.PoolSymbol, lockedAmount)
 	}
 
-	result := []UserBalanceWithLock{}
-	for coin, balances := range userBalanceMap {
+	// 4. Build result
+	result := make([]UserBalanceWithLock, 0, len(userBalanceMap)+len(lockedCoins))
+
+	// Handle coins with existing balances
+	for coin, balance := range userBalanceMap {
 		var totalLocked decimal.Decimal
-		if lockedCoin, ok := lockedCoins[coin]; ok {
-			for _, balance := range lockedCoin {
-				totalLocked = totalLocked.Add(balance.Balance)
-			}
+		poolBalances := lockedCoins[coin]
+		for _, pb := range poolBalances {
+			totalLocked = totalLocked.Add(pb.Balance)
 		}
+
 		result = append(result, UserBalanceWithLock{
 			UserBalance: UserBalance{
 				Account: accountName,
 				Coin:    coin,
-				Balance: balances,
+				Balance: balance,
 			},
 			Locked:      totalLocked,
-			PoolBalance: lockedCoins[coin],
+			PoolBalance: poolBalances,
 		})
 	}
 
-	for coin, lockedCoin := range lockedCoins {
-		if _, ok := userBalanceMap[coin]; ok {
+	// Handle coins with only locked amounts
+	for coin, poolBalances := range lockedCoins {
+		if _, exists := userBalanceMap[coin]; exists {
 			continue
 		}
+
 		var totalLocked decimal.Decimal
-		for _, balance := range lockedCoin {
-			totalLocked = totalLocked.Add(balance.Balance)
+		for _, pb := range poolBalances {
+			totalLocked = totalLocked.Add(pb.Balance)
 		}
+
 		result = append(result, UserBalanceWithLock{
 			UserBalance: UserBalance{
 				Account: accountName,
@@ -147,9 +143,10 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string) ([]UserB
 				Balance: decimal.Zero,
 			},
 			Locked:      totalLocked,
-			PoolBalance: lockedCoins[coin],
+			PoolBalance: poolBalances,
 		})
 	}
+
 	return result, nil
 }
 
