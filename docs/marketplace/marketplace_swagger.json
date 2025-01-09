@@ -707,9 +707,6 @@
                 },
                 "pool_symbol": {
                     "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
                 }
             }
         },
@@ -992,7 +989,7 @@
                 "balance": {
                     "type": "string"
                 },
-                "contract": {
+                "coin": {
                     "type": "string"
                 },
                 "locked": {
@@ -1003,9 +1000,6 @@
                     "items": {
                         "$ref": "#/definitions/entity.LockBalance"
                     }
-                },
-                "symbol": {
-                    "type": "string"
                 }
             }
         },

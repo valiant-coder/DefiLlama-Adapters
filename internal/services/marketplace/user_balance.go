@@ -18,12 +18,11 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 	var result []entity.UserBalance
 	for _, ub := range userBalances {
 		var userBalance entity.UserBalance
-		userBalance.Contract = ub.Contract
-		userBalance.Symbol = ub.Symbol
+		userBalance.Coin = ub.Coin
 		userBalance.Balance = ub.Balance.String()
 		userBalance.Locked = ub.Locked.String()
 		userBalance.Locks = []entity.LockBalance{}
-		for _, poolBalance := range ub.PoolBalances {
+		for _, poolBalance := range ub.PoolBalance {
 			userBalance.Locks = append(userBalance.Locks, entity.LockBalance{
 				PoolID:     poolBalance.PoolID,
 				PoolSymbol: poolBalance.PoolSymbol,

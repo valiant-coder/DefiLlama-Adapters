@@ -710,9 +710,6 @@ const docTemplatemarketplace = `{
                 },
                 "pool_symbol": {
                     "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
                 }
             }
         },
@@ -995,7 +992,7 @@ const docTemplatemarketplace = `{
                 "balance": {
                     "type": "string"
                 },
-                "contract": {
+                "coin": {
                     "type": "string"
                 },
                 "locked": {
@@ -1006,9 +1003,6 @@ const docTemplatemarketplace = `{
                     "items": {
                         "$ref": "#/definitions/entity.LockBalance"
                     }
-                },
-                "symbol": {
-                    "type": "string"
                 }
             }
         },

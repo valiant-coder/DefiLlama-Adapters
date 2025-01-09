@@ -182,6 +182,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 	}
 
+	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
 	return nil
 }
 
@@ -388,6 +389,8 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		}
 
 	}
+	go s.updateUserTokenBalance(data.EV.Maker.Actor)
+	go s.updateUserTokenBalance(data.EV.Taker.Actor)
 
 	return nil
 }
@@ -507,6 +510,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		log.Printf("insert history order failed: %v", err)
 		return nil
 	}
+	go s.updateUserTokenBalance(data.EV.Trader.Actor)
 
 	return nil
 }

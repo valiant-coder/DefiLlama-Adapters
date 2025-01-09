@@ -41,7 +41,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.33.0
 	google.golang.org/api v0.126.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/datatypes v1.2.5
 	gorm.io/driver/clickhouse v0.6.1
 )
 

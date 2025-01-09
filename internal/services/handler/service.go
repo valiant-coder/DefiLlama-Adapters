@@ -26,6 +26,7 @@ type Service struct {
 	poolCache map[uint64]*db.Pool
 	cdexCfg   config.CdexConfig
 	eosCfg    config.EosConfig
+	hyperionCfg config.HyperionConfig
 }
 
 func NewService() (*Service, error) {
@@ -40,6 +41,7 @@ func NewService() (*Service, error) {
 		poolCache: make(map[uint64]*db.Pool),
 		cdexCfg: cfg.Cdex,
 		eosCfg:  cfg.Eos,
+		hyperionCfg: cfg.Hyperion,
 	}, nil
 }
 
