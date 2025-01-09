@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type Client struct {
@@ -193,14 +195,14 @@ type GetTokensResponse struct {
 }
 
 type Token struct {
-	Symbol    string  `json:"symbol"`
-	Precision uint8   `json:"precision"`
-	Amount    float64 `json:"amount"`
-	Contract  string  `json:"contract"`
+	Symbol    string          `json:"symbol"`
+	Precision uint8           `json:"precision"`
+	Amount    decimal.Decimal `json:"amount"`
+	Contract  string          `json:"contract"`
 }
 
 func (c *Client) GetTokens(ctx context.Context, account string) ([]Token, error) {
-	url := fmt.Sprintf("%s/v2/history/get_tokens?account=%s", c.endpoint, account)
+	url := fmt.Sprintf("%s/v2/state/get_tokens?account=%s", c.endpoint, account)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
