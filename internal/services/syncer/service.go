@@ -41,7 +41,10 @@ func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig, cdex
 	}
 	if lastBlockNum == 0 {
 		lastBlockNum = hyperionCfg.StartBlock
+	} else {
+		lastBlockNum = lastBlockNum + 1
 	}
+
 	return &Service{
 		hyperionClient: hyperionClient,
 		streamClient:   streamClient,
@@ -60,13 +63,20 @@ func (s *Service) Start(ctx context.Context) error {
 
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
-			Contract: s.cdexCfg.PoolContract,
-			StartFrom: int64(s.hyperionCfg.StartBlock),
-
+			Contract:  s.cdexCfg.PoolContract,
+			Action:    "*",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum)+1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
 		},
 		{
-			Contract: s.cdexCfg.EventContract,
-			StartFrom: int64(s.hyperionCfg.StartBlock),
+			Contract:  s.cdexCfg.EventContract,
+			Action:    "*",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum)+1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
 		},
 	})
 
@@ -103,7 +113,7 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf("%s:*,%s:*",s.cdexCfg.PoolContract, s.cdexCfg.EventContract),
+			Filter:  fmt.Sprintf("%s:*,%s:*", s.cdexCfg.PoolContract, s.cdexCfg.EventContract),
 			Limit:   s.hyperionCfg.BatchSize,
 			Sort:    "asc",
 			After:   strconv.FormatUint(s.lastBlockNum, 10),
