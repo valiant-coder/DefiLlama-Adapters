@@ -126,7 +126,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		return nil
 
 	} else {
-		var avgPrice,price decimal.Decimal
+		var avgPrice, price decimal.Decimal
 		if newOrder.EV.IsMarket {
 			var orderTag string
 			if newOrder.EV.IsBid {
@@ -140,7 +140,8 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				return nil
 			}
 			if len(trades) == 0 {
-				return fmt.Errorf("no trades found for market order: %v", newOrder.EV.OrderID)
+				log.Printf("no trades found for market order: %v", orderTag)
+				return nil
 			}
 			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
 			for _, trade := range trades {
@@ -220,7 +221,8 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		} `json:"ev"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
-		return fmt.Errorf("unmarshal match order data failed: %w", err)
+		log.Printf("unmarshal match order data failed: %v", err)
+		return nil
 	}
 
 	ctx := context.Background()
@@ -409,7 +411,8 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
-		return fmt.Errorf("unmarshal cancel order data failed: %w", err)
+		log.Printf("unmarshal cancel order data failed: %v", err)
+		return nil
 	}
 
 	ctx := context.Background()
