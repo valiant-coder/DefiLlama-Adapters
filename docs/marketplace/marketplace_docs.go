@@ -529,6 +529,29 @@ const docTemplatemarketplace = `{
                     }
                 }
             }
+        },
+        "/system-info": {
+            "get": {
+                "description": "Get system information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Get system information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.SystemInfo"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -759,6 +782,14 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.PayCPU": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Pool": {
             "type": "object",
             "properties": {
@@ -889,6 +920,17 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "transaction_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "pay_cpu": {
+                    "$ref": "#/definitions/entity.PayCPU"
+                },
+                "version": {
                     "type": "string"
                 }
             }

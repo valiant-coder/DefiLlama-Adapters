@@ -77,6 +77,7 @@ func Run(addr string, release bool) error {
 	v1.GET("/balances", getUserBalances)
 
 
+	r.GET("/system-info", getSystemInfo)
 	r.POST("/eos/pay-cpu", payCPU)
 
 	jwtParams := api.InitParams()
