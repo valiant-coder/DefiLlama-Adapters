@@ -2,6 +2,7 @@ package eos
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"testing"
@@ -47,7 +48,7 @@ func TestFeeDelegation(t *testing.T) {
 	resp, err := SignAndBroadcastByPayer(
 		ctx,
 		api,
-		string(singleSignedTxBytes),
+		hex.EncodeToString(singleSignedTxBytes),
 		payerPrivateKey,
 	)
 	if err != nil {

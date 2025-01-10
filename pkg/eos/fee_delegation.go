@@ -2,6 +2,8 @@ package eos
 
 import (
 	"context"
+	"encoding/hex"
+	"log"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/ecc"
@@ -69,7 +71,6 @@ func CreateUserSignedTransaction(
 		return nil, err
 	}
 
-
 	return signedTx, nil
 }
 
@@ -81,12 +82,15 @@ func SignAndBroadcastByPayer(
 	payerPrivateKey string,
 ) (*eos.PushTransactionFullResp, error) {
 
-	tx := &eos.SignedTransaction{}
-	err := eos.UnmarshalBinary([]byte(singleSignedTx), tx)
+	txBytes, err := hex.DecodeString(singleSignedTx)
 	if err != nil {
 		return nil, err
 	}
-
+	tx := &eos.SignedTransaction{}
+	err = eos.UnmarshalBinary(txBytes, tx)
+	if err != nil {
+		return nil, err
+	}
 
 	payerKey, err := ecc.NewPrivateKey(payerPrivateKey)
 	if err != nil {
@@ -103,6 +107,7 @@ func SignAndBroadcastByPayer(
 
 	fullSignedTx, err := api.Signer.Sign(ctx, tx, []byte(txOpts.ChainID), payerKey.PublicKey())
 	if err != nil {
+		log.Printf("sign transaction failed: %v", err)
 		return nil, err
 	}
 
@@ -113,11 +118,13 @@ func SignAndBroadcastByPayer(
 
 	packed, err := fullSignedTx.Pack(eos.CompressionNone)
 	if err != nil {
+		log.Printf("pack transaction failed: %v", err)
 		return nil, err
 	}
 
 	resp, err := api.PushTransaction(ctx, packed)
 	if err != nil {
+		log.Printf("push transaction failed: %v", err)
 		return nil, err
 	}
 	return resp, nil
