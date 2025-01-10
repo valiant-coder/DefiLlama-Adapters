@@ -104,7 +104,7 @@ func (s *Service) Start(ctx context.Context) error {
 			if !ok {
 				return fmt.Errorf("action channel closed")
 			}
-
+			log.Printf("receive action: %+v", action)
 			if err := s.publishAction(action); err != nil {
 				log.Printf("Publish action failed: %v", err)
 				continue
