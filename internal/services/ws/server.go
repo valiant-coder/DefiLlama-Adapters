@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"exapp-go/config"
+	"exapp-go/pkg/nsqutil"
+
 	"github.com/spf13/cast"
 	"github.com/zishang520/engine.io/types"
 	"github.com/zishang520/socket.io/v2/socket"
@@ -14,6 +17,7 @@ import (
 type Server struct {
 	io     *socket.Server
 	pusher *Pusher
+	worker *nsqutil.Worker
 }
 
 // Create new WebSocket server
@@ -31,14 +35,29 @@ func NewServer(ctx context.Context) *Server {
 
 	io := socket.NewServer(nil, c)
 
+	nsqCfg := config.Conf().Nsq
 	server := &Server{
-		io: io,
+		io:     io,
+		worker: nsqutil.NewWorker("ws", nsqCfg.Lookupd, nsqCfg.LookupTTl),
 	}
 	server.pusher = NewPusher(ctx, server)
+
+	// Setup NSQ message handlers
+	server.setupNSQHandlers()
+
 	// Set connection handler
 	io.On("connection", server.handleConnection)
 
 	return server
+}
+
+// Setup NSQ message handlers
+func (s *Server) setupNSQHandlers() {
+	// Handle market data updates
+	s.worker.Consume("market_updates", s.handleNSQMessage)
+
+	// Handle user data updates
+	s.worker.Consume("user_updates", s.handleNSQMessage)
 }
 
 // Get HTTP handler
@@ -64,7 +83,24 @@ func (s *Server) handleConnection(args ...interface{}) {
 			return
 		}
 		account := args[0].(string)
-		s.authenticateUser(client, account)
+		// Add user to dedicated room
+		accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
+		client.Join(accountRoom)
+
+		// Send authentication success message
+		client.Emit("authenticated", map[string]interface{}{
+			"status":  "success",
+			"account": account,
+		})
+	})
+
+	client.On("unauthenticate", func(args ...interface{}) {
+		if len(args) < 1 {
+			return
+		}
+		account := args[0].(string)
+		accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
+		client.Leave(accountRoom)
 	})
 
 	// Subscribe to kline data
@@ -138,20 +174,6 @@ func (s *Server) handleConnection(args ...interface{}) {
 
 }
 
-// Authenticate user
-func (s *Server) authenticateUser(client *socket.Socket, account string) {
-
-	// Add user to dedicated room
-	accountRoom := socket.Room(fmt.Sprintf("user:%s", account))
-	client.Join(accountRoom)
-
-	// Send authentication success message
-	client.Emit("authenticated", map[string]interface{}{
-		"status": "success",
-		"userId": account,
-	})
-}
-
 // Push message to specific user
 func (s *Server) PushToAccount(account string, event string, data interface{}) {
 	accountRoom := socket.Room(fmt.Sprintf("user:%s", account))
@@ -166,6 +188,9 @@ func (s *Server) Broadcast(sub Subscription, event string, data interface{}) {
 
 // Close server
 func (s *Server) Close() error {
+	if s.worker != nil {
+		s.worker.StopConsume()
+	}
 	s.pusher.Stop()
 	s.io.Close(nil)
 	return nil

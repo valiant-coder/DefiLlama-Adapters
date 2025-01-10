@@ -2,60 +2,17 @@ package ws
 
 import (
 	"context"
-	"time"
+	"exapp-go/internal/entity"
 )
-
-// Kline data
-type KlineData struct {
-	PoolID    uint64    `json:"pool_id"`
-	Interval  string    `json:"interval"`
-	OpenTime  time.Time `json:"open_time"`
-	Open      string    `json:"open"`
-	High      string    `json:"high"`
-	Low       string    `json:"low"`
-	Close     string    `json:"close"`
-	Volume    string    `json:"volume"`
-	CloseTime time.Time `json:"close_time"`
-}
-
-// Depth data
-type DepthData struct {
-	PoolID uint64     `json:"pool_id"`
-	Bids   [][]string `json:"bids"` // [price, quantity]
-	Asks   [][]string `json:"asks"` // [price, quantity]
-}
-
-// Trade data
-type TradeData struct {
-	PoolID   uint64    `json:"pool_id"`
-	ID       int64     `json:"id"`
-	Price    string    `json:"price"`
-	Quantity string    `json:"quantity"`
-	Side     string    `json:"side"` // buy/sell
-	Time     time.Time `json:"time"`
-}
 
 // Balance update
 type BalanceUpdate struct {
-	UserID    int64  `json:"user_id"`
-	Asset     string `json:"asset"`
-	Available string `json:"available"`
-	Frozen    string `json:"frozen"`
 }
 
 // Order update
 type OrderUpdate struct {
-	UserID    int64     `json:"user_id"`
-	OrderID   int64     `json:"order_id"`
-	PoolID    uint64    `json:"pool_id"`
-	Side      string    `json:"side"`
-	Type      string    `json:"type"`
-	Status    string    `json:"status"`
-	Price     string    `json:"price"`
-	Quantity  string    `json:"quantity"`
-	Executed  string    `json:"executed"`
-	Remaining string    `json:"remaining"`
-	Time      time.Time `json:"time"`
+	Account string `json:"account"`
+	ID      string `json:"id"`
 }
 
 // Push service
@@ -76,7 +33,7 @@ func NewPusher(ctx context.Context, server *Server) *Pusher {
 }
 
 // Push kline data
-func (p *Pusher) PushKline(data KlineData) {
+func (p *Pusher) PushKline(data entity.Kline) {
 	sub := Subscription{
 		PoolID:   data.PoolID,
 		Type:     SubTypeKline,
@@ -86,7 +43,7 @@ func (p *Pusher) PushKline(data KlineData) {
 }
 
 // Push depth data
-func (p *Pusher) PushDepth(data DepthData) {
+func (p *Pusher) PushDepth(data entity.Depth) {
 	sub := Subscription{
 		PoolID: data.PoolID,
 		Type:   SubTypeDepth,
@@ -95,7 +52,7 @@ func (p *Pusher) PushDepth(data DepthData) {
 }
 
 // Push trade data
-func (p *Pusher) PushTrade(data TradeData) {
+func (p *Pusher) PushTrade(data entity.Trade) {
 	sub := Subscription{
 		PoolID: data.PoolID,
 		Type:   SubTypeTrades,
@@ -104,10 +61,10 @@ func (p *Pusher) PushTrade(data TradeData) {
 }
 
 // Push balance update
-func (p *Pusher) PushBalanceUpdate(account string, update BalanceUpdate) {
+func (p *Pusher) PushBalanceUpdate(account string) {
 	// Push balance update to specific user
 	event := "balance_update"
-	p.pushToUser(account, event, update)
+	p.pushToUser(account, event, BalanceUpdate{})
 }
 
 // Push order update

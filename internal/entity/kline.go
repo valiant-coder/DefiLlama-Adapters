@@ -6,6 +6,7 @@ import (
 
 type Kline struct {
 	PoolID    uint64  `json:"pool_id"`
+	Interval  string  `json:"interval"`
 	Timestamp Time    `json:"timestamp"`
 	Open      float64 `json:"open"`
 	High      float64 `json:"high"`
@@ -20,6 +21,7 @@ func DbKlineToEntity(kline *ckhdb.Kline) Kline {
 	return Kline{
 		PoolID:    kline.PoolID,
 		Timestamp: Time(kline.IntervalStart),
+		Interval:  string(kline.Interval),
 		Open:      kline.Open.InexactFloat64(),
 		High:      kline.High.InexactFloat64(),
 		Low:       kline.Low.InexactFloat64(),

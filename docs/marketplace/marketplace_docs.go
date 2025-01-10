@@ -702,6 +702,9 @@ const docTemplatemarketplace = `{
                 "high": {
                     "type": "number"
                 },
+                "interval": {
+                    "type": "string"
+                },
                 "low": {
                     "type": "number"
                 },
