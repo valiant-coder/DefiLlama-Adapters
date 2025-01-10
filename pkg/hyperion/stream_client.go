@@ -95,6 +95,13 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 		if messageType != "action_trace" {
 			return
 		}
+		mode, ok := message["mode"].(string)
+		if !ok {
+			return
+		}
+		if mode != "live" {
+			return
+		}
 
 		var action Action
 		if err := json.Unmarshal([]byte(message["message"].(string)), &action); err != nil {
