@@ -45,6 +45,29 @@ func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval s
 	return klines, err
 }
 
+func (r *ClickHouseRepo) GetLatestKlines(ctx context.Context, poolID uint64) ([]*Kline, error) {
+	var klines []*Kline
+	err := r.WithContext(ctx).Raw(`
+		SELECT 
+			k.*
+		FROM klines_view k
+		INNER JOIN (
+			SELECT 
+				pool_id,
+				interval,
+				MAX(interval_start) as max_interval_start
+			FROM klines_view
+			WHERE pool_id = ?
+			GROUP BY pool_id, interval
+		) latest 
+		ON k.pool_id = latest.pool_id 
+		AND k.interval = latest.interval 
+		AND k.interval_start = latest.max_interval_start
+		WHERE k.pool_id = ?
+		ORDER BY k.interval;
+	`, poolID, poolID).Scan(&klines).Error
+	return klines, err
+}
 
 func (r *ClickHouseRepo) GetRecentClosePrice(ctx context.Context, poolID uint64, interval string, start time.Time) (decimal.Decimal, error) {
 	var klines []Kline

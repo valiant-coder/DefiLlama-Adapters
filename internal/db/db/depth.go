@@ -58,16 +58,23 @@ func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 	return newParams
 }
 
+type DepthChange struct {
+	PoolID uint64
+	IsBuy  bool
+	Price  decimal.Decimal
+	Amount decimal.Decimal
+}
+
 // UpdateDepth updates depth data
-func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) error {
+func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) ([]DepthChange, error) {
 	for _, param := range params {
 		if param.UniqID != "" {
 			exists, err := s.IsMember(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID)
 			if err != nil {
-				return fmt.Errorf("check uniq id error: %w", err)
+				return nil, fmt.Errorf("check uniq id error: %w", err)
 			}
 			if exists {
-				return nil
+				return nil, nil
 			}
 		}
 	}
@@ -87,7 +94,9 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 	// Aggregate params
 	params = aggregateParams(params)
 
-	return s.Watch(ctx, func(tx *redis.Tx) error {
+	var changes []DepthChange
+
+	err := s.Watch(ctx, func(tx *redis.Tx) error {
 		pipe := tx.Pipeline()
 
 		for _, param := range params {
@@ -102,7 +111,6 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 				side = "bids"
 			}
 			key := fmt.Sprintf("depth:%d:%s", param.PoolID, side)
-			// Use price as score, price string as query member
 			priceStr := param.Price.String()
 			// Get current amount at this price level
 			var existingAmount decimal.Decimal
@@ -126,6 +134,15 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 				return fmt.Errorf("insufficient amount at price %s, existing %s, trying to reduce %s",
 					param.Price.String(), existingAmount.String(), param.Amount.String())
 			}
+
+			// append depth changes
+			changes = append(changes, DepthChange{
+				PoolID: param.PoolID,
+				IsBuy:  param.IsBuy,
+				Price:  param.Price,
+				Amount: newAmount,
+			})
+
 			if len(result) > 0 {
 				member := result[0]
 				pipe.ZRem(ctx, key, member)
@@ -144,6 +161,8 @@ func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) erro
 		_, err := pipe.Exec(ctx)
 		return err
 	}, keys...)
+
+	return changes, err
 }
 
 // GetDepth retrieves depth data

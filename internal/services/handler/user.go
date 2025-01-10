@@ -32,5 +32,7 @@ func (s *Service) updateUserTokenBalance(account string) error {
 			continue
 		}
 	}
+	go s.publisher.PublishBalanceUpdate(account)
+
 	return nil
 }

@@ -110,14 +110,12 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			log.Printf("insert open order failed: %v", err)
 			return nil
 		}
-		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  order.Price,
-				Amount: placedQuantity,
-				IsBuy:  newOrder.EV.IsBid,
-			},
+		err = s.updateDepth(ctx, db.UpdateDepthParams{
+			PoolID: poolID,
+			UniqID: cast.ToString(action.GlobalSequence),
+			Price:  order.Price,
+			Amount: placedQuantity,
+			IsBuy:  newOrder.EV.IsBid,
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
@@ -183,6 +181,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	}
 
 	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
+	go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[newOrder.EV.IsBid]))
 	return nil
 }
 
@@ -303,37 +302,33 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		TakerIsBid:     data.EV.TakerIsBid,
 		CreatedAt:      time.Now(),
 	}
-	err = s.ckhRepo.InsertTradeIfNotExist(ctx, &trade)
+	err = s.newTrade(ctx, &trade)
 	if err != nil {
-		log.Printf("insert trade failed: %v", err)
+		log.Printf("new trade failed: %v", err)
 		return nil
 	}
 
 	// update depth
 	if data.EV.TakerIsBid {
 		// Taker is buyer, decrease sell depth
-		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  trade.Price,
-				Amount: baseQuantity.Neg(),
-				IsBuy:  false,
-			},
+		err = s.updateDepth(ctx, db.UpdateDepthParams{
+			PoolID: poolID,
+			UniqID: cast.ToString(action.GlobalSequence),
+			Price:  trade.Price,
+			Amount: baseQuantity.Neg(),
+			IsBuy:  false,
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
 		}
 	} else {
 		// Taker is seller, decrease buy depth
-		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  trade.Price,
-				Amount: baseQuantity.Neg(),
-				IsBuy:  true,
-			},
+		err = s.updateDepth(ctx, db.UpdateDepthParams{
+			PoolID: poolID,
+			UniqID: cast.ToString(action.GlobalSequence),
+			Price:  trade.Price,
+			Amount: baseQuantity.Neg(),
+			IsBuy:  true,
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
@@ -391,6 +386,8 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	}
 	go s.updateUserTokenBalance(data.EV.Maker.Actor)
 	go s.updateUserTokenBalance(data.EV.Taker.Actor)
+	go s.publisher.PublishOrderUpdate(data.EV.Maker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.MakerOrderID), map[bool]string{true: "0", false: "1"}[!data.EV.TakerIsBid]))
+	go s.publisher.PublishOrderUpdate(data.EV.Taker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.TakerOrderID), map[bool]string{true: "0", false: "1"}[!data.EV.TakerIsBid]))
 
 	return nil
 }
@@ -435,28 +432,24 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 
 	// update depth
 	if data.EV.IsBid {
-		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  order.Price,
-				Amount: canceledQuantity.Neg(),
-				IsBuy:  true,
-			},
+		err = s.updateDepth(ctx, db.UpdateDepthParams{
+			PoolID: poolID,
+			UniqID: cast.ToString(action.GlobalSequence),
+			Price:  order.Price,
+			Amount: canceledQuantity.Neg(),
+			IsBuy:  true,
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
 			return nil
 		}
 	} else {
-		err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				UniqID: cast.ToString(action.GlobalSequence),
-				Price:  order.Price,
-				Amount: canceledQuantity.Neg(),
-				IsBuy:  false,
-			},
+		err = s.updateDepth(ctx, db.UpdateDepthParams{
+			PoolID: poolID,
+			UniqID: cast.ToString(action.GlobalSequence),
+			Price:  order.Price,
+			Amount: canceledQuantity.Neg(),
+			IsBuy:  false,
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
@@ -511,6 +504,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		return nil
 	}
 	go s.updateUserTokenBalance(data.EV.Trader.Actor)
-
+	go s.publisher.PublishOrderUpdate(data.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[data.EV.IsBid]))
 	return nil
 }

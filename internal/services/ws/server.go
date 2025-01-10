@@ -9,6 +9,7 @@ import (
 	"exapp-go/config"
 	"exapp-go/pkg/nsqutil"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/zishang520/engine.io/types"
 	"github.com/zishang520/socket.io/v2/socket"
@@ -52,7 +53,7 @@ func NewServer(ctx context.Context) *Server {
 	nsqCfg := config.Conf().Nsq
 	server := &Server{
 		io:     io,
-		worker: nsqutil.NewWorker("ws", nsqCfg.Lookupd, nsqCfg.LookupTTl),
+		worker: nsqutil.NewWorker(uuid.New().String(), nsqCfg.Lookupd, nsqCfg.LookupTTl),
 	}
 	server.pusher = NewPusher(ctx, server)
 
