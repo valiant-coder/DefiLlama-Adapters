@@ -153,8 +153,8 @@ func (s *Server) handleConnection(args ...interface{}) {
 		if len(args) < 2 {
 			return
 		}
-		poolID := uint64(args[0].(float64))
-		subType := args[1].(string)
+		subType := args[0].(string)
+		poolID := uint64(args[1].(float64))
 		var room string
 		if subType == string(SubTypeKline) {
 			if len(args) < 3 {
