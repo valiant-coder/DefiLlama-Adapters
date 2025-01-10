@@ -9,6 +9,7 @@ import (
 
 	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
+	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
 )
@@ -39,6 +40,17 @@ func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig, cdex
 	if err != nil {
 		return nil, fmt.Errorf("get max block number failed: %w", err)
 	}
+
+	repo := db.New()
+	lastOpenOrderBlockNum, err := repo.GetOpenOrderMaxBlockNumber(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("get max block number failed: %w", err)
+	}
+
+	if lastOpenOrderBlockNum > lastBlockNum {
+		lastBlockNum = lastOpenOrderBlockNum
+	}
+
 	if lastBlockNum == 0 {
 		lastBlockNum = hyperionCfg.StartBlock
 	} else {
@@ -66,7 +78,7 @@ func (s *Service) Start(ctx context.Context) error {
 			Contract:  s.cdexCfg.PoolContract,
 			Action:    "*",
 			Account:   "",
-			StartFrom: int64(s.lastBlockNum)+1,
+			StartFrom: int64(s.lastBlockNum) + 1,
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
@@ -74,7 +86,7 @@ func (s *Service) Start(ctx context.Context) error {
 			Contract:  s.cdexCfg.EventContract,
 			Action:    "*",
 			Account:   "",
-			StartFrom: int64(s.lastBlockNum)+1,
+			StartFrom: int64(s.lastBlockNum) + 1,
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},

@@ -97,7 +97,6 @@ func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.Query
 	return orders, total, nil
 }
 
-
 func (r *Repo) GetOpenOrderByTrader(ctx context.Context, trader string) ([]*OpenOrder, error) {
 	var orders []*OpenOrder
 	err := r.WithContext(ctx).Where("trader = ?", trader).Find(&orders).Error
@@ -107,6 +106,11 @@ func (r *Repo) GetOpenOrderByTrader(ctx context.Context, trader string) ([]*Open
 	return orders, nil
 }
 
+func (r *Repo) GetOpenOrderMaxBlockNumber(ctx context.Context) (uint64, error) {
+	var blockNumber uint64
+	err := r.WithContext(ctx).Model(&OpenOrder{}).Select("MAX(block_number)").Scan(&blockNumber).Error
+	return blockNumber, err
+}
 
 type OrderBook struct {
 	PoolID uint64      `json:"pool_id"`
