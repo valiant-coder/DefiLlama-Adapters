@@ -30,6 +30,7 @@ func main() {
 			cmd.SyncCmd,
 			cmd.HandlerCmd,
 			cmd.CronCmd,
+			cmd.WebSocketCommand,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
