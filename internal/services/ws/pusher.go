@@ -5,8 +5,17 @@ import (
 	"exapp-go/internal/entity"
 )
 
+const (
+	PushEventBalanceUpdate = "balance_update"
+	PushEventOrderUpdate   = "order_update"
+	PushEventTradeUpdate   = "trade"
+	PushEventDepthUpdate   = "depth"
+	PushEventKlineUpdate   = "kline"
+)
+
 // Balance update
 type BalanceUpdate struct {
+	Account string `json:"account"`
 }
 
 // Order update
@@ -39,7 +48,7 @@ func (p *Pusher) PushKline(data entity.Kline) {
 		Type:     SubTypeKline,
 		Interval: data.Interval,
 	}
-	p.server.Broadcast(sub, "kline", data)
+	p.server.Broadcast(sub, PushEventKlineUpdate, data)
 }
 
 // Push depth data
@@ -48,7 +57,7 @@ func (p *Pusher) PushDepth(data entity.Depth) {
 		PoolID: data.PoolID,
 		Type:   SubTypeDepth,
 	}
-	p.server.Broadcast(sub, "depth", data)
+	p.server.Broadcast(sub, PushEventDepthUpdate, data)
 }
 
 // Push trade data
@@ -57,21 +66,19 @@ func (p *Pusher) PushTrade(data entity.Trade) {
 		PoolID: data.PoolID,
 		Type:   SubTypeTrades,
 	}
-	p.server.Broadcast(sub, "trade", data)
+	p.server.Broadcast(sub, PushEventTradeUpdate, data)
 }
 
 // Push balance update
 func (p *Pusher) PushBalanceUpdate(account string) {
 	// Push balance update to specific user
-	event := "balance_update"
-	p.pushToUser(account, event, BalanceUpdate{})
+	p.pushToUser(account, PushEventBalanceUpdate, BalanceUpdate{Account: account})
 }
 
 // Push order update
 func (p *Pusher) PushOrderUpdate(account string, update OrderUpdate) {
 	// Push order update to specific user
-	event := "order_update"
-	p.pushToUser(account, event, update)
+	p.pushToUser(account, PushEventOrderUpdate, update)
 }
 
 // Push data to specific user

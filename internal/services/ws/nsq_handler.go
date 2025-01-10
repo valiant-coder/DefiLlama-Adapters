@@ -8,6 +8,10 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
+
+const (
+	TopicCdexUpdates = "cdex_updates"
+)
 // NSQ message types
 const (
 	MsgTypeOrderUpdate   = "order_update"
@@ -19,8 +23,8 @@ const (
 
 // Base NSQ message structure
 type NSQMessage struct {
-	Type    string          `json:"type"`
-	Data    json.RawMessage `json:"data"`
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
 }
 
 // Handle NSQ message
@@ -40,6 +44,11 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 		}
 		// Push order update to specific user
 		s.pusher.PushOrderUpdate(orderUpdate.Account, orderUpdate)
+
+	case MsgTypeBalanceUpdate:
+		account := string(nsqMsg.Data)
+		// Push balance update to specific user
+		s.pusher.PushBalanceUpdate(account)
 
 	case MsgTypeTradeUpdate:
 		var tradeData entity.Trade

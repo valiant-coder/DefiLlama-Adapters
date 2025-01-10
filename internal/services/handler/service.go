@@ -19,14 +19,15 @@ const (
 )
 
 type Service struct {
-	nsqCfg    config.NsqConfig
-	ckhRepo   *ckhdb.ClickHouseRepo
-	repo      *db.Repo
-	worker    *nsqutil.Worker
-	poolCache map[uint64]*db.Pool
-	cdexCfg   config.CdexConfig
-	eosCfg    config.EosConfig
+	nsqCfg      config.NsqConfig
+	ckhRepo     *ckhdb.ClickHouseRepo
+	repo        *db.Repo
+	worker      *nsqutil.Worker
+	poolCache   map[uint64]*db.Pool
+	cdexCfg     config.CdexConfig
+	eosCfg      config.EosConfig
 	hyperionCfg config.HyperionConfig
+	publisher   *NSQPublisher
 }
 
 func NewService() (*Service, error) {
@@ -34,14 +35,20 @@ func NewService() (*Service, error) {
 	repo := db.New()
 	cfg := config.Conf()
 
+	publisher, err := NewNSQPublisher(cfg.Nsq.Nsqds)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Service{
-		ckhRepo: ckhRepo,
-		repo:    repo,
-		nsqCfg:  cfg.Nsq,
-		poolCache: make(map[uint64]*db.Pool),
-		cdexCfg: cfg.Cdex,
-		eosCfg:  cfg.Eos,
+		ckhRepo:     ckhRepo,
+		repo:        repo,
+		nsqCfg:      cfg.Nsq,
+		poolCache:   make(map[uint64]*db.Pool),
+		cdexCfg:     cfg.Cdex,
+		eosCfg:      cfg.Eos,
 		hyperionCfg: cfg.Hyperion,
+		publisher:   publisher,
 	}, nil
 }
 
@@ -59,6 +66,9 @@ func (s *Service) Start(ctx context.Context) error {
 
 func (s *Service) Stop(ctx context.Context) error {
 	s.worker.StopConsume()
+	if s.publisher != nil {
+		s.publisher.Close()
+	}
 	return nil
 }
 

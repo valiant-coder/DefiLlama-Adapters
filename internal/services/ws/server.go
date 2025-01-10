@@ -14,6 +14,20 @@ import (
 	"github.com/zishang520/socket.io/v2/socket"
 )
 
+type SubscriptionType string
+
+const (
+	SubTypeKline  SubscriptionType = "kline"
+	SubTypeDepth  SubscriptionType = "depth"
+	SubTypeTrades SubscriptionType = "trades"
+)
+
+type Subscription struct {
+	PoolID   uint64
+	Type     SubscriptionType
+	Interval string
+}
+
 type Server struct {
 	io     *socket.Server
 	pusher *Pusher
@@ -53,11 +67,7 @@ func NewServer(ctx context.Context) *Server {
 
 // Setup NSQ message handlers
 func (s *Server) setupNSQHandlers() {
-	// Handle market data updates
-	s.worker.Consume("market_updates", s.handleNSQMessage)
-
-	// Handle user data updates
-	s.worker.Consume("user_updates", s.handleNSQMessage)
+	s.worker.Consume(TopicCdexUpdates, s.handleNSQMessage)
 }
 
 // Get HTTP handler
