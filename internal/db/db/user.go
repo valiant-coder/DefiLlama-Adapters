@@ -79,7 +79,7 @@ func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
 type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
-	CredentialID   string    `gorm:"column:credential_id;type:text;not null;uniqueIndex:idx_credential_id"`
+	CredentialID   string    `gorm:"column:credential_id;type:varchar(255);uniqueIndex:idx_credential_id"`
 	PublicKey      string    `gorm:"column:public_key;type:text;not null"`
 	Name           string    `gorm:"column:name;type:varchar(255);not null"`
 	LastUsedAt     time.Time `gorm:"column:last_used_at;type:datetime"`
