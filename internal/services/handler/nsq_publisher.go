@@ -1,10 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/nsqutil"
-	"log"
 )
 
 const (
@@ -57,13 +55,7 @@ func (p *NSQPublisher) PublishOrderUpdate(account string, id string) error {
 		},
 	}
 
-	data, err := json.Marshal(msg)
-	if err != nil {
-		log.Printf("Marshal order update failed: %v", err)
-		return err
-	}
-
-	return p.publisher.Publish(TopicCdexUpdates, data)
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 }
 
 // PublishBalanceUpdate publishes a balance update message
@@ -75,13 +67,8 @@ func (p *NSQPublisher) PublishBalanceUpdate(account string) error {
 		Type: MsgTypeBalanceUpdate,
 		Data: account,
 	}
-	data, err := json.Marshal(msg)
-	if err != nil {
-		log.Printf("Marshal balance update failed: %v", err)
-		return err
-	}
 
-	return p.publisher.Publish(TopicCdexUpdates, data)
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 }
 
 // PublishTradeUpdate publishes a trade update message
@@ -94,13 +81,7 @@ func (p *NSQPublisher) PublishTradeUpdate(trade entity.Trade) error {
 		Data: trade,
 	}
 
-	data, err := json.Marshal(msg)
-	if err != nil {
-		log.Printf("Marshal trade update failed: %v", err)
-		return err
-	}
-
-	return p.publisher.Publish(TopicCdexUpdates, data)
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 }
 
 // PublishDepthUpdate publishes a depth update message
@@ -113,13 +94,7 @@ func (p *NSQPublisher) PublishDepthUpdate(depth entity.Depth) error {
 		Data: depth,
 	}
 
-	data, err := json.Marshal(msg)
-	if err != nil {
-		log.Printf("Marshal depth update failed: %v", err)
-		return err
-	}
-
-	return p.publisher.Publish(TopicCdexUpdates, data)
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 }
 
 // PublishKlineUpdate publishes a kline update message
@@ -132,11 +107,5 @@ func (p *NSQPublisher) PublishKlineUpdate(kline entity.Kline) error {
 		Data: kline,
 	}
 
-	data, err := json.Marshal(msg)
-	if err != nil {
-		log.Printf("Marshal kline update failed: %v", err)
-		return err
-	}
-
-	return p.publisher.Publish(TopicCdexUpdates, data)
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 }
