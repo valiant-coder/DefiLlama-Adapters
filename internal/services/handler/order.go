@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
@@ -139,7 +140,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			}
 			if len(trades) == 0 {
 				log.Printf("no trades found for market order: %v", orderTag)
-				return nil
+				return errors.New("no trades found for market order")
 			}
 			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
 			for _, trade := range trades {
@@ -376,6 +377,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			IsMarket:         false,
 			CreateTxID:       makerOrder.TxID,
 			CreateBlockNum:   makerOrder.BlockNumber,
+			CreatedAt:        makerOrder.CreatedAt,
 		}
 		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
 		if err != nil {
