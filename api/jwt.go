@@ -106,9 +106,10 @@ func unauthorized() func(c *gin.Context, code int, message string) {
 
 func loginResponse() func(c *gin.Context, code int, token string, expire time.Time) {
 	return func(c *gin.Context, code int, token string, expire time.Time) {
-		success(gin.H{
+		OK(c, gin.H{
 			"token":  token,
-			"expire": expire.Format(time.DateTime),
+			"expire": expire.Unix(),
 		})
 	}
 }
+
