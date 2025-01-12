@@ -2,6 +2,7 @@ package marketplace
 
 import (
 	"exapp-go/api"
+	"exapp-go/config"
 	"exapp-go/pkg/log"
 	"fmt"
 	"os"
@@ -58,24 +59,20 @@ func Run(addr string, release bool) error {
 		gin.CustomRecovery(handleRecovery),
 	)
 
-
 	v1 := r.Group("/api/v1")
-
 
 	// Pool routes
 	v1.GET("/pools", pools)
 	v1.GET("/pools/:symbolOrId", getPoolDetail)
-	
+
 	v1.GET("/klines", klines)
 	v1.GET("/depth", getDepth)
 	v1.GET("/latest-trades", getLatestTrades)
 	v1.GET("/open-orders", getOpenOrders)
 	v1.GET("/history-orders", getHistoryOrders)
 	v1.GET("/orders/:id", getHistoryOrderDetail)
- 
 
 	v1.GET("/balances", getUserBalances)
-
 
 	r.GET("/system-info", getSystemInfo)
 	r.POST("/eos/pay-cpu", payCPU)
@@ -95,10 +92,14 @@ func Run(addr string, release bool) error {
 	auth := r.Group("/", authMiddleware.MiddlewareFunc())
 	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 
-
-
 	auth.POST("/credentials", createUserCredentials)
 	auth.GET("/credentials", getUserCredentials)
 
+	if config.Conf().HTTPS.Enabled {
+		return r.RunTLS(addr,
+			config.Conf().HTTPS.CertFile,
+			config.Conf().HTTPS.KeyFile,
+		)
+	}
 	return r.Run(addr)
 }

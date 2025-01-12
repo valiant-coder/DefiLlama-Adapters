@@ -19,6 +19,20 @@ type Config struct {
 		Migrate  bool   `yaml:"migrate"`
 	} `yaml:"mysql"`
 
+	HTTPS struct {
+		Enabled  bool   `yaml:"enabled"`
+		CertFile string `yaml:"cert_file"`
+		KeyFile  string `yaml:"key_file"`
+	} `yaml:"https"`
+
+	WS struct {
+		HTTPS struct {
+			Enabled  bool   `yaml:"enabled"`
+			CertFile string `yaml:"cert_file"`
+			KeyFile  string `yaml:"key_file"`
+		} `yaml:"https"`
+	} `yaml:"ws"`
+
 	ClickHouse struct {
 		Host     string `yaml:"host"`
 		Port     string `yaml:"port"`
@@ -61,7 +75,7 @@ type Config struct {
 	Hyperion HyperionConfig `yaml:"hyperion"`
 
 	Nsq NsqConfig `yaml:"nsq"`
-	
+
 	Cdex CdexConfig `yaml:"cdex"`
 }
 
@@ -92,11 +106,11 @@ type NsqConfig struct {
 }
 
 type CdexConfig struct {
-	DexContract string `yaml:"dex_contract"`
-	PoolContract string `yaml:"pool_contract"`
-	EXAppContract string `yaml:"exapp_contract"`
-	HistoryContract string `yaml:"history_contract"`
-	EventContract string `yaml:"event_contract"`
+	DexContract             string  `yaml:"dex_contract"`
+	PoolContract            string  `yaml:"pool_contract"`
+	EXAppContract           string  `yaml:"exapp_contract"`
+	HistoryContract         string  `yaml:"history_contract"`
+	EventContract           string  `yaml:"event_contract"`
 	DefaultPoolTakerFeeRate float64 `yaml:"default_pool_taker_fee_rate"`
 	DefaultPoolMakerFeeRate float64 `yaml:"default_pool_maker_fee_rate"`
 }

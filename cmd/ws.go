@@ -106,12 +106,30 @@ func runWebSocketServer(c *cli.Context) error {
 	}()
 
 	// Start server
-	log.Printf("Server is running at http://%s\n", addr)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal("Server error:", err)
-		return err
+	log.Printf("Server is running at %s://%s\n", getProtocol(), addr)
+
+	if config.Conf().WS.HTTPS.Enabled {
+		if err := srv.ListenAndServeTLS(
+			config.Conf().WS.HTTPS.CertFile,
+			config.Conf().WS.HTTPS.KeyFile,
+		); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Server error:", err)
+			return err
+		}
+	} else {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Server error:", err)
+			return err
+		}
 	}
 
 	log.Println("Server exited")
 	return nil
+}
+
+func getProtocol() string {
+	if config.Conf().WS.HTTPS.Enabled {
+		return "wss"
+	}
+	return "ws"
 }
