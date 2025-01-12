@@ -31,7 +31,7 @@ type NSQMessage struct {
 func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 	var nsqMsg NSQMessage
 	if err := json.Unmarshal(msg.Body, &nsqMsg); err != nil {
-		log.Printf("Failed to unmarshal NSQ message: %v", err)
+		log.Printf("Failed to unmarshal NSQ message: %v,%v", err, string(msg.Body))
 		return nil // Return nil to confirm message
 	}
 
