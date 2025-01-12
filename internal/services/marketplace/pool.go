@@ -8,6 +8,10 @@ import (
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/queryparams"
 	"strconv"
+	"time"
+
+	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 )
 
 type PoolService struct {
@@ -65,7 +69,26 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 	}
 	poolStats, err := s.ckhRepo.GetPoolStats(ctx, pool.PoolID)
 	if err != nil {
-		return entity.Pool{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			poolStats = &ckhdb.PoolStats{
+				PoolID:      pool.PoolID,
+				Symbol:      pool.Symbol,
+				BaseCoin:    pool.BaseCoin,
+				QuoteCoin:   pool.QuoteCoin,
+				LastPrice:   decimal.NewFromInt(0),
+				Change:      decimal.NewFromInt(0),
+				ChangeRate:  0,
+				High:        decimal.NewFromInt(0),
+				Low:         decimal.NewFromInt(0),
+				Volume:      decimal.NewFromInt(0),
+				QuoteVolume: decimal.NewFromInt(0),
+				Trades:      0,
+				Timestamp:   time.Now(),
+			}
+
+		} else {
+			return entity.Pool{}, err
+		}
 	}
 	return entity.Pool{
 		PoolID:             pool.PoolID,
