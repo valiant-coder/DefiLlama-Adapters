@@ -9,6 +9,17 @@ type ReqUserLogin struct {
 type UserCredential struct {
 	CredentialID string `json:"credential_id"`
 	PublicKey    string `json:"public_key"`
+	Name         string `json:"name"`
+	Synced       bool   `json:"synced"`
+}
+
+type RespUserCredential struct {
+	UserCredential
+	CreatedAt     Time     `json:"created_at"`
+	LastUsedIP    string   `json:"last_used_ip"`
+	LastUsedAt    Time     `json:"last_used_at"`
+	EOSAccount    string   `json:"eos_account"`
+	EOSPermission []string `json:"eos_permission"`
 }
 
 type UserBalance struct {

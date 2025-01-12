@@ -424,7 +424,7 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.UserCredential"
+                                "$ref": "#/definitions/entity.RespUserCredential"
                             }
                         }
                     }
@@ -927,6 +927,41 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.RespUserCredential": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "credential_id": {
+                    "type": "string"
+                },
+                "eos_account": {
+                    "type": "string"
+                },
+                "eos_permission": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "last_used_ip": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "synced": {
+                    "type": "boolean"
+                }
+            }
+        },
         "entity.SystemInfo": {
             "type": "object",
             "properties": {
@@ -1057,8 +1092,14 @@ const docTemplatemarketplace = `{
                 "credential_id": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "public_key": {
                     "type": "string"
+                },
+                "synced": {
+                    "type": "boolean"
                 }
             }
         }

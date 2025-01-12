@@ -8,6 +8,7 @@ import (
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/log"
 	"exapp-go/pkg/oauth2"
+	"strings"
 )
 
 type UserService struct {
@@ -59,17 +60,26 @@ func (s *UserService) IsUserExist(ctx context.Context, uid string) (bool, error)
 	return s.db.IsUserExist(ctx, uid)
 }
 
-func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]entity.UserCredential, error) {
+func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]entity.RespUserCredential, error) {
 	credentials, err := s.db.GetUserCredentials(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
 
-	var dst []entity.UserCredential
+	var dst []entity.RespUserCredential
 	for _, v := range credentials {
-		dst = append(dst, entity.UserCredential{
-			CredentialID: v.CredentialID,
-			PublicKey:    v.PublicKey,
+		dst = append(dst, entity.RespUserCredential{
+			UserCredential: entity.UserCredential{
+				CredentialID: v.CredentialID,
+				PublicKey:    v.PublicKey,
+				Name:         v.Name,
+				Synced:       v.Synced,
+			},
+			CreatedAt:     entity.Time(v.CreatedAt),
+			LastUsedAt:    entity.Time(v.LastUsedAt),
+			LastUsedIP:    v.LastUsedIP,
+			EOSAccount:    v.EOSAccount,
+			EOSPermission: strings.Split(v.EOSPermissions, ","),
 		})
 	}
 
@@ -78,8 +88,10 @@ func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]ent
 
 func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserCredential, uid string) error {
 	return s.db.CreateCredentialIfNotExist(ctx, &db.UserCredential{
-		UID:          uid,
-		CredentialID: req.CredentialID,
-		PublicKey:    req.PublicKey,
+		UID:            uid,
+		CredentialID:   req.CredentialID,
+		PublicKey:      req.PublicKey,
+		Name:           req.Name,
+		Synced:         req.Synced,
 	})
 }

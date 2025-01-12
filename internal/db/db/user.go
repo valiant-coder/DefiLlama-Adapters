@@ -11,7 +11,10 @@ import (
 
 func init() {
 	addMigrateFunc(func(r *Repo) error {
-		return r.AutoMigrate(&User{})
+		return r.AutoMigrate(
+			&User{},
+			&UserCredential{},
+		)
 	})
 }
 
@@ -75,9 +78,15 @@ func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
 
 type UserCredential struct {
 	gorm.Model
-	UID          string `gorm:"column:uid;type:varchar(255);not null;"`
-	CredentialID string `gorm:"column:credential_id;type:text;not null;uniqueIndex:idx_credential_id"`
-	PublicKey    string `gorm:"column:public_key;type:text;not null"`
+	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
+	CredentialID   string    `gorm:"column:credential_id;type:text;not null;uniqueIndex:idx_credential_id"`
+	PublicKey      string    `gorm:"column:public_key;type:text;not null"`
+	Name           string    `gorm:"column:name;type:varchar(255);not null"`
+	LastUsedAt     time.Time `gorm:"column:last_used_at;type:datetime"`
+	LastUsedIP     string    `gorm:"column:last_used_ip;type:text;not null"`
+	Synced         bool      `gorm:"column:synced;type:tinyint(1);not null;default:0"`
+	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);not null"`
+	EOSPermissions string    `gorm:"column:eos_permissions;type:text;not null"`
 }
 
 func (UserCredential) TableName() string {
@@ -95,6 +104,6 @@ func (r *Repo) CreateCredentialIfNotExist(ctx context.Context, credential *UserC
 
 func (r *Repo) GetUserCredentials(ctx context.Context, uid string) ([]UserCredential, error) {
 	var credentials []UserCredential
-	result := r.DB.WithContext(ctx).Where("user_id = ?", uid).Find(&credentials)
+	result := r.DB.WithContext(ctx).Where("uid = ?", uid).Find(&credentials)
 	return credentials, result.Error
 }

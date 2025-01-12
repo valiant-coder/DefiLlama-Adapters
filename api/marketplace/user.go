@@ -72,7 +72,7 @@ func createUserCredentials(c *gin.Context) {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Success 200 {array} entity.UserCredential "user credentials"
+// @Success 200 {array} entity.RespUserCredential "user credentials"
 // @Router /credentials [get]
 func getUserCredentials(c *gin.Context) {
 	userService := marketplace.NewUserService()
