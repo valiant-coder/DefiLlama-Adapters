@@ -125,7 +125,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
 			"type":     SubTypeKline,
-			"poolID":   poolID,
+			"pool_id":   poolID,
 			"interval": interval,
 		})
 	})
@@ -140,7 +140,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
 			"type":   SubTypeDepth,
-			"poolID": poolID,
+			"pool_id": poolID,
 		})
 	})
 
@@ -155,7 +155,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
 			"type":   SubTypeTrades,
-			"poolID": poolID,
+			"pool_id": poolID,
 		})
 	})
 
@@ -179,7 +179,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Leave(socket.Room(room))
 		client.Emit("unsubscribed", map[string]interface{}{
 			"type":   subType,
-			"poolID": poolID,
+			"pool_id": poolID,
 		})
 	})
 
