@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/cli/v2"
 
+	"exapp-go/config"
 	"exapp-go/internal/services/ws"
 )
 
@@ -43,6 +44,11 @@ var WebSocketCommand = &cli.Command{
 }
 
 func runWebSocketServer(c *cli.Context) error {
+	err := config.Load(c.String("config"))
+	if err != nil {
+		log.Printf("load config err: %v\n", err)
+		return err
+	}
 	// Set gin mode
 	gin.SetMode(c.String("mode"))
 
