@@ -82,15 +82,15 @@ type UserCredential struct {
 	CredentialID   string    `gorm:"column:credential_id;type:varchar(255);uniqueIndex:idx_credential_id"`
 	PublicKey      string    `gorm:"column:public_key;type:text;not null"`
 	Name           string    `gorm:"column:name;type:varchar(255);not null"`
-	LastUsedAt     time.Time `gorm:"column:last_used_at;type:datetime"`
-	LastUsedIP     string    `gorm:"column:last_used_ip;type:text;not null"`
+	LastUsedAt     time.Time `gorm:"column:last_used_at;default:null;type:timestamp"`
+	LastUsedIP     string    `gorm:"column:last_used_ip;type:varchar(255)"`
 	Synced         bool      `gorm:"column:synced;type:tinyint(1);not null;default:0"`
-	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);not null"`
-	EOSPermissions string    `gorm:"column:eos_permissions;type:text;not null"`
+	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255)"`
+	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512)"`
 }
 
 func (UserCredential) TableName() string {
-	return "td_user_credentials"
+	return "user_credentials"
 }
 
 func (r *Repo) CreateCredentialIfNotExist(ctx context.Context, credential *UserCredential) error {
