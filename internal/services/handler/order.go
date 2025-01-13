@@ -126,7 +126,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 	} else {
 		var avgPrice, price decimal.Decimal
-		if newOrder.EV.IsMarket {
+		if executedQuantity.GreaterThan(decimal.Zero) {
 			var orderTag string
 			if newOrder.EV.IsBid {
 				orderTag = fmt.Sprintf("%d-%d-%d", poolID, orderID, 0)
@@ -139,8 +139,8 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				return nil
 			}
 			if len(trades) == 0 {
-				log.Printf("no trades found for market order: %v", orderTag)
-				return errors.New("no trades found for market order")
+				log.Printf("no trades found for executed order: %v", orderTag)
+				return errors.New("no trades found for executed order")
 			}
 			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
 			for _, trade := range trades {
