@@ -56,41 +56,70 @@ INSERT INTO pool_stats (
     change_rate,
     timestamp
 )
-WITH aggregated AS (
+WITH 
+last_trade AS (
+    SELECT 
+        pool_id,
+        base_coin,
+        quote_coin,
+        symbol,
+        price as last_known_price
+    FROM trades
+    WHERE (pool_id, global_sequence) IN (
+        SELECT pool_id, MAX(global_sequence)
+        FROM trades
+        GROUP BY pool_id
+    )
+),
+aggregated AS (
     SELECT
-        t.pool_id,
-        t.base_coin,
-        t.quote_coin,
-        t.symbol,
-        MAX(price) as high,
-        MIN(price) as low,
-        COUNT(*) as trades,
-        SUM(base_quantity) as volume,
-        SUM(quote_quantity) as quote_volume,
-        argMax(price, global_sequence) as last_price,
-        argMin(price, global_sequence) as first_price
-    FROM trades t
-    WHERE time >= NOW() - INTERVAL 24 HOUR 
-    GROUP BY pool_id, base_coin, quote_coin, symbol
+        lt.pool_id,
+        lt.base_coin,
+        lt.quote_coin,
+        lt.symbol,
+        MAX(t.price) as high,
+        MIN(t.price) as low,
+        COUNT(t.tx_id) as trades,
+        SUM(COALESCE(t.base_quantity, 0)) as volume,
+        SUM(COALESCE(t.quote_quantity, 0)) as quote_volume,
+        MAX(CASE WHEN t.time >= NOW() - INTERVAL 24 HOUR THEN t.price ELSE NULL END) as last_price,
+        MIN(CASE WHEN t.time >= NOW() - INTERVAL 24 HOUR THEN t.price ELSE NULL END) as first_price,
+        lt.last_known_price
+    FROM last_trade lt
+    LEFT JOIN trades t ON lt.pool_id = t.pool_id 
+        AND t.time >= NOW() - INTERVAL 24 HOUR
+    GROUP BY lt.pool_id, lt.base_coin, lt.quote_coin, lt.symbol, lt.last_known_price
 )
 SELECT
     pool_id,
     base_coin,
     quote_coin,
     symbol,
-    high,
-    low,
+    COALESCE(high, last_known_price) as high,
+    COALESCE(low, last_known_price) as low,
     trades,
-    volume,
-    quote_volume,
-    last_price,
-    (last_price - first_price) as change,
-    (last_price / first_price - 1) as change_rate,
+    COALESCE(volume, 0) as volume,
+    COALESCE(quote_volume, 0) as quote_volume,
+    COALESCE(last_price, last_known_price) as last_price,
+    CASE 
+        WHEN first_price IS NOT NULL THEN (COALESCE(last_price, last_known_price) - first_price)
+        ELSE 0
+    END as change,
+    CASE 
+        WHEN first_price IS NOT NULL THEN (COALESCE(last_price, last_known_price) / first_price - 1)
+        ELSE 0
+    END as change_rate,
     now() as timestamp
 FROM aggregated;
     `
 	return r.DB.WithContext(ctx).Exec(query).Error
 }
+
+
+func (r *ClickHouseRepo) CreatePoolStats(ctx context.Context, poolStats *PoolStats) error {
+	return r.DB.WithContext(ctx).Create(poolStats).Error
+}
+
 
 /*
 OPTIMIZE TABLE pool_stats FINAL;

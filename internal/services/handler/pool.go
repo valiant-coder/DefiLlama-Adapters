@@ -3,12 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/cdex"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
@@ -77,7 +79,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		makerFeeRate = cast.ToFloat64(pool.MakerFeeRate) / 10000
 	}
 
-	err = s.repo.CreatePoolIfNotExist(ctx, &db.Pool{
+	newPool := &db.Pool{
 		PoolID:             pool.ID,
 		BaseSymbol:         baseSymbol,
 		BaseContract:       pool.Base.Contract,
@@ -96,9 +98,30 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		MakerFeeRate:       makerFeeRate,
 		Status:             db.PoolStatus(pool.Status),
 		MinAmount:          decimal.New(int64(pool.MinAmount), -int32(basePrecision)),
+	}
+	err = s.repo.CreatePoolIfNotExist(ctx, newPool)
+	if err != nil {
+		log.Printf("failed to create db pool: %v, pool: %+v", err, newPool)
+		return err
+	}
+
+	err = s.ckhRepo.CreatePoolStats(ctx, &ckhdb.PoolStats{
+		PoolID:      newPool.PoolID,
+		Symbol:      newPool.Symbol,
+		BaseCoin:    newPool.BaseCoin,
+		QuoteCoin:   newPool.QuoteCoin,
+		LastPrice:   decimal.NewFromInt(0),
+		Change:      decimal.NewFromInt(0),
+		ChangeRate:  0,
+		High:        decimal.NewFromInt(0),
+		Low:         decimal.NewFromInt(0),
+		Volume:      decimal.NewFromInt(0),
+		QuoteVolume: decimal.NewFromInt(0),
+		Trades:      0,
+		Timestamp:   time.Now(),
 	})
 	if err != nil {
-		log.Printf("failed to create db pool: %v, pool: %+v", err, pool)
+		log.Printf("failed to create db pool stats: %v, pool: %+v", err, newPool)
 		return err
 	}
 
