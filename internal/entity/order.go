@@ -45,7 +45,7 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 		AvgPrice:       openOrder.Price.String(),
 		OrderAmount:    openOrder.OriginalQuantity.String(),
 		ExecutedAmount: openOrder.ExecutedQuantity.String(),
-		OrderTotal:     openOrder.OriginalQuantity.Mul(openOrder.Price).String(),
+		OrderTotal:     openOrder.OriginalQuantity.Mul(openOrder.Price).Round(int32(openOrder.QuoteCoinPrecision)).String(),
 		OrderTime:      Time(openOrder.CreatedAt),
 		Side:           side,
 		Type:           1,

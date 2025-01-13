@@ -56,7 +56,7 @@ func (r *Repo) updateLockedCoins(lockedCoins map[string][]*UserPoolBalance, coin
 
 func (r *Repo) calculateOrderLock(order *OpenOrder) (string, decimal.Decimal) {
 	if order.IsBid {
-		return order.PoolQuoteCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity).Mul(order.Price)
+		return order.PoolQuoteCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity).Mul(order.Price).Round(int32(order.QuoteCoinPrecision))
 	}
 	return order.PoolBaseCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity)
 }

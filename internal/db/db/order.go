@@ -35,23 +35,24 @@ const (
 
 // Order represents a trading order in the DEX
 type OpenOrder struct {
-	TxID             string          `gorm:"column:tx_id;type:varchar(255)"`
-	App              string          `gorm:"column:app;type:varchar(255)"`
-	CreatedAt        time.Time       `gorm:"column:created_at;type:timestamp"`
-	BlockNumber      uint64          `gorm:"column:block_number;type:bigint(20)"`
-	PoolID           uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:pool_id;type:bigint(20)"`
-	OrderID          uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:order_id;type:bigint(20)"`
-	PoolSymbol       string          `gorm:"column:pool_symbol;type:varchar(255)"`
-	PoolBaseCoin     string          `gorm:"column:pool_base_coin;type:varchar(255)"`
-	PoolQuoteCoin    string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
-	ClientOrderID    string          `gorm:"column:order_cid;type:varchar(255)"`
-	Trader           string          `gorm:"index:idx_trader;type:varchar(255)"`
-	Type             OrderType       `gorm:"column:type;type:tinyint(4)"`
-	Price            decimal.Decimal `gorm:"type:Decimal(36,18)"`
-	IsBid            bool            `gorm:"column:is_bid;type:tinyint(1);uniqueIndex:idx_pool_id_order_id_is_bid"`
-	OriginalQuantity decimal.Decimal `gorm:"type:Decimal(36,18)"`
-	ExecutedQuantity decimal.Decimal `gorm:"type:Decimal(36,18)"`
-	Status           OrderStatus     `gorm:"column:status;type:tinyint(4)"`
+	TxID               string          `gorm:"column:tx_id;type:varchar(255)"`
+	App                string          `gorm:"column:app;type:varchar(255)"`
+	CreatedAt          time.Time       `gorm:"column:created_at;type:timestamp"`
+	BlockNumber        uint64          `gorm:"column:block_number;type:bigint(20)"`
+	PoolID             uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:pool_id;type:bigint(20)"`
+	OrderID            uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:order_id;type:bigint(20)"`
+	PoolSymbol         string          `gorm:"column:pool_symbol;type:varchar(255)"`
+	PoolBaseCoin       string          `gorm:"column:pool_base_coin;type:varchar(255)"`
+	PoolQuoteCoin      string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
+	ClientOrderID      string          `gorm:"column:order_cid;type:varchar(255)"`
+	Trader             string          `gorm:"index:idx_trader;type:varchar(255)"`
+	Type               OrderType       `gorm:"column:type;type:tinyint(4)"`
+	Price              decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	IsBid              bool            `gorm:"column:is_bid;type:tinyint(1);uniqueIndex:idx_pool_id_order_id_is_bid"`
+	OriginalQuantity   decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	ExecutedQuantity   decimal.Decimal `gorm:"type:Decimal(36,18)"`
+	QuoteCoinPrecision uint8           `gorm:"column:quote_coin_precision;type:tinyint(4)"`
+	Status             OrderStatus     `gorm:"column:status;type:tinyint(4)"`
 }
 
 // TableName overrides the table name
