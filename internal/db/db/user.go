@@ -76,6 +76,12 @@ func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
 	return result.RowsAffected > 0, result.Error
 }
 
+func (r *Repo) GetUser(ctx context.Context, uid string) (User, error) {
+	var user User
+	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
+	return user, result.Error
+}
+
 type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`

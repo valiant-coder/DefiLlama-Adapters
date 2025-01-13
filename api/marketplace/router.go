@@ -95,6 +95,8 @@ func Run(addr string, release bool) error {
 	auth.POST("/credentials", createUserCredentials)
 	auth.GET("/credentials", getUserCredentials)
 
+	auth.GET("/user-info", getUserInfo)
+
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,
 			config.Conf().HTTPS.CertFile,

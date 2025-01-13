@@ -84,6 +84,23 @@ func getUserCredentials(c *gin.Context) {
 	api.OK(c, credentials)
 }
 
+// @Summary Get user info
+// @Description Get user info
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {object} entity.RespUserInfo "user info"
+// @Router /user-info [get]
+func getUserInfo(c *gin.Context) {
+	userService := marketplace.NewUserService()
+	userInfo, err := userService.GetUserInfo(c.Request.Context(), c.GetString("uid"))
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, userInfo)
+}
+
 // @Summary Get user balances
 // @Description Get user balances
 // @Tags user

@@ -6,6 +6,13 @@ type ReqUserLogin struct {
 	IdToken string `json:"id_token"`
 }
 
+type RespUserInfo struct {
+	UID      string               `json:"uid"`
+	UserName string               `json:"user_name"`
+	Passkeys []RespUserCredential `json:"passkeys"`
+}
+
+
 type UserCredential struct {
 	CredentialID string `json:"credential_id"`
 	PublicKey    string `json:"public_key"`

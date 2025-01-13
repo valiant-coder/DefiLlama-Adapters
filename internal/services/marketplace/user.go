@@ -86,12 +86,30 @@ func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]ent
 	return dst, nil
 }
 
+func (s *UserService) GetUserInfo(ctx context.Context, uid string) (entity.RespUserInfo, error) {
+	user, err := s.db.GetUser(ctx, uid)
+	if err != nil {
+		return entity.RespUserInfo{}, err
+	}
+
+	credentials, err := s.GetUserCredentials(ctx, uid)
+	if err != nil {
+		return entity.RespUserInfo{}, err
+	}
+
+	return entity.RespUserInfo{
+		UID:      user.UID,
+		UserName: user.Username,
+		Passkeys: credentials,
+	}, nil
+}
+
 func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserCredential, uid string) error {
 	return s.db.CreateCredentialIfNotExist(ctx, &db.UserCredential{
-		UID:            uid,
-		CredentialID:   req.CredentialID,
-		PublicKey:      req.PublicKey,
-		Name:           req.Name,
-		Synced:         req.Synced,
+		UID:          uid,
+		CredentialID: req.CredentialID,
+		PublicKey:    req.PublicKey,
+		Name:         req.Name,
+		Synced:       req.Synced,
 	})
 }

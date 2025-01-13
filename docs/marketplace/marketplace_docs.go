@@ -552,6 +552,29 @@ const docTemplatemarketplace = `{
                     }
                 }
             }
+        },
+        "/user-info": {
+            "get": {
+                "description": "Get user info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user info",
+                "responses": {
+                    "200": {
+                        "description": "user info",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespUserInfo"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -959,6 +982,23 @@ const docTemplatemarketplace = `{
                 },
                 "synced": {
                     "type": "boolean"
+                }
+            }
+        },
+        "entity.RespUserInfo": {
+            "type": "object",
+            "properties": {
+                "passkeys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.RespUserCredential"
+                    }
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
                 }
             }
         },
