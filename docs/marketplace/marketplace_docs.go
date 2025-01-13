@@ -311,7 +311,7 @@ const docTemplatemarketplace = `{
                 "summary": "Get history order detail",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy",
                         "name": "id",
                         "in": "path",

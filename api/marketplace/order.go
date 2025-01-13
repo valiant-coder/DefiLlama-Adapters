@@ -59,7 +59,7 @@ func getHistoryOrders(c *gin.Context) {
 // @Tags order
 // @Accept json
 // @Produce json
-// @Param id path int true "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy"
+// @Param id path string true "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy"
 // @Success 200 {object} entity.HistoryOrderDetail "history order detail"
 // @Router /api/v1/orders/{id} [get]
 func getHistoryOrderDetail(c *gin.Context) {
