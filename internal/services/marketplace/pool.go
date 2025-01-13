@@ -107,6 +107,7 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 		PricePrecision:     pool.PricePrecision,
 		TakerFeeRate:       pool.TakerFeeRate,
 		MakerFeeRate:       pool.MakerFeeRate,
+		MinAmount:          pool.MinAmount.String(),
 		Status:             uint8(pool.Status),
 		PoolStats: entity.PoolStats{
 			PoolID:     pool.PoolID,

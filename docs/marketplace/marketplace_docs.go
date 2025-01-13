@@ -872,6 +872,9 @@ const docTemplatemarketplace = `{
                 "max_flct": {
                     "type": "integer"
                 },
+                "min_amount": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },

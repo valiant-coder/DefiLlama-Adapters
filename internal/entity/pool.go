@@ -19,6 +19,7 @@ type Pool struct {
 	MakerFeeRate       float64   `json:"maker_fee_rate"`
 	Status             uint8     `json:"status"`
 	PoolStats          PoolStats `json:"pool_stats"`
+	MinAmount          string    `json:"min_amount"`
 }
 
 type PoolStats struct {

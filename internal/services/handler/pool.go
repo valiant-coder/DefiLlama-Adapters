@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
 )
 
@@ -94,6 +95,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		TakerFeeRate:       takerFeeRate,
 		MakerFeeRate:       makerFeeRate,
 		Status:             db.PoolStatus(pool.Status),
+		MinAmount:          decimal.New(int64(pool.MinAmount), -int32(basePrecision)),
 	})
 	if err != nil {
 		log.Printf("failed to create db pool: %v, pool: %+v", err, pool)
