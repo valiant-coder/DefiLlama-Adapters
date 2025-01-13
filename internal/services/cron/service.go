@@ -28,6 +28,7 @@ func addSyncFuncs(c *cron.Cron, spec string, cmdList ...func()) {
 }
 
 func (s *Service) SyncPoolStats() {
+	log.Println("begin sync pool stats...")
 	ctx := context.Background()
 	err := s.ckhdb.UpdatePoolStats(ctx)
 	if err != nil {
@@ -37,13 +38,14 @@ func (s *Service) SyncPoolStats() {
 	if err != nil {
 		log.Println("failed to optimize pool stats", err)
 	}
-
+	log.Println("sync pool stats done")
 }
 
 func (s *Service) Run() error {
 	c := cron.New()
 
-	addSyncFuncs(c, "0 0 * * *", s.SyncPoolStats)
+	// 每分钟
+	addSyncFuncs(c, "0 * * * * *", s.SyncPoolStats)
 
 	c.Run()
 	return nil
