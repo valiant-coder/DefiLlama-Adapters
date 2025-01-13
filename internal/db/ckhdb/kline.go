@@ -45,6 +45,12 @@ func (r *ClickHouseRepo) GetKline(ctx context.Context, poolID uint64, interval s
 	return klines, err
 }
 
+func (r *ClickHouseRepo) GetLastKlineBefore(ctx context.Context, poolID uint64, interval string, start time.Time) (*Kline, error) {
+	var kline *Kline
+	err := r.WithContext(ctx).Where("pool_id = ? AND interval = ? AND interval_start < ?", poolID, interval, start).Order("interval_start DESC").Limit(1).Find(&kline).Error
+	return kline, err
+}
+
 func (r *ClickHouseRepo) GetLatestKlines(ctx context.Context, poolID uint64) ([]*Kline, error) {
 	var klines []*Kline
 	err := r.WithContext(ctx).Raw(`
