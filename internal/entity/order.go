@@ -10,6 +10,9 @@ type OpenOrder struct {
 	ID            string `json:"id"`
 	OrderID       uint64 `json:"order_id"`
 	PoolID        uint64 `json:"pool_id"`
+	PoolSymbol    string `json:"pool_symbol"`
+	PoolBaseCoin  string `json:"pool_base_coin"`
+	PoolQuoteCoin string `json:"pool_quote_coin"`
 	ClientOrderID string `json:"order_cid"`
 	Trader        string `json:"trader"`
 	OrderTime     Time   `json:"order_time"`
@@ -33,6 +36,9 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 		ID:             fmt.Sprintf("%d-%d-%d", openOrder.PoolID, openOrder.OrderID, side),
 		OrderID:        openOrder.OrderID,
 		PoolID:         openOrder.PoolID,
+		PoolSymbol:     openOrder.PoolSymbol,
+		PoolBaseCoin:   openOrder.PoolBaseCoin,
+		PoolQuoteCoin:  openOrder.PoolQuoteCoin,
 		ClientOrderID:  openOrder.ClientOrderID,
 		Trader:         openOrder.Trader,
 		OrderPrice:     openOrder.Price.String(),
