@@ -642,8 +642,17 @@ const docTemplatemarketplace = `{
                 "order_time": {
                     "type": "string"
                 },
+                "pool_base_coin": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
+                },
+                "pool_quote_coin": {
+                    "type": "string"
+                },
+                "pool_symbol": {
+                    "type": "string"
                 },
                 "side": {
                     "description": "0 buy 1 sell",
@@ -692,8 +701,17 @@ const docTemplatemarketplace = `{
                 "order_time": {
                     "type": "string"
                 },
+                "pool_base_coin": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
+                },
+                "pool_quote_coin": {
+                    "type": "string"
+                },
+                "pool_symbol": {
+                    "type": "string"
                 },
                 "side": {
                     "description": "0 buy 1 sell",

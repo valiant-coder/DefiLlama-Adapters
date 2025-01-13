@@ -57,6 +57,9 @@ type HistoryOrder struct {
 	ID            string `json:"id"`
 	OrderID       uint64 `json:"order_id"`
 	PoolID        uint64 `json:"pool_id"`
+	PoolSymbol    string `json:"pool_symbol"`
+	PoolBaseCoin  string `json:"pool_base_coin"`
+	PoolQuoteCoin string `json:"pool_quote_coin"`
 	ClientOrderID string `json:"order_cid"`
 	Trader        string `json:"trader"`
 	// 0 buy 1 sell
@@ -87,6 +90,9 @@ func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
 		ID:             fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
 		OrderID:        order.OrderID,
 		PoolID:         order.PoolID,
+		PoolSymbol:     order.PoolSymbol,
+		PoolBaseCoin:   order.PoolBaseCoin,
+		PoolQuoteCoin:  order.PoolQuoteCoin,
 		ClientOrderID:  order.ClientOrderID,
 		Trader:         order.Trader,
 		Side:           side,
