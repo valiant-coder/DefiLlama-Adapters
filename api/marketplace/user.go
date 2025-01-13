@@ -86,6 +86,7 @@ func getUserCredentials(c *gin.Context) {
 
 // @Summary Get user info
 // @Description Get user info
+// @Security ApiKeyAuth
 // @Tags user
 // @Accept json
 // @Produce json

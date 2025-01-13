@@ -555,6 +555,11 @@ const docTemplatemarketplace = `{
         },
         "/user-info": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get user info",
                 "consumes": [
                     "application/json"
