@@ -37,6 +37,10 @@ type Server struct {
 
 // Create new WebSocket server
 func NewServer(ctx context.Context) *Server {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	c := socket.DefaultServerOptions()
 	c.SetServeClient(true)
 	c.SetPingInterval(10 * time.Second)
@@ -68,7 +72,9 @@ func NewServer(ctx context.Context) *Server {
 
 // Setup NSQ message handlers
 func (s *Server) setupNSQHandlers() {
-	s.worker.Consume(TopicCdexUpdates, s.handleNSQMessage)
+	if s.worker != nil {
+		s.worker.Consume(TopicCdexUpdates, s.handleNSQMessage)
+	}
 }
 
 // Get HTTP handler
@@ -78,27 +84,65 @@ func (s *Server) Handler() http.Handler {
 
 // Generate room name
 func getRoomName(subType, poolID, interval string) string {
+	if poolID == "" {
+		return ""
+	}
 	if interval != "" {
 		return fmt.Sprintf("%s:%s:%s", subType, poolID, interval)
 	}
 	return fmt.Sprintf("%s:%s", subType, poolID)
 }
 
+// safeGetString safely extracts a string from an interface{}
+func safeGetString(v interface{}) (string, bool) {
+	if v == nil {
+		return "", false
+	}
+	str, ok := v.(string)
+	return str, ok
+}
+
+// safeGetFloat64 safely extracts a float64 from an interface{}
+func safeGetFloat64(v interface{}) (float64, bool) {
+	if v == nil {
+		return 0, false
+	}
+	num, ok := v.(float64)
+	return num, ok
+}
+
 // Handle new connection
 func (s *Server) handleConnection(args ...interface{}) {
-	client := args[0].(*socket.Socket)
+	if len(args) == 0 {
+		return
+	}
+
+	client, ok := args[0].(*socket.Socket)
+	if !ok || client == nil {
+		return
+	}
 
 	// User authentication
 	client.On("authenticate", func(args ...interface{}) {
 		if len(args) < 1 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid authentication parameters",
+			})
 			return
 		}
-		account := args[0].(string)
+
+		account, ok := safeGetString(args[0])
+		if !ok || account == "" {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid account format",
+			})
+			return
+		}
+
 		// Add user to dedicated room
 		accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
 		client.Join(accountRoom)
 
-		// Send authentication success message
 		client.Emit("authenticated", map[string]interface{}{
 			"status":  "success",
 			"account": account,
@@ -109,7 +153,10 @@ func (s *Server) handleConnection(args ...interface{}) {
 		if len(args) < 1 {
 			return
 		}
-		account := args[0].(string)
+		account, ok := safeGetString(args[0])
+		if !ok || account == "" {
+			return
+		}
 		accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
 		client.Leave(accountRoom)
 	})
@@ -117,15 +164,38 @@ func (s *Server) handleConnection(args ...interface{}) {
 	// Subscribe to kline data
 	client.On("subscribe_kline", func(args ...interface{}) {
 		if len(args) < 2 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid kline subscription parameters",
+			})
 			return
 		}
-		poolID := uint64(args[0].(float64))
-		interval := args[1].(string)
+
+		poolIDFloat, ok := safeGetFloat64(args[0])
+		if !ok {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid pool_id format",
+			})
+			return
+		}
+		poolID := uint64(poolIDFloat)
+
+		interval, ok := safeGetString(args[1])
+		if !ok || interval == "" {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid interval format",
+			})
+			return
+		}
+
 		room := socket.Room(getRoomName(string(SubTypeKline), cast.ToString(poolID), interval))
+		if room == "" {
+			return
+		}
+
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
 			"type":     SubTypeKline,
-			"pool_id":   poolID,
+			"pool_id":  poolID,
 			"interval": interval,
 		})
 	})
@@ -133,13 +203,29 @@ func (s *Server) handleConnection(args ...interface{}) {
 	// Subscribe to depth data
 	client.On("subscribe_depth", func(args ...interface{}) {
 		if len(args) < 1 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid depth subscription parameters",
+			})
 			return
 		}
-		poolID := uint64(args[0].(float64))
+
+		poolIDFloat, ok := safeGetFloat64(args[0])
+		if !ok {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid pool_id format",
+			})
+			return
+		}
+		poolID := uint64(poolIDFloat)
+
 		room := socket.Room(getRoomName(string(SubTypeDepth), cast.ToString(poolID), ""))
+		if room == "" {
+			return
+		}
+
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
-			"type":   SubTypeDepth,
+			"type":    SubTypeDepth,
 			"pool_id": poolID,
 		})
 	})
@@ -147,14 +233,29 @@ func (s *Server) handleConnection(args ...interface{}) {
 	// Subscribe to trade data
 	client.On("subscribe_trades", func(args ...interface{}) {
 		if len(args) < 1 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid trades subscription parameters",
+			})
 			return
 		}
-		poolID := uint64(args[0].(float64))
+
+		poolIDFloat, ok := safeGetFloat64(args[0])
+		if !ok {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid pool_id format",
+			})
+			return
+		}
+		poolID := uint64(poolIDFloat)
 
 		room := socket.Room(getRoomName(string(SubTypeTrades), cast.ToString(poolID), ""))
+		if room == "" {
+			return
+		}
+
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
-			"type":   SubTypeTrades,
+			"type":    SubTypeTrades,
 			"pool_id": poolID,
 		})
 	})
@@ -162,38 +263,79 @@ func (s *Server) handleConnection(args ...interface{}) {
 	// Unsubscribe
 	client.On("unsubscribe", func(args ...interface{}) {
 		if len(args) < 2 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid unsubscribe parameters",
+			})
 			return
 		}
-		subType := args[0].(string)
-		poolID := uint64(args[1].(float64))
+
+		subType, ok := safeGetString(args[0])
+		if !ok {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid subscription type",
+			})
+			return
+		}
+
+		poolIDFloat, ok := safeGetFloat64(args[1])
+		if !ok {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid pool_id format",
+			})
+			return
+		}
+		poolID := uint64(poolIDFloat)
+
 		var room string
 		if subType == string(SubTypeKline) {
 			if len(args) < 3 {
+				client.Emit("error", map[string]interface{}{
+					"message": "Missing interval parameter for kline unsubscribe",
+				})
 				return
 			}
-			interval := args[2].(string)
+			interval, ok := safeGetString(args[2])
+			if !ok {
+				client.Emit("error", map[string]interface{}{
+					"message": "Invalid interval format",
+				})
+				return
+			}
 			room = getRoomName(subType, cast.ToString(poolID), interval)
 		} else {
 			room = getRoomName(subType, cast.ToString(poolID), "")
 		}
+
+		if room == "" {
+			return
+		}
+
 		client.Leave(socket.Room(room))
 		client.Emit("unsubscribed", map[string]interface{}{
-			"type":   subType,
+			"type":    subType,
 			"pool_id": poolID,
 		})
 	})
-
 }
 
 // Push message to specific user
 func (s *Server) PushToAccount(account string, event string, data interface{}) {
+	if s.io == nil || account == "" || event == "" {
+		return
+	}
 	accountRoom := socket.Room(fmt.Sprintf("user:%s", account))
 	s.io.To(accountRoom).Emit(event, data)
 }
 
 // Broadcast message to subscribers
 func (s *Server) Broadcast(sub Subscription, event string, data interface{}) {
+	if s.io == nil || event == "" {
+		return
+	}
 	room := socket.Room(getRoomName(string(sub.Type), cast.ToString(sub.PoolID), sub.Interval))
+	if room == "" {
+		return
+	}
 	s.io.To(room).Emit(event, data)
 }
 
@@ -202,7 +344,11 @@ func (s *Server) Close() error {
 	if s.worker != nil {
 		s.worker.StopConsume()
 	}
-	s.pusher.Stop()
-	s.io.Close(nil)
+	if s.pusher != nil {
+		s.pusher.Stop()
+	}
+	if s.io != nil {
+		s.io.Close(nil)
+	}
 	return nil
 }
