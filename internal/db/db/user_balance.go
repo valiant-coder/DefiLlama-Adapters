@@ -4,14 +4,10 @@ import (
 	"context"
 
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 func init() {
-	addMigrateFunc(func(r *Repo) error {
-		return r.AutoMigrate(&UserBalance{})
-	})
+
 }
 
 type UserPoolBalance struct {
@@ -21,22 +17,10 @@ type UserPoolBalance struct {
 }
 
 type UserBalance struct {
-	gorm.Model
 	Account string `gorm:"column:account;type:varchar(255);not null;uniqueIndex:idx_account_coin"`
 	// contract-symbol
 	Coin    string          `gorm:"column:coin;type:varchar(255);not null;uniqueIndex:idx_account_coin"`
 	Balance decimal.Decimal `gorm:"column:balance;type:decimal(36,18);not null;"`
-}
-
-func (UserBalance) TableName() string {
-	return "user_balances"
-}
-
-func (r *Repo) UpsertUserBalance(ctx context.Context, userBalance *UserBalance) error {
-	return r.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "account"}, {Name: "coin"}},
-		DoUpdates: clause.AssignmentColumns([]string{"balance"}),
-	}).Create(userBalance).Error
 }
 
 type UserBalanceWithLock struct {
@@ -77,12 +61,7 @@ func (r *Repo) calculateOrderLock(order *OpenOrder) (string, decimal.Decimal) {
 	return order.PoolBaseCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity)
 }
 
-func (r *Repo) GetUserBalances(ctx context.Context, accountName string) ([]UserBalanceWithLock, error) {
-	// 1. Get user balances
-	var userBalances []UserBalance
-	if err := r.WithContext(ctx).Where("account = ?", accountName).Find(&userBalances).Error; err != nil {
-		return nil, err
-	}
+func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userBalances []UserBalance) ([]UserBalanceWithLock, error) {
 
 	// Build balance mapping
 	userBalanceMap := make(map[string]decimal.Decimal, len(userBalances))
@@ -148,8 +127,4 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string) ([]UserB
 	}
 
 	return result, nil
-}
-
-func (r *Repo) DeleteUserBalance(ctx context.Context, account string) error {
-	return r.WithContext(ctx).Where("account = ?", account).Unscoped().Delete(&UserBalance{}).Error
 }
