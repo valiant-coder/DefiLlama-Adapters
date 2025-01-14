@@ -2,11 +2,13 @@ package marketplace
 
 import (
 	"context"
+	"errors"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/entity"
 	"time"
 
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 )
 
 // getIntervalDuration returns the time duration based on the interval string
@@ -51,13 +53,17 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 
 	lastKline, err := s.repo.GetLastKlineBefore(ctx, poolID, interval, start)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			lastKline = nil
+		} else {
+			return nil, err
+		}
 	}
 
 	// Create a map to store existing kline data
-	klineMap := make(map[time.Time]*ckhdb.Kline)
+	klineMap := make(map[int64]*ckhdb.Kline)
 	for _, k := range klines {
-		klineMap[k.IntervalStart] = k
+		klineMap[k.IntervalStart.Unix()] = k
 	}
 
 	// Calculate time interval
@@ -71,8 +77,28 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 		lastValidKline = lastKline
 	}
 
+	// Adjust start time to next complete cycle based on interval
+	if interval == "1M" {
+		// For monthly kline, adjust to beginning of next month
+		if !start.Equal(time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())) {
+			currentTime = time.Date(
+				start.Year(),
+				start.Month()+1,
+				1,
+				0, 0, 0, 0,
+				start.Location(),
+			)
+		}
+	} else {
+		// Calculate start time of next complete cycle
+		remainder := start.UnixNano() % duration.Nanoseconds()
+		if remainder != 0 {
+			currentTime = start.Add(duration - time.Duration(remainder))
+		}
+	}
+
 	for currentTime.Before(end) {
-		if k, exists := klineMap[currentTime]; exists {
+		if k, exists := klineMap[currentTime.Unix()]; exists {
 			// If data exists for this timestamp, use actual data
 			if lastValidKline == nil {
 				k.Open = k.Close

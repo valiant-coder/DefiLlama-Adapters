@@ -14,7 +14,10 @@ func TestKlineService_GetKline(t *testing.T) {
 	config.Load("config/config_dev.yaml")
 	klineService := NewKlineService()
 
-	klines, err := klineService.GetKline(context.Background(), 0, "1m", time.Now().Add(-time.Hour*8), time.Now())
+	start := time.Unix(1736649481, 0)
+	end := time.Unix(1736822281, 0)
+
+	klines, err := klineService.GetKline(context.Background(), 1, "4h", start, end)
 	if err != nil {
 		t.Errorf("KlineService.GetKline() error = %v", err)
 	}
