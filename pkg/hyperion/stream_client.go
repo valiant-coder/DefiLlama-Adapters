@@ -108,7 +108,6 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 			log.Printf("unmarshal response failed: %v", err)
 			return
 		}
-		log.Printf("action: %+v", action)
 
 		select {
 		case actionCh <- action:
