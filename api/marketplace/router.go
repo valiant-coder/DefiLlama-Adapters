@@ -76,6 +76,7 @@ func Run(addr string, release bool) error {
 
 	r.GET("/system-info", getSystemInfo)
 	r.POST("/eos/pay-cpu", payCPU)
+	r.GET("/support-tokens", getSupportTokens)
 
 	jwtParams := api.InitParams()
 	jwtParams.Authenticator = authenticator
@@ -96,6 +97,13 @@ func Run(addr string, release bool) error {
 	auth.GET("/credentials", getUserCredentials)
 
 	auth.GET("/user-info", getUserInfo)
+
+	auth.POST("/first-deposit", firstDeposit)
+	auth.POST("/deposit", deposit)
+	auth.POST("/withdrawal", withdrawal)
+
+	auth.GET("/deposit-history", getDepositHistory)
+	auth.GET("/withdrawal-history", getWithdrawalHistory)
 
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,

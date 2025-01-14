@@ -44,7 +44,6 @@ func (s *Service) SyncPoolStats() {
 func (s *Service) Run() error {
 	c := cron.New()
 
-	// 每分钟
 	addSyncFuncs(c, "0 * * * * *", s.SyncPoolStats)
 
 	c.Run()

@@ -465,6 +465,45 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/deposit": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deposit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deposit"
+                ],
+                "summary": "Deposit",
+                "parameters": [
+                    {
+                        "description": "deposit params",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqDeposit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespDeposit"
+                        }
+                    }
+                }
+            }
+        },
         "/eos/pay-cpu": {
             "post": {
                 "description": "pay cpu for user tx",
@@ -499,6 +538,45 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/first-deposit": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "First deposit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deposit"
+                ],
+                "summary": "First deposit",
+                "parameters": [
+                    {
+                        "description": "first deposit params",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqFirstDeposit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespFirstDeposit"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Login",
@@ -526,6 +604,32 @@ const docTemplatemarketplace = `{
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/support-tokens": {
+            "get": {
+                "description": "Get support tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "token"
+                ],
+                "summary": "Get support tokens",
+                "responses": {
+                    "200": {
+                        "description": "token list",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Token"
+                            }
+                        }
                     }
                 }
             }
@@ -583,6 +687,20 @@ const docTemplatemarketplace = `{
         }
     },
     "definitions": {
+        "entity.Chain": {
+            "type": "object",
+            "properties": {
+                "chain_name": {
+                    "type": "string"
+                },
+                "min_deposit_amount": {
+                    "type": "string"
+                },
+                "min_withdraw_amount": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Depth": {
             "type": "object",
             "properties": {
@@ -954,6 +1072,40 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.ReqDeposit": {
+            "type": "object",
+            "required": [
+                "chain_name",
+                "symbol"
+            ],
+            "properties": {
+                "chain_name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ReqFirstDeposit": {
+            "type": "object",
+            "required": [
+                "chain_name",
+                "public_key",
+                "symbol"
+            ],
+            "properties": {
+                "chain_name": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.ReqPayCPU": {
             "type": "object",
             "required": [
@@ -973,6 +1125,22 @@ const docTemplatemarketplace = `{
                 },
                 "method": {
                     "description": "google,apple",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.RespDeposit": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.RespFirstDeposit": {
+            "type": "object",
+            "properties": {
+                "address": {
                     "type": "string"
                 }
             }
@@ -1044,6 +1212,20 @@ const docTemplatemarketplace = `{
                     "$ref": "#/definitions/entity.PayCPU"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Token": {
+            "type": "object",
+            "properties": {
+                "support_chain": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Chain"
+                    }
+                },
+                "symbol": {
                     "type": "string"
                 }
             }

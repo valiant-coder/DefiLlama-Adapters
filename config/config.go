@@ -83,6 +83,10 @@ type EosConfig struct {
 	NodeURL         string `yaml:"node_url"`
 	PayerAccount    string `yaml:"payer_account"`
 	PayerPrivateKey string `yaml:"payer_private_key"`
+	Bridge          string `yaml:"bridge"`
+	Actor           string `yaml:"actor"`
+	ActorPrivateKey string `yaml:"actor_private_key"`
+	VaultEVMAddress string `yaml:"vault_evm_address"`
 }
 
 type JWTConfig struct {
