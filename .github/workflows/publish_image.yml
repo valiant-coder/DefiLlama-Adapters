@@ -9,7 +9,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  IMAGE_NAME: cdex/exapp-go
+  IMAGE_NAME: exapp/exapp-go
 
 jobs:
   build-and-push:
