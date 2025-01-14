@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine3.18 AS builder
+FROM golang:1.23-alpine3.21 AS builder
 
 COPY ./ /app
 WORKDIR /app
@@ -9,11 +9,11 @@ ENV GO111MODULE=on
 
 RUN go build -a -installsuffix cgo -ldflags '-s -w' -o exapp-go *.go
 
-FROM  alpine:3.17
+FROM  alpine:3.21
 
 COPY --from=builder /app/exapp-go /
 
 ADD config /config
 
 
-CMD [/exapp-go]
+CMD ["/exapp-go"]
