@@ -13,9 +13,10 @@ import (
 )
 
 type MappingAddrRequest struct {
-	PermissionID     uint8  `json:"permission_id"`
-	Remark           string `json:"remark"`
-	RecipientAddress string `json:"recipient_address"`
+	PermissionID         uint64 `json:"permission_id"`
+	Remark               string `json:"remark"`
+	RecipientAddress     string `json:"recipient_address"`
+	AssignDepositAddress string `json:"assign_deposit_address"`
 }
 
 type BridgeClient struct {
@@ -50,21 +51,18 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 			{Actor: eos.AN(c.actor), Permission: eos.PN("active")},
 		},
 		ActionData: eos.NewActionData(struct {
-			Actor            eos.AccountName `json:"actor" eos:"actor"`
-			PermissionID     uint8           `json:"permission_id" eos:"permission_id"`
-			Remark           string          `json:"remark" eos:"remark"`
-			RecipientAddress string          `json:"recipient_address" eos:"recipient_address"`
+			Actor                eos.AccountName `eos:"actor"`
+			PermissionID         uint64          `eos:"permission_id"`
+			RecipientAddress     string          `eos:"recipient_address"`
+			Remark               string          `eos:"remark"`
+			AssignDepositAddress string          `eos:"assign_deposit_address"`
 		}{
-			Actor:            eos.AN(c.actor),
-			PermissionID:     req.PermissionID,
-			Remark:           req.Remark,
-			RecipientAddress: req.RecipientAddress,
+			Actor:                eos.AN(c.actor),
+			PermissionID:         req.PermissionID,
+			Remark:               req.Remark,
+			RecipientAddress:     req.RecipientAddress,
+			AssignDepositAddress: req.AssignDepositAddress,
 		}),
-	}
-
-	txOpts := &eos.TxOptions{}
-	if err := txOpts.FillFromChain(ctx, c.api); err != nil {
-		return nil, err
 	}
 
 	return c.api.SignPushActions(ctx, action)
