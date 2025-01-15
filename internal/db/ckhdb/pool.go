@@ -106,7 +106,7 @@ SELECT
         ELSE 0
     END as change,
     CASE 
-        WHEN first_price IS NOT NULL THEN (COALESCE(last_price, last_known_price) / first_price - 1)
+        WHEN first_price IS NOT NULL THEN (toFloat64(COALESCE(last_price, last_known_price)) / toFloat64(first_price) - 1)
         ELSE 0
     END as change_rate,
     now() as timestamp
