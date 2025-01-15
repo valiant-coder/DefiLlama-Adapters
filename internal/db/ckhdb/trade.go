@@ -45,16 +45,16 @@ func (Trade) TableName() string {
 }
 
 func (r *ClickHouseRepo) InsertTradeIfNotExist(ctx context.Context, trade *Trade) error {
-	var makerSide,takerSide uint8
-	if trade.TakerIsBid {	
+	var makerSide, takerSide uint8
+	if trade.TakerIsBid {
 		takerSide = 0
 		makerSide = 1
-	}else{
+	} else {
 		takerSide = 1
 		makerSide = 0
 	}
-	trade.MakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.MakerOrderID,makerSide)
-	trade.TakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID,takerSide)
+	trade.MakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.MakerOrderID, makerSide)
+	trade.TakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, takerSide)
 	return r.DB.WithContext(ctx).Model(&Trade{}).Where("global_sequence = ?", trade.GlobalSequence).FirstOrCreate(trade).Error
 }
 
@@ -71,7 +71,13 @@ func (r *ClickHouseRepo) GetTrades(ctx context.Context, orderTag string) ([]Trad
 }
 
 func (r *ClickHouseRepo) GetMaxBlockNumber(ctx context.Context) (uint64, error) {
-	var blockNumber uint64
+	var blockNumber *uint64
 	err := r.DB.WithContext(ctx).Model(&Trade{}).Select("MAX(block_number)").Scan(&blockNumber).Error
-	return blockNumber, err
+	if err != nil {
+		return 0, err
+	}
+	if blockNumber == nil {
+		return 0, nil
+	}
+	return *blockNumber, nil
 }
