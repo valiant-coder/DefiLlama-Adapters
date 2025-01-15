@@ -26,7 +26,7 @@ var SyncCmd = &cli.Command{
 		db.New()
 
 		cfg := config.Conf()
-		srv, err := syncer.NewService(cfg.Hyperion, cfg.Nsq, cfg.Cdex)
+		srv, err := syncer.NewService(cfg.Eos, cfg.Nsq)
 		if err != nil {
 			log.Printf("create syncer service failed: %v\n", err)
 			return err

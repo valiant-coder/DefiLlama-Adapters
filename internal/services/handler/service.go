@@ -24,9 +24,9 @@ type Service struct {
 	repo        *db.Repo
 	worker      *nsqutil.Worker
 	poolCache   map[uint64]*db.Pool
-	cdexCfg     config.CdexConfig
 	eosCfg      config.EosConfig
-	hyperionCfg config.HyperionConfig
+	cdexCfg     config.CdexConfig
+	exappCfg    config.ExappConfig
 	publisher   *NSQPublisher
 }
 
@@ -45,9 +45,9 @@ func NewService() (*Service, error) {
 		repo:        repo,
 		nsqCfg:      cfg.Nsq,
 		poolCache:   make(map[uint64]*db.Pool),
-		cdexCfg:     cfg.Cdex,
 		eosCfg:      cfg.Eos,
-		hyperionCfg: cfg.Hyperion,
+		cdexCfg:     cfg.Eos.CdexConfig,
+		exappCfg:    cfg.Eos.Exapp,
 		publisher:   publisher,
 	}, nil
 }
@@ -79,7 +79,7 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		log.Printf("Unmarshal action failed: %v", err)
 		return nil
 	}
-	if action.Act.Account != s.cdexCfg.EventContract && action.Act.Account != s.cdexCfg.PoolContract && action.Act.Account != s.cdexCfg.BridgeContract {
+	if action.Act.Account != s.cdexCfg.EventContract && action.Act.Account != s.cdexCfg.PoolContract && action.Act.Account != s.exappCfg.AssetContract {
 		return nil
 	}
 	switch action.Act.Name {

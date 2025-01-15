@@ -16,7 +16,7 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		return nil, errors.New("account is required")
 	}
 
-	hyperionCfg := config.Conf().Hyperion
+	hyperionCfg := config.Conf().Eos.Hyperion
 	hyperionClient := hyperion.NewClient(hyperionCfg.Endpoint)
 	tokens, err := hyperionClient.GetTokens(ctx, accountName)
 	if err != nil {

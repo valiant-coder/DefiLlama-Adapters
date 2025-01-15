@@ -33,7 +33,8 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		return err
 	}
 
-	cdexClient := cdex.NewClient(s.eosCfg.NodeURL, s.cdexCfg.DexContract, s.cdexCfg.PoolContract)
+	cdexCfg := s.eosCfg.CdexConfig
+	cdexClient := cdex.NewClient(s.eosCfg.NodeURL, cdexCfg.DexContract, cdexCfg.PoolContract)
 	pools, err := cdexClient.GetPools(ctx)
 	if err != nil {
 		return err

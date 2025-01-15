@@ -1,18 +1,29 @@
 mysql:
   host: localhost
-  port: 3306
+  port: "3306"
   database: mydb
   user: root
-  pass: password
+  pass: password123
   loc: Local
   migrate: true
 
+https:
+  enabled: false
+  cert_file: /path/to/cert.pem
+  key_file: /path/to/key.pem
+
+ws:
+  https:
+    enabled: false
+    cert_file: /path/to/ws_cert.pem
+    key_file: /path/to/ws_key.pem
+
 clickhouse:
   host: localhost
-  port: 9000
-  database: exapp-dev
+  port: "9000"
+  database: analytics_db
   user: default
-  pass: ""
+  pass: clickhouse_pass
 
 trace:
   exporter: jaeger
@@ -22,42 +33,55 @@ redis:
   is_cluster: false
   cluster:
     urls:
-      - "localhost:6379"
-    user: ""
-    pass: ""
+      - "redis-node1:6379"
+      - "redis-node2:6379"
+      - "redis-node3:6379"
+    user: redis_user
+    pass: redis_cluster_pass
   host: localhost
   port: 6379
   db: 0
-  pass: ""
+  pass: redis_pass
+
+nsq:
+  nsqds:
+    - "nsqd1:4150"
+    - "nsqd2:4150"
+  lookupd: "localhost:4161"
+  lookup_ttl: 60s
 
 jwt:
-  secret_key: "RqdCsdaS6X*!zn]E4rBv" 
-  realm: "exapp"
-  timeout: 24  # hour
+  secret_key: your_jwt_secret_key_here
+  realm: your_application_realm
+  timeout: 24
 
 oauth2:
   google:
-    client_id: "1234567890"
+    client_id: your_google_client_id
   apple:
-    client_id: "1234567890"
+    client_id: your_apple_client_id
 
 eos:
-  node_url: "https://eos.greymass.com"
-  payer_account: "your_payer_account"   
-  payer_private_key: "your_private_key" 
-
-hyperion:
-  endpoint: "https://eos.greymass.com"
-  stream_endpoint: "wss://eos.greymass.com"
-
-nsq:
-  nsqds: ["127.0.0.1:4150"]
-  lookupd: "127.0.0.1:4161"
-  lookup_ttl: 30s
-
-cdex:
-  dex_contract: ""
-  pool_contract: ""
-  exapp_contract: ""
-  history_contract: ""
-  event_contract: ""
+  node_url: https://eos.greymass.com
+  payer_account: myaccount
+  payer_private_key: your_private_key_here
+  hyperion:
+    start_block: 0
+    batch_size: 100
+    endpoint: https://hyperion.example.com
+    stream_endpoint: wss://hyperion.example.com/stream
+  cdex:
+    dex_contract: dexcontract
+    pool_contract: poolcontract
+    exapp_contract: exappcontract
+    history_contract: historycontract
+    event_contract: eventcontract
+    default_pool_taker_fee_rate: 0.003
+    default_pool_maker_fee_rate: 0.001
+  exapp:
+    vault_evm_address: "0x1234567890abcdef"
+    asset_contract: assetcontract
+    actor: exappactor
+    actor_private_key: your_actor_private_key
+  exsat:
+    bridge_contract: bridgecontract

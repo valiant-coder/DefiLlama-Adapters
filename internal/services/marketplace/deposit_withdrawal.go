@@ -85,14 +85,14 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 
 	bridgeClient := eos.NewBridgeClient(
 		s.eosCfg.NodeURL,
-		s.eosCfg.Bridge,
-		s.eosCfg.Actor,
-		s.eosCfg.ActorPrivateKey,
+		s.eosCfg.Exsat.BridgeContract,
+		s.eosCfg.Exapp.Actor,
+		s.eosCfg.Exapp.ActorPrivateKey,
 	)
 
 	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
 		PermissionID:     token.PermissionID,
-		RecipientAddress: s.eosCfg.VaultEVMAddress,
+		RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		Remark:           remark,
 	})
 	if err != nil {
@@ -105,7 +105,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	newDepositAddress, err := bridgeClient.GetDepositAddress(ctx, eos.RequestDepositAddress{
 		PermissionID: token.PermissionID,
 		Remark:       remark,
-		Recipient:    s.eosCfg.VaultEVMAddress,
+		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
 	})
 	if err != nil {
 		log.Printf("get deposit address from bridge error: %v", err)
@@ -172,14 +172,14 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 
 	bridgeClient := eos.NewBridgeClient(
 		s.eosCfg.NodeURL,
-		s.eosCfg.Bridge,
-		s.eosCfg.Actor,
-		s.eosCfg.ActorPrivateKey,
+		s.eosCfg.Exapp.AssetContract,
+		s.eosCfg.Exapp.Actor,
+		s.eosCfg.Exapp.ActorPrivateKey,
 	)
 
 	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
 		PermissionID:     token.PermissionID,
-		RecipientAddress: s.eosCfg.VaultEVMAddress,
+		RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		Remark:           remark,
 	})
 	if err != nil {
@@ -192,7 +192,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	newDepositAddress, err := bridgeClient.GetDepositAddress(ctx, eos.RequestDepositAddress{
 		PermissionID: token.PermissionID,
 		Remark:       remark,
-		Recipient:    s.eosCfg.VaultEVMAddress,
+		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
 	})
 	if err != nil {
 		log.Printf("get deposit address from bridge error: %v", err)

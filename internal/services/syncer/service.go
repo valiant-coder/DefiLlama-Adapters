@@ -26,9 +26,12 @@ type Service struct {
 	hyperionCfg    config.HyperionConfig
 	nsqCfg         config.NsqConfig
 	cdexCfg        config.CdexConfig
+	exappCfg       config.ExappConfig
+	exsatCfg       config.ExsatConfig
 }
 
-func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig, cdexCfg config.CdexConfig) (*Service, error) {
+func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, error) {
+	hyperionCfg := eosCfg.Hyperion
 	hyperionClient := hyperion.NewClient(hyperionCfg.Endpoint)
 	streamClient, err := hyperion.NewStreamClient(hyperionCfg.StreamEndpoint)
 	if err != nil {
@@ -64,7 +67,8 @@ func NewService(hyperionCfg config.HyperionConfig, nsqCfg config.NsqConfig, cdex
 		lastBlockNum:   lastBlockNum,
 		hyperionCfg:    hyperionCfg,
 		nsqCfg:         nsqCfg,
-		cdexCfg:        cdexCfg,
+		cdexCfg:        eosCfg.CdexConfig,
+		exappCfg:       eosCfg.Exapp,
 	}, nil
 }
 
@@ -91,7 +95,7 @@ func (s *Service) Start(ctx context.Context) error {
 			Filters:   []hyperion.RequestFilter{},
 		},
 		{
-			Contract:  s.cdexCfg.BridgeContract,
+			Contract:  s.exappCfg.AssetContract,
 			Action:    "*",
 			Account:   "",
 			StartFrom: int64(s.lastBlockNum) + 1,
@@ -133,7 +137,7 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf("%s:*,%s:*,%s:*", s.cdexCfg.PoolContract, s.cdexCfg.EventContract, s.cdexCfg.BridgeContract),
+			Filter:  fmt.Sprintf("%s:*,%s:*,%s:*", s.cdexCfg.PoolContract, s.cdexCfg.EventContract, s.exappCfg.AssetContract),
 			Limit:   s.hyperionCfg.BatchSize,
 			Sort:    "asc",
 			After:   strconv.FormatUint(s.lastBlockNum, 10),

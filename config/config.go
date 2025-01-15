@@ -59,6 +59,8 @@ type Config struct {
 		Pass string `yaml:"pass"`
 	} `yaml:"redis"`
 
+	Nsq NsqConfig `yaml:"nsq"`
+
 	JWT JWTConfig `mapstructure:"jwt"`
 
 	Oauth2 struct {
@@ -71,22 +73,12 @@ type Config struct {
 	} `yaml:"oauth2"`
 
 	Eos EosConfig `yaml:"eos"`
-
-	Hyperion HyperionConfig `yaml:"hyperion"`
-
-	Nsq NsqConfig `yaml:"nsq"`
-
-	Cdex CdexConfig `yaml:"cdex"`
 }
 
-type EosConfig struct {
-	NodeURL         string `yaml:"node_url"`
-	PayerAccount    string `yaml:"payer_account"`
-	PayerPrivateKey string `yaml:"payer_private_key"`
-	Bridge          string `yaml:"bridge"`
-	Actor           string `yaml:"actor"`
-	ActorPrivateKey string `yaml:"actor_private_key"`
-	VaultEVMAddress string `yaml:"vault_evm_address"`
+type NsqConfig struct {
+	Nsqds     []string      `yaml:"nsqds"`
+	Lookupd   string        `yaml:"lookupd"`
+	LookupTTl time.Duration `yaml:"lookup_ttl"`
 }
 
 type JWTConfig struct {
@@ -96,6 +88,16 @@ type JWTConfig struct {
 	Timeout int `yaml:"timeout"`
 }
 
+type EosConfig struct {
+	NodeURL         string         `yaml:"node_url"`
+	PayerAccount    string         `yaml:"payer_account"`
+	PayerPrivateKey string         `yaml:"payer_private_key"`
+	Hyperion        HyperionConfig `yaml:"hyperion"`
+	CdexConfig      CdexConfig     `yaml:"cdex"`
+	Exapp           ExappConfig    `yaml:"exapp"`
+	Exsat           ExsatConfig    `yaml:"exsat"`
+}
+
 type HyperionConfig struct {
 	StartBlock     uint64 `yaml:"start_block"`
 	BatchSize      int    `yaml:"batch_size"`
@@ -103,10 +105,15 @@ type HyperionConfig struct {
 	StreamEndpoint string `yaml:"stream_endpoint"`
 }
 
-type NsqConfig struct {
-	Nsqds     []string      `yaml:"nsqds"`
-	Lookupd   string        `yaml:"lookupd"`
-	LookupTTl time.Duration `yaml:"lookup_ttl"`
+type ExappConfig struct {
+	VaultEVMAddress string `yaml:"vault_evm_address"`
+	AssetContract   string `yaml:"asset_contract"`
+	Actor           string `yaml:"actor"`
+	ActorPrivateKey string `yaml:"actor_private_key"`
+}
+
+type ExsatConfig struct {
+	BridgeContract string `yaml:"bridge_contract"`
 }
 
 type CdexConfig struct {
@@ -115,8 +122,6 @@ type CdexConfig struct {
 	EXAppContract   string `yaml:"exapp_contract"`
 	HistoryContract string `yaml:"history_contract"`
 	EventContract   string `yaml:"event_contract"`
-
-	BridgeContract string `yaml:"bridge_contract"`
 
 	DefaultPoolTakerFeeRate float64 `yaml:"default_pool_taker_fee_rate"`
 	DefaultPoolMakerFeeRate float64 `yaml:"default_pool_maker_fee_rate"`
