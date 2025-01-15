@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"exapp-go/pkg/hyperion"
+	"exapp-go/pkg/utils"
 	"log"
 
 	"exapp-go/internal/db/db"
@@ -65,12 +66,18 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		return nil
 	}
 
+	depositTime, err := utils.ParseTime(action.Timestamp)
+	if err != nil {
+		log.Printf("parse action time failed: %v", err)
+		return nil
+	}
 	err = s.repo.CreateDepositRecord(ctx, &db.DepositRecord{
 		Symbol: asset.Symbol.Symbol,
 		UID:    uid,
 		Amount: decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
 		Status: db.DepositStatusSuccess,
 		TxHash: action.TrxID,
+		Time:   depositTime,
 	})
 	if err != nil {
 		log.Printf("Create deposit record failed: %v-%v", data, err)

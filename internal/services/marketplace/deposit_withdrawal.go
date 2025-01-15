@@ -28,7 +28,15 @@ func NewDepositWithdrawalService() *DepositWithdrawalService {
 }
 
 func (s *DepositWithdrawalService) GetDepositRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]entity.RespDepositRecord, int64, error) {
-	return nil, 0, nil
+	records, total, err := s.repo.GetDepositRecords(ctx, uid, queryParams)
+	if err != nil {
+		return nil, 0, err
+	}
+	var result []entity.RespDepositRecord
+	for _, record := range records {
+		result = append(result, entity.FormatDepositRecord(record))
+	}
+	return result, total, nil
 }
 
 func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string, req *entity.ReqFirstDeposit) (entity.RespFirstDeposit, error) {

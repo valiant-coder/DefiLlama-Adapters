@@ -1,5 +1,9 @@
 package entity
 
+import (
+	"exapp-go/internal/db/db"
+)
+
 type ReqFirstDeposit struct {
 	PublicKey string `json:"public_key" binding:"required"`
 	Symbol    string `json:"symbol" binding:"required"`
@@ -19,9 +23,19 @@ type RespDeposit struct {
 	Address string `json:"address"`
 }
 
-
 type RespDepositRecord struct {
-	ID        uint64 `json:"id"`
-	Address   string `json:"address"`
-	CreatedAt string `json:"created_at"`
+	Symbol string `json:"symbol"`
+	Amount string `json:"amount"`
+	// 0 pending 1success 2 fail
+	Status    uint8 `json:"status"`
+	DepositAt Time  `json:"deposit_at"`
+}
+
+func FormatDepositRecord(record *db.DepositRecord) RespDepositRecord {
+	return RespDepositRecord{
+		Symbol:    record.Symbol,
+		Amount:    record.Amount.String(),
+		Status:    uint8(record.Status),
+		DepositAt: Time(record.Time),
+	}
 }
