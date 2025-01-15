@@ -78,7 +78,7 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		log.Printf("Unmarshal action failed: %v", err)
 		return nil
 	}
-	if action.Act.Account != s.cdexCfg.EventContract && action.Act.Account != s.cdexCfg.PoolContract {
+	if action.Act.Account != s.cdexCfg.EventContract && action.Act.Account != s.cdexCfg.PoolContract && action.Act.Account != s.cdexCfg.BridgeContract {
 		return nil
 	}
 	switch action.Act.Name {
@@ -90,6 +90,10 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return s.handleMatchOrder(action)
 	case "create":
 		return s.handleCreatePool(action)
+	case "lognewacc":
+		return s.handleNewAccount(action)	
+	case "logdeposit":
+		return s.handleDeposit(action)
 	default:
 		log.Printf("Unknown action: %s", action.Act.Name)
 		return nil

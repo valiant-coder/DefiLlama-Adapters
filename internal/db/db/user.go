@@ -113,3 +113,20 @@ func (r *Repo) GetUserCredentials(ctx context.Context, uid string) ([]UserCreden
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).Find(&credentials)
 	return credentials, result.Error
 }
+
+func (r *Repo) GetUserCredentialByPubkey(ctx context.Context, pubkey string) (*UserCredential, error) {
+	var credential UserCredential
+	result := r.DB.WithContext(ctx).Where("public_key = ?", pubkey).First(&credential)
+	return &credential, result.Error
+}
+
+func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredential) error {
+	return r.DB.WithContext(ctx).Model(&UserCredential{}).Where("id = ?", credential.ID).Updates(credential).Error
+}
+
+
+func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (string, error) {
+	var credential UserCredential
+	result := r.DB.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&credential)
+	return credential.UID, result.Error
+}

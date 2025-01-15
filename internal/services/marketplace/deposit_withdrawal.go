@@ -53,8 +53,15 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		return entity.RespFirstDeposit{}, errors.New("no found passkey")
 	}
 
+	token, err := s.repo.GetToken(ctx, req.Symbol, req.ChainName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.RespFirstDeposit{}, errors.New("token not found")
+		}
+		return entity.RespFirstDeposit{}, err
+	}
 	remark := fmt.Sprintf("new-%s-%s", uid, req.PublicKey)
-	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, req.Symbol, req.ChainName)
+	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, token.PermissionID)
 	if err != nil {
 		return entity.RespFirstDeposit{}, err
 	}
@@ -66,14 +73,6 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 				}, nil
 			}
 		}
-	}
-
-	token, err := s.repo.GetToken(ctx, req.Symbol, req.ChainName)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return entity.RespFirstDeposit{}, errors.New("token not found")
-		}
-		return entity.RespFirstDeposit{}, err
 	}
 
 	bridgeClient := eos.NewBridgeClient(
@@ -106,11 +105,10 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	}
 	log.Printf("get first deposit address: %s", newDepositAddress)
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
-		UID:       uid,
-		Address:   newDepositAddress,
-		Symbol:    req.Symbol,
-		ChainName: req.ChainName,
-		Remark:    remark,
+		UID:          uid,
+		Address:      newDepositAddress,
+		PermissionID: token.PermissionID,
+		Remark:       remark,
 	})
 	if err != nil {
 		return entity.RespFirstDeposit{}, err
@@ -140,7 +138,15 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		return entity.RespDeposit{}, errors.New("no eos account found")
 	}
 
-	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, req.Symbol, req.ChainName)
+	token, err := s.repo.GetToken(ctx, req.Symbol, req.ChainName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.RespDeposit{}, errors.New("token not found")
+		}
+		return entity.RespDeposit{}, err
+	}
+
+	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, token.PermissionID)
 	if err != nil {
 		return entity.RespDeposit{}, err
 	}
@@ -155,14 +161,6 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			}
 		}
 	}
-	
-	token, err := s.repo.GetToken(ctx, req.Symbol, req.ChainName)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return entity.RespDeposit{}, errors.New("token not found")
-		}
-		return entity.RespDeposit{}, err
-	}
 
 	bridgeClient := eos.NewBridgeClient(
 		s.eosCfg.NodeURL,
@@ -174,7 +172,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
 		PermissionID:     token.PermissionID,
 		RecipientAddress: s.eosCfg.VaultEVMAddress,
-		Remark:          remark,
+		Remark:           remark,
 	})
 	if err != nil {
 		return entity.RespDeposit{}, err
@@ -194,11 +192,10 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 	log.Printf("new deposit address: %s", newDepositAddress)
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
-		UID:       uid,
-		Address:   newDepositAddress,
-		Symbol:    req.Symbol,
-		ChainName: req.ChainName,
-		Remark:    remark,
+		UID:          uid,
+		Address:      newDepositAddress,
+		PermissionID: token.PermissionID,
+		Remark:       remark,
 	})
 	if err != nil {
 		return entity.RespDeposit{}, err
@@ -207,4 +204,3 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		Address: newDepositAddress,
 	}, nil
 }
-

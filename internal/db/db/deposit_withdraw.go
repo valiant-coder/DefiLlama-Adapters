@@ -16,6 +16,14 @@ func init() {
 	})
 }
 
+type DepositStatus uint8
+
+const (
+	DepositStatusPending DepositStatus = iota
+	DepositStatusSuccess
+	DepositStatusFailed
+)
+
 type DepositRecord struct {
 	gorm.Model
 	Symbol    string          `gorm:"column:symbol;type:varchar(255);not null"`
@@ -24,7 +32,7 @@ type DepositRecord struct {
 	Address   string          `gorm:"column:address;type:varchar(255);not null"`
 	Amount    decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
 	Fee       decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
-	Status    uint8           `gorm:"column:status;type:varchar(255);not null"`
+	Status    DepositStatus   `gorm:"column:status;type:tinyint(3);not null"`
 	TxHash    string          `gorm:"column:tx_hash;type:varchar(255);not null"`
 	Remark    string          `gorm:"column:remark;type:varchar(255);not null"`
 }
@@ -39,11 +47,10 @@ func (r *Repo) CreateDepositRecord(ctx context.Context, record *DepositRecord) e
 
 type UserDepositAddress struct {
 	gorm.Model
-	UID       string `gorm:"column:uid;type:varchar(255);not null"`
-	Address   string `gorm:"column:address;type:varchar(255);not null"`
-	Symbol    string `gorm:"column:symbol;type:varchar(255);not null"`
-	ChainName string `gorm:"column:chain_name;type:varchar(255);not null"`
-	Remark    string `gorm:"column:remark;type:varchar(255);not null"`
+	UID          string `gorm:"column:uid;type:varchar(255);not null"`
+	Address      string `gorm:"column:address;type:varchar(255);not null"`
+	PermissionID uint64 `gorm:"column:permission_id;type:bigint(20);not null"`
+	Remark       string `gorm:"column:remark;type:varchar(255);not null"`
 }
 
 func (u *UserDepositAddress) TableName() string {
@@ -54,8 +61,8 @@ func (r *Repo) CreateUserDepositAddress(ctx context.Context, address *UserDeposi
 	return r.DB.WithContext(ctx).Create(address).Error
 }
 
-func (r *Repo) GetUserDepositAddress(ctx context.Context, uid string, symbol string, chainName string) ([]UserDepositAddress, error) {
+func (r *Repo) GetUserDepositAddress(ctx context.Context, uid string,permissionID uint64) ([]UserDepositAddress, error) {
 	var addresses []UserDepositAddress
-	err := r.DB.WithContext(ctx).Where("uid = ? and symbol = ? and chain_name = ?", uid, symbol, chainName).Find(&addresses).Error
+	err := r.DB.WithContext(ctx).Where("uid = ? and permission_id = ?", uid, permissionID).Find(&addresses).Error
 	return addresses, err
 }

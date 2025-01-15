@@ -43,6 +43,12 @@ func (r *Repo) GetToken(ctx context.Context, symbol string, chainName string) (*
 	return &token, err
 }
 
+func (r *Repo) GetTokenByEOS(ctx context.Context, eosContractAddress string,symbol string) (*Token, error) {
+	var token Token
+	err := r.WithContext(ctx).Where("eos_contract_address = ? and symbol = ?", eosContractAddress,symbol).First(&token).Error
+	return &token, err
+}
+
 func (r *Repo) ListTokens(ctx context.Context) ([]Token, error) {
 	var tokens []Token
 	err := r.WithContext(ctx).Find(&tokens).Error
