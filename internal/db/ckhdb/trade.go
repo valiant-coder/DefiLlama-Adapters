@@ -72,7 +72,7 @@ func (r *ClickHouseRepo) GetTrades(ctx context.Context, orderTag string) ([]Trad
 
 func (r *ClickHouseRepo) GetMaxBlockNumber(ctx context.Context) (uint64, error) {
 	var blockNumber *uint64
-	err := r.DB.WithContext(ctx).Model(&Trade{}).Select("MAX(block_number)").Scan(&blockNumber).Error
+	err := r.DB.WithContext(ctx).Model(&Trade{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
 	if err != nil {
 		return 0, err
 	}

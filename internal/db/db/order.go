@@ -108,9 +108,15 @@ func (r *Repo) GetOpenOrderByTrader(ctx context.Context, trader string) ([]*Open
 }
 
 func (r *Repo) GetOpenOrderMaxBlockNumber(ctx context.Context) (uint64, error) {
-	var blockNumber uint64
-	err := r.WithContext(ctx).Model(&OpenOrder{}).Select("MAX(block_number)").Scan(&blockNumber).Error
-	return blockNumber, err
+	var blockNumber *uint64
+	err := r.WithContext(ctx).Model(&OpenOrder{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
+	if err != nil {
+		return 0, err
+	}
+	if blockNumber == nil {
+		return 0, nil
+	}
+	return *blockNumber, nil
 }
 
 type OrderBook struct {
