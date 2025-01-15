@@ -69,7 +69,7 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 }
 
 type RequestDepositAddress struct {
-	PermissionID uint8  `json:"permission_id"`
+	PermissionID uint64 `json:"permission_id"`
 	Remark       string `json:"remark"`
 	Recipient    string `json:"recipient"`
 }

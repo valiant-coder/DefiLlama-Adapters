@@ -19,7 +19,7 @@ type Token struct {
 	gorm.Model
 	Symbol       string `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol_chain_name"`
 	ChainName    string `gorm:"column:chain_name;type:varchar(255);not null;uniqueIndex:idx_symbol_chain_name"`
-	PermissionID uint8  `gorm:"column:permission_id;type:tinyint(3);not null"`
+	PermissionID uint64 `gorm:"column:permission_id;type:bigint(20);not null"`
 	Decimals     uint8  `gorm:"column:decimals;type:tinyint(3);not null"`
 
 	EOSContractAddress string          `gorm:"column:eos_contract_address;type:varchar(255);not null"`
