@@ -145,6 +145,7 @@ func (s *Service) syncHistory(ctx context.Context) error {
 		if len(resp.Actions) == 0 {
 			break
 		}
+		log.Printf("sync actions history: %d", len(resp.Actions))
 
 		for _, action := range resp.Actions {
 			if err := s.publishAction(action); err != nil {

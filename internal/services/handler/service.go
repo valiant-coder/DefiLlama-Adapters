@@ -73,6 +73,7 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
+	log.Println("get new action")
 	var action hyperion.Action
 	if err := json.Unmarshal(msg.Body, &action); err != nil {
 		log.Printf("Unmarshal action failed: %v", err)
@@ -91,7 +92,7 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 	case "create":
 		return s.handleCreatePool(action)
 	case "lognewacc":
-		return s.handleNewAccount(action)	
+		return s.handleNewAccount(action)
 	case "logdeposit":
 		return s.handleDeposit(action)
 	default:
