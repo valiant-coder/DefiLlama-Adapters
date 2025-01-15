@@ -504,6 +504,37 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/deposit-history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get deposit history",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deposit"
+                ],
+                "summary": "Get deposit history",
+                "responses": {
+                    "200": {
+                        "description": "deposit records",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.RespDepositRecord"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/eos/pay-cpu": {
             "post": {
                 "description": "pay cpu for user tx",
@@ -1133,6 +1164,24 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "address": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.RespDepositRecord": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "deposit_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "0 pending 1success 2 fail",
+                    "type": "integer"
+                },
+                "symbol": {
                     "type": "string"
                 }
             }
