@@ -100,7 +100,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	}
 	log.Printf("mapping new address txid: %v", resp.TransactionID)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	newDepositAddress, err := bridgeClient.GetDepositAddress(ctx, eos.RequestDepositAddress{
 		PermissionID: token.PermissionID,
@@ -172,7 +172,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 
 	bridgeClient := eos.NewBridgeClient(
 		s.eosCfg.NodeURL,
-		s.eosCfg.Exapp.AssetContract,
+		s.eosCfg.Exsat.BridgeContract,
 		s.eosCfg.Exapp.Actor,
 		s.eosCfg.Exapp.ActorPrivateKey,
 	)
@@ -187,7 +187,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 	log.Printf("mapping new address txid: %v", resp.TransactionID)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	newDepositAddress, err := bridgeClient.GetDepositAddress(ctx, eos.RequestDepositAddress{
 		PermissionID: token.PermissionID,
