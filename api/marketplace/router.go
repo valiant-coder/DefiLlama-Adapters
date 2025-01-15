@@ -46,6 +46,7 @@ func Run(addr string, release bool) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowCredentials = true
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Authorization")
 	corsConfig.MaxAge = 12 * time.Hour
 	handleRecovery := func(c *gin.Context, err interface{}) {
 		log.Logger().Errorf("[Recovery] %s", err)
