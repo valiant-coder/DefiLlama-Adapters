@@ -2,18 +2,21 @@ package ckhdb
 
 import (
 	"context"
-	"fmt"
 	"exapp-go/config"
 	"exapp-go/pkg/queryparams"
+	"fmt"
 	"sync"
+	"time"
 
 	"gorm.io/driver/clickhouse"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-var clickhouseDB *gorm.DB
-var ckOnce sync.Once
+var (
+	clickhouseDB *gorm.DB
+	ckOnce       sync.Once
+)
 
 func ckhDB() *gorm.DB {
 	ckOnce.Do(func() {
@@ -22,11 +25,21 @@ func ckhDB() *gorm.DB {
 		dsn := fmt.Sprintf("clickhouse://%s:%s@%s:%s/%s?dial_timeout=10s&read_timeout=20s", config.User, config.Pass, config.Host, config.Port, config.Database)
 		var err error
 		clickhouseDB, err = gorm.Open(clickhouse.Open(dsn), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Silent),
+			Logger:      logger.Default.LogMode(logger.Silent),
+			PrepareStmt: false,
 		})
 		if err != nil {
 			panic("failed to connect clickhouse database")
 		}
+
+		sqlDB, err := clickhouseDB.DB()
+		if err != nil {
+			panic("failed to get database instance")
+		}
+
+		sqlDB.SetMaxIdleConns(10)
+		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Hour)
 	})
 	return clickhouseDB
 }
@@ -86,13 +99,13 @@ func (c *ClickHouseRepo) Query(ctx context.Context, models interface{}, params *
 	if len(params.TableName) > 0 {
 		db = db.Table(params.TableName)
 	}
-	err = db.Limit(-1).Offset(-1).Count(&total).Error
-	if err != nil {
+
+	subQuery := db
+	if err = subQuery.Session(&gorm.Session{}).Count(&total).Error; err != nil {
 		return
 	}
 
-	err = db.Limit(params.Limit).Offset(params.Offset).Order(params.Order).Find(models).Error
-	if err != nil {
+	if err = db.Limit(params.Limit).Offset(params.Offset).Order(params.Order).Find(models).Error; err != nil {
 		return
 	}
 
