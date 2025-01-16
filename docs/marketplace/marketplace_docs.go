@@ -1143,6 +1143,9 @@ const docTemplatemarketplace = `{
                 "single_signed_transaction"
             ],
             "properties": {
+                "public_key": {
+                    "type": "string"
+                },
                 "single_signed_transaction": {
                     "type": "string"
                 }
