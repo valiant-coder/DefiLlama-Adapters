@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Client Example</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div>
+        <h2>WebSocket Connection Status: <span id="status">Not Connected</span></h2>
+        
+        <!-- Authentication Section -->
+        <div>
+            <input type="text" id="accountInput" placeholder="Enter Account">
+            <button onclick="authenticate()">Authenticate</button>
+            <button onclick="unauthenticate()">Unauthenticate</button>
+        </div>
+
+        <!-- Kline Subscription Section -->
+        <div>
+            <h3>Kline Subscription</h3>
+            <input type="number" id="klinePoolId" placeholder="Trading Pair ID">
+            <input type="text" id="klineInterval" placeholder="Time Interval">
+            <button onclick="subscribeKline()">Subscribe Kline</button>
+        </div>
+
+        <!-- Depth Subscription Section -->
+        <div>
+            <h3>Depth Subscription</h3>
+            <input type="number" id="depthPoolId" placeholder="Trading Pair ID">
+            <button onclick="subscribeDepth()">Subscribe Depth</button>
+        </div>
+
+        <!-- Trade Subscription Section -->
+        <div>
+            <h3>Trade Subscription</h3>
+            <input type="number" id="tradesPoolId" placeholder="Trading Pair ID">
+            <button onclick="subscribeTrades()">Subscribe Trades</button>
+        </div>
+
+        <!-- Unsubscribe Section -->
+        <div>
+            <h3>Unsubscribe</h3>
+            <select id="unsubType">
+                <option value="kline">Kline</option>
+                <option value="depth">Depth</option>
+                <option value="trades">Trades</option>
+            </select>
+            <input type="number" id="unsubPoolId" placeholder="Trading Pair ID">
+            <input type="text" id="unsubInterval" placeholder="Time Interval (Kline Only)">
+            <button onclick="unsubscribe()">Unsubscribe</button>
+        </div>
+
+        <!-- Data Display Area -->
+        <div>
+            <h3>Received Data:</h3>
+            <pre id="dataDisplay"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Socket.IO connection
+        const socket = io('https://test2-wss.cryptopioneer.net', {
+            transports: ['websocket'],
+            autoConnect: true
+        });
+
+        // Connection status handling
+        socket.on('connect', () => {
+            document.getElementById('status').textContent = 'Connected';
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('status').textContent = 'Not Connected';
+        });
+
+        // Display received data
+        function displayData(event, data) {
+            const display = document.getElementById('dataDisplay');
+            const message = `${event}: ${JSON.stringify(data, null, 2)}`;
+            display.textContent = message + '\n' + display.textContent;
+        }
+
+        // Authentication related
+        function authenticate() {
+            const account = document.getElementById('accountInput').value;
+            if (!account) {
+                alert('Please enter account');
+                return;
+            }
+            socket.emit('authenticate', account);
+        }
+
+        function unauthenticate() {
+            const account = document.getElementById('accountInput').value;
+            if (!account) {
+                alert('Please enter account');
+                return;
+            }
+            socket.emit('unauthenticate', account);
+        }
+
+        // Kline subscription
+        function subscribeKline() {
+            const poolId = Number(document.getElementById('klinePoolId').value);
+            const interval = document.getElementById('klineInterval').value;
+            if (!poolId || !interval) {
+                alert('Please enter complete kline subscription information');
+                return;
+            }
+            socket.emit('subscribe_kline', poolId, interval);
+        }
+
+        // Depth subscription
+        function subscribeDepth() {
+            const poolId = Number(document.getElementById('depthPoolId').value);
+            if (!poolId) {
+                alert('Please enter trading pair ID');
+                return;
+            }
+            socket.emit('subscribe_depth', poolId);
+        }
+
+        // Trade subscription
+        function subscribeTrades() {
+            const poolId = Number(document.getElementById('tradesPoolId').value);
+            if (!poolId) {
+                alert('Please enter trading pair ID');
+                return;
+            }
+            socket.emit('subscribe_trades', poolId);
+        }
+
+        // Unsubscribe
+        function unsubscribe() {
+            const type = document.getElementById('unsubType').value;
+            const poolId = Number(document.getElementById('unsubPoolId').value);
+            const interval = document.getElementById('unsubInterval').value;
+            
+            if (!type || !poolId) {
+                alert('Please enter complete unsubscribe information');
+                return;
+            }
+
+            if (type === 'kline' && !interval) {
+                alert('Time interval is required for kline unsubscription');
+                return;
+            }
+
+            const args = [type, poolId];
+            if (type === 'kline') {
+                args.push(interval);
+            }
+            socket.emit('unsubscribe', ...args);
+        }
+
+        // Listen to various push events
+        socket.on('authenticated', (data) => {
+            displayData('Authentication Successful', data);
+        });
+
+        socket.on('subscribed', (data) => {
+            displayData('Subscription Successful', data);
+        });
+
+        socket.on('unsubscribed', (data) => {
+            displayData('Unsubscription Successful', data);
+        });
+
+        socket.on('kline', (data) => {
+            displayData('Kline Data', data);
+        });
+
+        socket.on('depth', (data) => {
+            displayData('Depth Data', data);
+        });
+
+        socket.on('trade', (data) => {
+            displayData('Trade Data', data);
+        });
+
+        socket.on('order_update', (data) => {
+            displayData('Order Update', data);
+        });
+
+        socket.on('balance_update', (data) => {
+            displayData('Balance Update', data);
+        });
+
+        socket.on('error', (data) => {
+            displayData('Error', data);
+            alert(data.message);
+        });
+    </script>
+</body>
+</html>
