@@ -9,6 +9,7 @@ import (
 	"exapp-go/pkg/log"
 	"exapp-go/pkg/oauth2"
 	"strings"
+	"time"
 )
 
 type UserService struct {
@@ -112,4 +113,14 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 		Name:         req.Name,
 		Synced:       req.Synced,
 	})
+}
+
+func (s *UserService) UpdateUserCredentialUsage(ctx context.Context, publicKey string, ip string) error {
+	credential, err := s.db.GetUserCredentialByPubkey(ctx, publicKey)
+	if err != nil {
+		return err
+	}
+	credential.LastUsedAt = time.Now()
+	credential.LastUsedIP = ip
+	return s.db.UpdateUserCredential(ctx, credential)
 }

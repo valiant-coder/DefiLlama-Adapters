@@ -4,6 +4,7 @@ import (
 	"exapp-go/api"
 	"exapp-go/config"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/services/marketplace"
 
 	pkeos "exapp-go/pkg/eos"
 
@@ -27,6 +28,15 @@ func payCPU(c *gin.Context) {
 		api.Error(c, err)
 		return
 	}
+
+	if request.PublicKey != "" {
+		userService := marketplace.NewUserService()
+		if err := userService.UpdateUserCredentialUsage(c.Request.Context(), request.PublicKey, c.ClientIP()); err != nil {
+			api.Error(c, err)
+			return
+		}
+	}
+
 	response, err := pkeos.SignAndBroadcastByPayer(
 		c.Request.Context(),
 		eos.New(config.Conf().Eos.NodeURL),
