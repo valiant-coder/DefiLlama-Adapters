@@ -60,6 +60,7 @@ func (s *Service) PowerUp() {
 		conf.PayerPrivateKey,
 		conf.PowerUp.NetEOS,
 		conf.PowerUp.CPUEOS,
+		conf.PowerUp.MaxPayment,
 	)
 	if err != nil {
 		log.Printf("failed to powerup for payer account: %v\n", err)
@@ -73,6 +74,7 @@ func (s *Service) PowerUp() {
 		conf.Exapp.ActorPrivateKey,
 		conf.PowerUp.NetEOS,
 		conf.PowerUp.CPUEOS,
+		conf.PowerUp.MaxPayment,
 	)
 	if err != nil {
 		log.Printf("failed to powerup for exapp actor: %v\n", err)

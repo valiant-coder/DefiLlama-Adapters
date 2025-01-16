@@ -17,6 +17,7 @@ func PowerUp(
 	privKey string,
 	cpuEOS uint64,
 	netEOS uint64,
+	maxPayment uint64,
 ) error {
 	// Get weight values
 	netWeight, cpuWeight, err := GetPowerUpStatusWeight(ctx, endpoint)
@@ -55,7 +56,7 @@ func PowerUp(
 			Days:       1,
 			NetFrac:    netFrac,
 			CPUFrac:    cpuFrac,
-			MaxPayment: eos.NewEOSAsset(int64(100000)),
+			MaxPayment: eos.NewEOSAsset(int64(maxPayment)),
 		}),
 	}
 

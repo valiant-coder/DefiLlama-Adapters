@@ -13,6 +13,7 @@ func TestPowerUp(t *testing.T) {
 		"",
 		1000000000,
 		100000,
+		100000,
 	)
 	fmt.Println(err)
 	if err != nil {
