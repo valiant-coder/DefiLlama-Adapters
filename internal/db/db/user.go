@@ -86,7 +86,7 @@ type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
 	CredentialID   string    `gorm:"column:credential_id;type:varchar(255);uniqueIndex:idx_credential_id"`
-	PublicKey      string    `gorm:"column:public_key;type:text;not null;index:idx_public_key"`
+	PublicKey      string    `gorm:"column:public_key;type:varchar(255);not null;index:idx_public_key"`
 	Name           string    `gorm:"column:name;type:varchar(255);not null"`
 	LastUsedAt     time.Time `gorm:"column:last_used_at;default:null;type:timestamp"`
 	LastUsedIP     string    `gorm:"column:last_used_ip;type:varchar(255)"`
