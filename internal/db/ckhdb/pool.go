@@ -82,8 +82,8 @@ aggregated AS (
         COUNT(t.tx_id) as trades,
         SUM(COALESCE(t.base_quantity, 0)) as volume,
         SUM(COALESCE(t.quote_quantity, 0)) as quote_volume,
-        MAX(CASE WHEN t.time >= NOW() - INTERVAL 24 HOUR THEN t.price ELSE NULL END) as last_price,
-        MIN(CASE WHEN t.time >= NOW() - INTERVAL 24 HOUR THEN t.price ELSE NULL END) as first_price,
+        argMax(t.price, global_sequence) as last_price,
+        argMin(t.price, global_sequence) as first_price,
         lt.last_known_price
     FROM last_trade lt
     LEFT JOIN trades t ON lt.pool_id = t.pool_id 

@@ -87,7 +87,7 @@ func (s *Service) PowerUp() {
 func (s *Service) Run() error {
 	c := cron.New()
 
-	addSyncFuncs(c, "0 * * * * *", s.SyncPoolStats)
+	addSyncFuncs(c, "*/2 * * * * *", s.SyncPoolStats)
 
 	addSyncFuncs(c, "0 0 1 * * *", s.PowerUp)
 
