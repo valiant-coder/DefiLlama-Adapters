@@ -116,6 +116,13 @@ func SignAndBroadcastByPayer(
 		fullSignedTx.Signatures = append(fullSignedTx.Signatures[1:], fullSignedTx.Signatures[0])
 	}
 
+	fullSignedTxBytes, err := eos.MarshalBinary(fullSignedTx)
+	if err != nil {
+		log.Fatalf("Failed to marshal transaction: %v", err)
+	}
+
+	log.Printf("fullSignedTx: %v", hex.EncodeToString(fullSignedTxBytes))
+
 	packed, err := fullSignedTx.Pack(eos.CompressionNone)
 	if err != nil {
 		log.Printf("pack transaction failed: %v", err)
