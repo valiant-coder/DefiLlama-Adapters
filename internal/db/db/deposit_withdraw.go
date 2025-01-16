@@ -14,6 +14,7 @@ func init() {
 		return repo.AutoMigrate(
 			&DepositRecord{},
 			&UserDepositAddress{},
+			&UserWithdrawRecord{},
 		)
 	})
 }
@@ -72,4 +73,39 @@ func (r *Repo) GetUserDepositAddress(ctx context.Context, uid string, permission
 	var addresses []UserDepositAddress
 	err := r.DB.WithContext(ctx).Where("uid = ? and permission_id = ?", uid, permissionID).Find(&addresses).Error
 	return addresses, err
+}
+
+type WithdrawStatus uint8
+
+const (
+	WithdrawStatusPending WithdrawStatus = iota
+	WithdrawStatusSuccess
+	WithdrawStatusFailed
+)
+
+type UserWithdrawRecord struct {
+	gorm.Model
+	UID       string          `gorm:"column:uid;type:varchar(255);not null"`
+	Symbol    string          `gorm:"column:symbol;type:varchar(255);not null"`
+	ChainName string          `gorm:"column:chain_name;type:varchar(255);not null"`
+	Amount    decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
+	Fee       decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
+	Status    WithdrawStatus  `gorm:"column:status;type:tinyint(3);not null"`
+	TxHash    string          `gorm:"column:tx_hash;type:varchar(255);not null"`
+	Time      time.Time       `gorm:"column:time;type:datetime;not null"`
+}
+
+func (u *UserWithdrawRecord) TableName() string {
+	return "user_withdraw_records"
+}
+
+func (r *Repo) CreateWithdrawRecord(ctx context.Context, record *UserWithdrawRecord) error {
+	return r.DB.WithContext(ctx).Create(record).Error
+}
+
+func (r *Repo) GetWithdrawRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]*UserWithdrawRecord, int64, error) {
+	queryParams.Add("uid", uid)
+	var records []*UserWithdrawRecord
+	total, err := r.Query(ctx, &records, queryParams, "uid")
+	return records, total, err
 }

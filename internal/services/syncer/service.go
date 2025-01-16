@@ -137,7 +137,11 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf("%s:*,%s:*,%s:*", s.cdexCfg.PoolContract, s.cdexCfg.EventContract, s.exappCfg.AssetContract),
+			Filter:  fmt.Sprintf("%s:*,%s:*,%s:*",
+				s.cdexCfg.PoolContract,
+				s.cdexCfg.EventContract,
+				s.exappCfg.AssetContract,
+			),
 			Limit:   s.hyperionCfg.BatchSize,
 			Sort:    "asc",
 			After:   strconv.FormatUint(s.lastBlockNum, 10),

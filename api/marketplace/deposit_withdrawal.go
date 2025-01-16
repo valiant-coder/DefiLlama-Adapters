@@ -80,6 +80,21 @@ func getDepositHistory(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
+// @Summary Get withdrawal history
+// @Description Get withdrawal history
+// @Security ApiKeyAuth
+// @Tags withdrawal
+// @Accept json
+// @Produce json
+// @Success 200 {array} entity.RespWithdrawRecord "withdrawal records"
+// @Router /withdrawal-history [get]
 func getWithdrawalHistory(c *gin.Context) {
-
+	depositWithdrawalService := marketplace.NewDepositWithdrawalService()
+	queryParams := queryparams.NewQueryParams(c)
+	resp, total, err := depositWithdrawalService.GetWithdrawalRecords(c.Request.Context(), c.GetString("uid"), queryParams)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.List(c, resp, total)
 }

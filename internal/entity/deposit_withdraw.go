@@ -39,3 +39,24 @@ func FormatDepositRecord(record *db.DepositRecord) RespDepositRecord {
 		DepositAt: Time(record.Time),
 	}
 }
+
+type RespWithdrawRecord struct {
+	Symbol    string `json:"symbol"`
+	Amount    string `json:"amount"`
+	ChainName string `json:"chain_name"`
+	Fee       string `json:"fee"`
+	// 0 pending 1success 2 fail
+	Status     uint8 `json:"status"`
+	WithdrawAt Time  `json:"withdraw_at"`
+}
+
+func FormatWithdrawRecord(record *db.UserWithdrawRecord) RespWithdrawRecord {
+	return RespWithdrawRecord{
+		Symbol:     record.Symbol,
+		Amount:     record.Amount.String(),
+		ChainName:  record.ChainName,
+		Fee:        record.Fee.String(),
+		Status:     uint8(record.Status),
+		WithdrawAt: Time(record.Time),
+	}
+}

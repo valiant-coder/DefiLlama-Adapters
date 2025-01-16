@@ -212,3 +212,15 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		Address: newDepositAddress,
 	}, nil
 }
+
+func (s *DepositWithdrawalService) GetWithdrawalRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]entity.RespWithdrawRecord, int64, error) {
+	records, total, err := s.repo.GetWithdrawRecords(ctx, uid, queryParams)
+	if err != nil {
+		return nil, 0, err
+	}
+	var result []entity.RespWithdrawRecord
+	for _, record := range records {
+		result = append(result, entity.FormatWithdrawRecord(record))
+	}
+	return result, total, nil
+}

@@ -95,6 +95,8 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return s.handleNewAccount(action)
 	case "logdeposit":
 		return s.handleDeposit(action)
+	case "logwithdraw":
+		return s.handleWithdraw(action)
 	default:
 		log.Printf("Unknown action: %s", action.Act.Name)
 		return nil

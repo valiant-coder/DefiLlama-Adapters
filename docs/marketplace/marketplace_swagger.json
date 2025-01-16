@@ -712,6 +712,37 @@
                     }
                 }
             }
+        },
+        "/withdrawal-history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get withdrawal history",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "withdrawal"
+                ],
+                "summary": "Get withdrawal history",
+                "responses": {
+                    "200": {
+                        "description": "withdrawal records",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.RespWithdrawRecord"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1250,6 +1281,30 @@
                     "type": "string"
                 },
                 "user_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.RespWithdrawRecord": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "chain_name": {
+                    "type": "string"
+                },
+                "fee": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "0 pending 1success 2 fail",
+                    "type": "integer"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "withdraw_at": {
                     "type": "string"
                 }
             }
