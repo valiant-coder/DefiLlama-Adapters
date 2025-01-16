@@ -43,7 +43,7 @@ func (s *Service) SyncPoolStats() {
 	log.Println("sync pool stats done")
 }
 
-func (s *Service) PowerUpForPayer() {
+func (s *Service) PowerUp() {
 	log.Println("begin powerup for payer account...")
 	ctx := context.Background()
 	conf := config.Conf().Eos
@@ -58,14 +58,27 @@ func (s *Service) PowerUpForPayer() {
 		conf.NodeURL,
 		conf.PayerAccount,
 		conf.PayerPrivateKey,
-		conf.PowerUp.NetFrac,
-		conf.PowerUp.CPUFrac,
-		conf.PowerUp.MaxPayment,
+		conf.PowerUp.NetEOS,
+		conf.PowerUp.CPUEOS,
 	)
 	if err != nil {
 		log.Printf("failed to powerup for payer account: %v\n", err)
 		return
 	}
+
+	err = eos.PowerUp(
+		ctx,
+		conf.NodeURL,
+		conf.Exapp.Actor,
+		conf.Exapp.ActorPrivateKey,
+		conf.PowerUp.NetEOS,
+		conf.PowerUp.CPUEOS,
+	)
+	if err != nil {
+		log.Printf("failed to powerup for exapp actor: %v\n", err)
+		return
+	}
+
 	log.Println("powerup for payer account done")
 }
 
@@ -74,7 +87,7 @@ func (s *Service) Run() error {
 
 	addSyncFuncs(c, "0 * * * * *", s.SyncPoolStats)
 
-	addSyncFuncs(c, "0 0 1 * * *", s.PowerUpForPayer)
+	addSyncFuncs(c, "0 0 1 * * *", s.PowerUp)
 
 	c.Run()
 	return nil

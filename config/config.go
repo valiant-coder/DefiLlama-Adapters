@@ -101,8 +101,8 @@ type EosConfig struct {
 
 type PowerUpConfig struct {
 	Enabled    bool   `yaml:"enabled"`
-	NetFrac    uint64 `yaml:"net_frac"`
-	CPUFrac    uint64 `yaml:"cpu_frac"`
+	NetEOS     uint64 `yaml:"net_eos"`
+	CPUEOS     uint64 `yaml:"cpu_eos"`
 	MaxPayment uint64 `yaml:"max_payment"`
 }
 
