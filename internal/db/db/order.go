@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
-	"sort"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -37,9 +36,9 @@ const (
 type OpenOrder struct {
 	TxID               string          `gorm:"column:tx_id;type:varchar(255)"`
 	App                string          `gorm:"column:app;type:varchar(255)"`
-	CreatedAt          time.Time       `gorm:"column:created_at;type:timestamp"`
-	BlockNumber        uint64          `gorm:"column:block_number;type:bigint(20)"`
-	PoolID             uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:pool_id;type:bigint(20)"`
+	CreatedAt          time.Time       `gorm:"column:created_at;type:timestamp;index:idx_created_at;index:idx_pool_created_at"`
+	BlockNumber        uint64          `gorm:"column:block_number;type:bigint(20);index:idx_block_number"`
+	PoolID             uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:pool_id;type:bigint(20);index:idx_pool_created_at"`
 	OrderID            uint64          `gorm:"uniqueIndex:idx_pool_id_order_id_is_bid;column:order_id;type:bigint(20)"`
 	PoolSymbol         string          `gorm:"column:pool_symbol;type:varchar(255)"`
 	PoolBaseCoin       string          `gorm:"column:pool_base_coin;type:varchar(255)"`
@@ -126,26 +125,25 @@ type OrderBook struct {
 }
 
 func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*OrderBook, error) {
-	orders := []OpenOrder{}
-	err := r.WithContext(ctx).Where("pool_id = ?", poolID).Find(&orders).Error
+	book := &OrderBook{PoolID: poolID}
+
+	err := r.WithContext(ctx).
+		Where("pool_id = ? AND is_bid = ?", poolID, true).
+		Order("price DESC").
+		Limit(limit).
+		Find(&book.Bids).Error
 	if err != nil {
 		return nil, err
 	}
-	book := OrderBook{
-		PoolID: poolID,
+
+	err = r.WithContext(ctx).
+		Where("pool_id = ? AND is_bid = ?", poolID, false).
+		Order("price ASC").
+		Limit(limit).
+		Find(&book.Asks).Error
+	if err != nil {
+		return nil, err
 	}
-	for _, order := range orders {
-		if order.IsBid {
-			book.Bids = append(book.Bids, order)
-		} else {
-			book.Asks = append(book.Asks, order)
-		}
-	}
-	sort.Slice(book.Bids, func(i, j int) bool {
-		return book.Bids[i].Price.GreaterThan(book.Bids[j].Price)
-	})
-	sort.Slice(book.Asks, func(i, j int) bool {
-		return book.Asks[i].Price.LessThan(book.Asks[j].Price)
-	})
-	return &book, nil
+
+	return book, nil
 }

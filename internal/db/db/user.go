@@ -27,7 +27,7 @@ const (
 
 type User struct {
 	gorm.Model
-	Username    string      `gorm:"column:username;type:varchar(255);not null;"`
+	Username    string      `gorm:"column:username;type:varchar(255);not null;index:idx_username"`
 	UID         string      `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid"`
 	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
 	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
@@ -86,12 +86,12 @@ type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
 	CredentialID   string    `gorm:"column:credential_id;type:varchar(255);uniqueIndex:idx_credential_id"`
-	PublicKey      string    `gorm:"column:public_key;type:text;not null"`
+	PublicKey      string    `gorm:"column:public_key;type:text;not null;index:idx_public_key"`
 	Name           string    `gorm:"column:name;type:varchar(255);not null"`
 	LastUsedAt     time.Time `gorm:"column:last_used_at;default:null;type:timestamp"`
 	LastUsedIP     string    `gorm:"column:last_used_ip;type:varchar(255)"`
 	Synced         bool      `gorm:"column:synced;type:tinyint(1);not null;default:0"`
-	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255)"`
+	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);index:idx_eos_account"`
 	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512)"`
 }
 
@@ -123,7 +123,6 @@ func (r *Repo) GetUserCredentialByPubkey(ctx context.Context, pubkey string) (*U
 func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredential) error {
 	return r.DB.WithContext(ctx).Model(&UserCredential{}).Where("id = ?", credential.ID).Updates(credential).Error
 }
-
 
 func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (string, error) {
 	var credential UserCredential
