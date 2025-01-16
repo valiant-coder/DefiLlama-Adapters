@@ -8,3 +8,4 @@ develop/data
 *.yaml
 certs
 develop/*.yml
+__debug*
