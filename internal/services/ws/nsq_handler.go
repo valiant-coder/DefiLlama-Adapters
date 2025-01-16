@@ -74,6 +74,7 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 			log.Printf("Failed to unmarshal kline data: %v", err)
 			return nil
 		}
+		log.Printf("receive kline update: %v", klineData)
 		// Broadcast kline update
 		s.pusher.PushKline(klineData)
 

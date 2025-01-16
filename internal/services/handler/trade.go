@@ -33,8 +33,8 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		if err != nil {
 			log.Printf("publish kline update failed: %v", err)
 		}
+		log.Printf("publish kline update: %v", entity.DbKlineToEntity(kline))
 	}
-
 	return nil
 
 }
