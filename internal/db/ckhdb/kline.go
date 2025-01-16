@@ -54,10 +54,7 @@ func (r *ClickHouseRepo) GetLastKlineBefore(ctx context.Context, poolID uint64, 
 func (r *ClickHouseRepo) GetLatestKlines(ctx context.Context, poolID uint64) ([]*Kline, error) {
 	var klines []*Kline
 	err := r.WithContext(ctx).Raw(`
-		SELECT 
-			k.*
-		FROM klines_view k
-		INNER JOIN (
+		WITH latest_intervals AS (
 			SELECT 
 				pool_id,
 				interval,
@@ -65,24 +62,50 @@ func (r *ClickHouseRepo) GetLatestKlines(ctx context.Context, poolID uint64) ([]
 			FROM klines_view
 			WHERE pool_id = ?
 			GROUP BY pool_id, interval
-		) latest 
-		ON k.pool_id = latest.pool_id 
-		AND k.interval = latest.interval 
-		AND k.interval_start = latest.max_interval_start
+		)
+		SELECT 
+			k.*
+		FROM klines_view k
+		INNER JOIN latest_intervals li 
+		ON k.pool_id = li.pool_id 
+		AND k.interval = li.interval 
+		AND k.interval_start = li.max_interval_start
 		WHERE k.pool_id = ?
 		ORDER BY k.interval;
 	`, poolID, poolID).Scan(&klines).Error
 	return klines, err
 }
 
-func (r *ClickHouseRepo) GetRecentClosePrice(ctx context.Context, poolID uint64, interval string, start time.Time) (decimal.Decimal, error) {
-	var klines []Kline
-	err := r.WithContext(ctx).Where("pool_id = ? AND interval = ? AND interval_start < ?", poolID, interval, start).Order("interval_start DESC").Limit(1).Find(&klines).Error
+func (r *ClickHouseRepo) BatchGetLatestKlines(ctx context.Context, poolIDs []uint64) (map[uint64][]*Kline, error) {
+	var klines []*Kline
+	err := r.WithContext(ctx).Raw(`
+		WITH latest_intervals AS (
+			SELECT 
+				pool_id,
+				interval,
+				MAX(interval_start) as max_interval_start
+			FROM klines_view
+			WHERE pool_id IN (?)
+			GROUP BY pool_id, interval
+		)
+		SELECT 
+			k.*
+		FROM klines_view k
+		INNER JOIN latest_intervals li 
+		ON k.pool_id = li.pool_id 
+		AND k.interval = li.interval 
+		AND k.interval_start = li.max_interval_start
+		ORDER BY k.pool_id, k.interval;
+	`, poolIDs).
+		Scan(&klines).Error
+
 	if err != nil {
-		return decimal.Decimal{}, err
+		return nil, err
 	}
-	if len(klines) == 0 {
-		return decimal.Decimal{}, nil
+
+	result := make(map[uint64][]*Kline)
+	for _, kline := range klines {
+		result[kline.PoolID] = append(result[kline.PoolID], kline)
 	}
-	return klines[0].Close, nil
+	return result, nil
 }

@@ -12,9 +12,24 @@ func TestClickHouseRepo_GetLastKlineBefore(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config_dev.yaml")
 	repo := New()
-	kline, err := repo.GetLastKlineBefore(context.Background(), 1, "1m", time.Now())
+	testTime := time.Now()
+	kline, err := repo.GetLastKlineBefore(context.Background(), 1, "1m", testTime)
 	if err != nil {
-		t.Errorf("failed to get last kline before: %v", err)
+		t.Fatalf("failed to get last kline before: %v", err)
+	}
+	if kline == nil {
+		t.Fatal("expected kline to be non-nil")
 	}
 	t.Logf("last kline before: %+v", kline)
+}
+
+func TestClickHouseRepo_GetLatestKlines(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config_dev.yaml")
+	repo := New()
+	klines, err := repo.GetLatestKlines(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("failed to get latest klines: %v", err)
+	}
+	t.Logf("latest klines: %+v", klines)
 }
