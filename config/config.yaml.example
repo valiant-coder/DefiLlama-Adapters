@@ -65,6 +65,11 @@ eos:
   node_url: https://eos.greymass.com
   payer_account: myaccount
   payer_private_key: your_private_key_here
+  powerup:
+    enabled: true
+    net_frac: 10000
+    cpu_frac: 40800000000
+    max_payment: 200000
   hyperion:
     start_block: 0
     batch_size: 100

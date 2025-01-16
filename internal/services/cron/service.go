@@ -2,8 +2,10 @@ package cron
 
 import (
 	"context"
+	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
+	"exapp-go/pkg/eos"
 	"log"
 
 	"github.com/robfig/cron"
@@ -41,10 +43,38 @@ func (s *Service) SyncPoolStats() {
 	log.Println("sync pool stats done")
 }
 
+func (s *Service) PowerUpForPayer() {
+	log.Println("begin powerup for payer account...")
+	ctx := context.Background()
+	conf := config.Conf().Eos
+
+	if !conf.PowerUp.Enabled {
+		log.Println("powerup is disabled, skipping...")
+		return
+	}
+
+	err := eos.PowerUp(
+		ctx,
+		conf.NodeURL,
+		conf.PayerAccount,
+		conf.PayerPrivateKey,
+		conf.PowerUp.NetFrac,
+		conf.PowerUp.CPUFrac,
+		conf.PowerUp.MaxPayment,
+	)
+	if err != nil {
+		log.Printf("failed to powerup for payer account: %v\n", err)
+		return
+	}
+	log.Println("powerup for payer account done")
+}
+
 func (s *Service) Run() error {
 	c := cron.New()
 
 	addSyncFuncs(c, "0 * * * * *", s.SyncPoolStats)
+
+	addSyncFuncs(c, "0 0 1 * * *", s.PowerUpForPayer)
 
 	c.Run()
 	return nil

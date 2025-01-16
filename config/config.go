@@ -96,6 +96,14 @@ type EosConfig struct {
 	CdexConfig      CdexConfig     `yaml:"cdex"`
 	Exapp           ExappConfig    `yaml:"exapp"`
 	Exsat           ExsatConfig    `yaml:"exsat"`
+	PowerUp         PowerUpConfig  `yaml:"powerup"`
+}
+
+type PowerUpConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	NetFrac    uint64 `yaml:"net_frac"`
+	CPUFrac    uint64 `yaml:"cpu_frac"`
+	MaxPayment uint64 `yaml:"max_payment"`
 }
 
 type HyperionConfig struct {

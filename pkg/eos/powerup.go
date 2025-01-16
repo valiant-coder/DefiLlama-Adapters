@@ -7,7 +7,15 @@ import (
 	"github.com/eoscanada/eos-go"
 )
 
-func PowerUp(ctx context.Context, endpoint, accountName, privKey string) error {
+func PowerUp(
+	ctx context.Context,
+	endpoint,
+	accountName,
+	privKey string,
+	netFrac,
+	cpuFrac,
+	maxPayment uint64,
+) error {
 	api := eos.New(endpoint)
 	keyBag := &eos.KeyBag{}
 	err := keyBag.ImportPrivateKey(ctx, privKey)
@@ -26,9 +34,9 @@ func PowerUp(ctx context.Context, endpoint, accountName, privKey string) error {
 			Payer:      eos.AN(accountName),
 			Receiver:   eos.AN(accountName),
 			Days:       1,
-			NetFrac:    10000,
-			CPUFrac:    40800000000,
-			MaxPayment: eos.NewEOSAsset(200000),
+			NetFrac:    netFrac,
+			CPUFrac:    cpuFrac,
+			MaxPayment: eos.NewEOSAsset(int64(maxPayment)),
 		}),
 	}
 
