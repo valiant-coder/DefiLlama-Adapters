@@ -58,7 +58,7 @@ func NewServer(ctx context.Context) *Server {
 	nsqCfg := config.Conf().Nsq
 	server := &Server{
 		io:     io,
-		worker: nsqutil.NewWorker(uuid.New().String(), nsqCfg.Lookupd, nsqCfg.LookupTTl),
+		worker: nsqutil.NewWorker(fmt.Sprintf("%s#ephemeral", uuid.New().String()), nsqCfg.Lookupd, nsqCfg.LookupTTl),
 	}
 	server.pusher = NewPusher(ctx, server)
 
