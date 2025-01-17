@@ -148,6 +148,10 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			}
 			avgPrice = totalQuoteQuantity.Div(totalBaseQuantity).Round(int32(pool.PricePrecision))
 			price = avgPrice
+			if newOrder.EV.IsMarket {
+				originalQuantity = totalBaseQuantity
+				executedQuantity = totalBaseQuantity
+			}
 		} else {
 			avgPrice = decimal.New(cast.ToInt64(newOrder.EV.Price), -int32(pool.PricePrecision))
 			price = avgPrice
