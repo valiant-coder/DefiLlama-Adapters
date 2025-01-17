@@ -121,9 +121,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		})
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
-			return nil
 		}
-		return nil
 
 	} else {
 		var avgPrice, price decimal.Decimal
@@ -181,6 +179,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		}
 
 	}
+	log.Printf("handle create order: %v", newOrder)
 
 	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
 	go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[newOrder.EV.IsBid]))
@@ -307,7 +306,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	err = s.newTrade(ctx, &trade)
 	if err != nil {
 		log.Printf("new trade failed: %v", err)
-		return nil
 	}
 
 	// update depth
@@ -351,13 +349,11 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		err = s.repo.UpdateOpenOrder(ctx, makerOrder)
 		if err != nil {
 			log.Printf("update open order failed: %v", err)
-			return nil
 		}
 	} else {
 		err = s.repo.DeleteOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), makerOrder.IsBid)
 		if err != nil {
 			log.Printf("delete open order failed: %v", err)
-			return nil
 		}
 
 		historyOrder := ckhdb.HistoryOrder{
@@ -383,7 +379,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
 		if err != nil {
 			log.Printf("insert history order failed: %v", err)
-			return nil
 		}
 
 	}
