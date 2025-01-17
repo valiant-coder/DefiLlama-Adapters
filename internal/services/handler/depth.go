@@ -17,9 +17,6 @@ func (s *Service) updateDepth(ctx context.Context, params db.UpdateDepthParams) 
 
 	bids, asks := [][]string{}, [][]string{}
 	for _, change := range changes {
-		if change.Amount.IsZero() {
-			continue
-		}
 		var bid, ask []string
 		if change.IsBuy {
 			bid = append(bid, change.Price.String())
