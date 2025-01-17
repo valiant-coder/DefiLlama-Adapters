@@ -1,3 +1,22 @@
+
+-- Drop all materialized views
+DROP VIEW IF EXISTS klines_view;
+DROP TABLE IF EXISTS klines_mv;
+DROP TABLE IF EXISTS klines_5m_mv;
+DROP TABLE IF EXISTS klines_15m_mv;
+DROP TABLE IF EXISTS klines_30m_mv;
+DROP TABLE IF EXISTS klines_1h_mv;
+DROP TABLE IF EXISTS klines_4h_mv;
+DROP TABLE IF EXISTS klines_1d_mv;
+DROP TABLE IF EXISTS klines_1w_mv;
+DROP TABLE IF EXISTS klines_1M_mv;
+
+-- Drop klines table
+DROP TABLE IF EXISTS klines;
+
+
+
+
 CREATE TABLE IF NOT EXISTS klines (
     pool_id UInt64,
     interval_start DateTime,
@@ -54,7 +73,7 @@ GROUP BY
     interval_start,
     interval;
 
-	-- 5min kline
+-- 5min kline
 CREATE MATERIALIZED VIEW IF NOT EXISTS klines_5m_mv TO klines AS
 SELECT
     pool_id,
@@ -206,3 +225,173 @@ GROUP BY
     interval_start,
     interval;
 
+-- insert
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfInterval(time, INTERVAL 1 MINUTE) as interval_start,
+    '1m' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfInterval(time, INTERVAL 5 MINUTE) as interval_start,
+    '5m' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfInterval(time, INTERVAL 15 MINUTE) as interval_start,
+    '15m' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfInterval(time, INTERVAL 30 MINUTE) as interval_start,
+    '30m' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfInterval(time, INTERVAL 1 HOUR) as interval_start,
+    '1h' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfInterval(time, INTERVAL 4 HOUR) as interval_start,
+    '4h' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfDay(time) as interval_start,
+    '1d' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfWeek(time) as interval_start,
+    '1w' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY
+    pool_id,
+    interval_start,
+    interval;
+
+
+INSERT INTO klines 
+SELECT
+    pool_id,
+    toStartOfMonth(time) as interval_start,
+    '1M' as interval,
+    argMinState(price, global_sequence) as open_price,
+    maxState(price) as max_price,
+    minState(price) as min_price,
+    argMaxState(price, global_sequence) as close_price,
+    sumState(base_quantity) as volume,
+    sumState(quote_quantity) as quote_volume,
+    countState() as trade_count
+FROM trades
+GROUP BY 
+    pool_id,
+    interval_start,
+    interval;   
