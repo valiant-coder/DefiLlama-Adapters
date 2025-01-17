@@ -179,7 +179,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		}
 
 	}
-	log.Printf("handle create order: %v", newOrder)
 
 	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
 	go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[newOrder.EV.IsBid]))
