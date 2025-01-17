@@ -325,7 +325,7 @@ func (s *Server) PushToAccount(account string, event string, data interface{}) {
 		return
 	}
 	log.Printf("push to account: %s-%s", account, event)
-	accountRoom := socket.Room(fmt.Sprintf("user:%s", account))
+	accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
 	s.io.To(accountRoom).Emit(event, data)
 }
 
