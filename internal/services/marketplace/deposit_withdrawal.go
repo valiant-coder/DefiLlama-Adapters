@@ -39,6 +39,18 @@ func (s *DepositWithdrawalService) GetDepositRecords(ctx context.Context, uid st
 	return result, total, nil
 }
 
+func (s *DepositWithdrawalService) pollForDepositAddress(ctx context.Context, bridgeClient *eos.BridgeClient, req eos.RequestDepositAddress) (string, error) {
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		address, err := bridgeClient.GetDepositAddress(ctx, req)
+		if err == nil && address != "" {
+			return address, nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return "", errors.New("timeout waiting for deposit address")
+}
+
 func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string, req *entity.ReqFirstDeposit) (entity.RespFirstDeposit, error) {
 	passkeys, err := s.repo.GetUserCredentials(ctx, uid)
 	if err != nil {
@@ -100,9 +112,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	}
 	log.Printf("mapping new address txid: %v", resp.TransactionID)
 
-	time.Sleep(1 * time.Millisecond)
-
-	newDepositAddress, err := bridgeClient.GetDepositAddress(ctx, eos.RequestDepositAddress{
+	newDepositAddress, err := s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
 		PermissionID: token.PermissionID,
 		Remark:       remark,
 		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
@@ -124,7 +134,6 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	return entity.RespFirstDeposit{
 		Address: newDepositAddress,
 	}, nil
-
 }
 
 func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req *entity.ReqDeposit) (entity.RespDeposit, error) {
@@ -187,9 +196,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 	log.Printf("mapping new address txid: %v", resp.TransactionID)
 
-	time.Sleep(1 * time.Second)
-
-	newDepositAddress, err := bridgeClient.GetDepositAddress(ctx, eos.RequestDepositAddress{
+	newDepositAddress, err := s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
 		PermissionID: token.PermissionID,
 		Remark:       remark,
 		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
