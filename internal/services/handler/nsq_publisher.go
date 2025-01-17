@@ -3,6 +3,7 @@ package handler
 import (
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/nsqutil"
+	"log"
 )
 
 const (
@@ -44,6 +45,7 @@ func (p *NSQPublisher) Close() {
 
 // PublishOrderUpdate publishes an order update message
 func (p *NSQPublisher) PublishOrderUpdate(account string, id string) error {
+	log.Printf("publish order update: %s-%s", account, id)
 	msg := struct {
 		Type string      `json:"type"`
 		Data interface{} `json:"data"`

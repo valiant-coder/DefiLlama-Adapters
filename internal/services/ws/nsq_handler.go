@@ -8,10 +8,10 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-
 const (
 	TopicCdexUpdates = "cdex_updates"
 )
+
 // NSQ message types
 const (
 	MsgTypeOrderUpdate   = "order_update"
@@ -42,6 +42,7 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 			log.Printf("Failed to unmarshal order update: %v", err)
 			return nil
 		}
+		log.Printf("receive order update: %v", orderUpdate)
 		// Push order update to specific user
 		s.pusher.PushOrderUpdate(orderUpdate.Account, orderUpdate)
 

@@ -19,15 +19,15 @@ const (
 )
 
 type Service struct {
-	nsqCfg      config.NsqConfig
-	ckhRepo     *ckhdb.ClickHouseRepo
-	repo        *db.Repo
-	worker      *nsqutil.Worker
-	poolCache   map[uint64]*db.Pool
-	eosCfg      config.EosConfig
-	cdexCfg     config.CdexConfig
-	exappCfg    config.ExappConfig
-	publisher   *NSQPublisher
+	nsqCfg    config.NsqConfig
+	ckhRepo   *ckhdb.ClickHouseRepo
+	repo      *db.Repo
+	worker    *nsqutil.Worker
+	poolCache map[uint64]*db.Pool
+	eosCfg    config.EosConfig
+	cdexCfg   config.CdexConfig
+	exappCfg  config.ExappConfig
+	publisher *NSQPublisher
 }
 
 func NewService() (*Service, error) {
@@ -41,14 +41,14 @@ func NewService() (*Service, error) {
 	}
 
 	return &Service{
-		ckhRepo:     ckhRepo,
-		repo:        repo,
-		nsqCfg:      cfg.Nsq,
-		poolCache:   make(map[uint64]*db.Pool),
-		eosCfg:      cfg.Eos,
-		cdexCfg:     cfg.Eos.CdexConfig,
-		exappCfg:    cfg.Eos.Exapp,
-		publisher:   publisher,
+		ckhRepo:   ckhRepo,
+		repo:      repo,
+		nsqCfg:    cfg.Nsq,
+		poolCache: make(map[uint64]*db.Pool),
+		eosCfg:    cfg.Eos,
+		cdexCfg:   cfg.Eos.CdexConfig,
+		exappCfg:  cfg.Eos.Exapp,
+		publisher: publisher,
 	}, nil
 }
 

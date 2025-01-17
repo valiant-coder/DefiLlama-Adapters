@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -323,6 +324,7 @@ func (s *Server) PushToAccount(account string, event string, data interface{}) {
 	if s.io == nil || account == "" || event == "" {
 		return
 	}
+	log.Printf("push to account: %s-%s", account, event)
 	accountRoom := socket.Room(fmt.Sprintf("user:%s", account))
 	s.io.To(accountRoom).Emit(event, data)
 }
