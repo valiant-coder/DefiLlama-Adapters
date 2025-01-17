@@ -176,16 +176,16 @@ func (s *Repo) GetDepth(ctx context.Context, poolId uint64) (Depth, error) {
 	bidsKey := fmt.Sprintf("depth:%d:bids", poolId)
 	asksKey := fmt.Sprintf("depth:%d:asks", poolId)
 
-	// Bids from high to low
-	bidsResult, err := s.rdb.single.ZRevRange(ctx, bidsKey, 0, -1).Result()
+	// Bids from high to low, limit 100
+	bidsResult, err := s.rdb.single.ZRevRange(ctx, bidsKey, 0, 99).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return depth, nil
 		}
 		return depth, err
 	}
-	// Asks from low to high
-	asksResult, err := s.rdb.single.ZRange(ctx, asksKey, 0, -1).Result()
+	// Asks from low to high, limit 100
+	asksResult, err := s.rdb.single.ZRange(ctx, asksKey, 0, 99).Result()
 	if err != nil {
 		return depth, err
 	}
