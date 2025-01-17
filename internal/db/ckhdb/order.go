@@ -110,6 +110,12 @@ func (r *ClickHouseRepo) GetOrder(ctx context.Context, poolID uint64, orderID ui
 		side = 1
 	}
 	orderTag := fmt.Sprintf("%d-%d-%d", poolID, orderID, side)
+	if order.Status == OrderStatusCancelled {
+		return &OrderWithTrades{
+			HistoryOrder: order,
+			Trades:       []Trade{},
+		}, nil
+	}
 	trades, err := r.GetTrades(ctx, orderTag)
 	if err != nil {
 		return nil, err
