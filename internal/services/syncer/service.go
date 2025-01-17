@@ -80,7 +80,7 @@ func (s *Service) Start(ctx context.Context) error {
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
 			Contract:  s.cdexCfg.PoolContract,
-			Action:    "*",
+			Action:    "create",
 			Account:   "",
 			StartFrom: int64(s.lastBlockNum) + 1,
 			ReadUntil: 0,
@@ -88,7 +88,23 @@ func (s *Service) Start(ctx context.Context) error {
 		},
 		{
 			Contract:  s.cdexCfg.EventContract,
-			Action:    "*",
+			Action:    "emitplaced",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.cdexCfg.EventContract,
+			Action:    "emitcanceled",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.cdexCfg.EventContract,
+			Action:    "emitfilled",
 			Account:   "",
 			StartFrom: int64(s.lastBlockNum) + 1,
 			ReadUntil: 0,
@@ -96,12 +112,21 @@ func (s *Service) Start(ctx context.Context) error {
 		},
 		{
 			Contract:  s.exappCfg.AssetContract,
-			Action:    "*",
+			Action:    "logdeposit",
 			Account:   "",
 			StartFrom: int64(s.lastBlockNum) + 1,
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
+		{
+			Contract:  s.exappCfg.AssetContract,
+			Action:    "logwithdraw",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+
 	})
 
 	if err != nil {
@@ -137,9 +162,13 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf("%s:*,%s:*,%s:*",
+			Filter:  fmt.Sprintf(
+				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled,%s:logdeposit,%s:logwithdraw",
 				s.cdexCfg.PoolContract,
 				s.cdexCfg.EventContract,
+				s.cdexCfg.EventContract,
+				s.cdexCfg.EventContract,
+				s.exappCfg.AssetContract,
 				s.exappCfg.AssetContract,
 			),
 			Limit:   s.hyperionCfg.BatchSize,
