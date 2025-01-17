@@ -2,6 +2,7 @@ package ckhdb
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -51,7 +52,24 @@ func (r *ClickHouseRepo) GetLastKlineBefore(ctx context.Context, poolID uint64, 
 	return kline, err
 }
 
+type klineCache struct {
+	data      []*Kline
+	timestamp time.Time
+}
+
+var (
+	latestKlinesCache sync.Map
+	cacheDuration     = 100 * time.Millisecond
+)
+
 func (r *ClickHouseRepo) GetLatestKlines(ctx context.Context, poolID uint64) ([]*Kline, error) {
+	if cached, ok := latestKlinesCache.Load(poolID); ok {
+		cache := cached.(klineCache)
+		if time.Since(cache.timestamp) < cacheDuration {
+			return cache.data, nil
+		}
+	}
+
 	var klines []*Kline
 	err := r.WithContext(ctx).Raw(`
 		WITH latest_intervals AS (
@@ -73,7 +91,16 @@ func (r *ClickHouseRepo) GetLatestKlines(ctx context.Context, poolID uint64) ([]
 		WHERE k.pool_id = ?
 		ORDER BY k.interval;
 	`, poolID, poolID).Scan(&klines).Error
-	return klines, err
+
+	if err != nil {
+		return nil, err
+	}
+	latestKlinesCache.Store(poolID, klineCache{
+		data:      klines,
+		timestamp: time.Now(),
+	})
+
+	return klines, nil
 }
 
 func (r *ClickHouseRepo) BatchGetLatestKlines(ctx context.Context, poolIDs []uint64) (map[uint64][]*Kline, error) {

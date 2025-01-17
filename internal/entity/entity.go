@@ -22,6 +22,10 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 }
 
 
+func (t Time) Timestamp() int64 {
+	return time.Time(t).Unix()
+}
+
 
 type NumString string
 // if empty str return "0"
