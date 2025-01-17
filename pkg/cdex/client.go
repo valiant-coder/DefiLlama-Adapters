@@ -68,6 +68,23 @@ type Order struct {
 	IsBid    uint8     `json:"is_bid"`
 }
 
+func (o *Order) UnmarshalJSON(data []byte) error {
+	type OrderAlias Order 
+	aux := &struct {
+		*OrderAlias
+		Price json.Number `json:"price"`
+	}{
+		OrderAlias: (*OrderAlias)(o),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	o.Price = aux.Price.String()
+	return nil
+}
+
+
 type Fund struct {
 	PoolID uint64    `json:"pool_id"`
 	Base   eos.Asset `json:"base"`

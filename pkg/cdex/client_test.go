@@ -16,7 +16,7 @@ func TestNewClient(t *testing.T) {
 		t.Fatalf("failed to get pools: %v", err)
 	}
 	t.Logf("pools: %+v", pools)
-	orders, err := client.GetOrders(context.Background(), 1, true)
+	orders, err := client.GetOrders(context.Background(), 3, true)
 	if err != nil {
 		t.Fatalf("failed to get orders: %v", err)
 	}
