@@ -40,7 +40,6 @@ func (e *EOSExtendedAsset) SymbolAndPrecision() (string, uint8) {
 	return symbol, precision
 }
 
-
 type Pool struct {
 	ID             uint64           `json:"id"`
 	Base           EOSExtendedAsset `json:"base"`
@@ -55,7 +54,6 @@ type Pool struct {
 	Status         uint8            `json:"status"`
 }
 
-
 type Order struct {
 	ID     uint64   `json:"id"`
 	App    eos.Name `json:"app"`
@@ -64,7 +62,7 @@ type Order struct {
 		Actor      eos.AccountName    `json:"actor"`
 		Permission eos.PermissionName `json:"permission"`
 	} `json:"trader"`
-	Price    uint64    `json:"price"`
+	Price    string    `json:"price"`
 	Quantity eos.Asset `json:"quantity"`
 	Filled   eos.Asset `json:"filled"`
 	IsBid    uint8     `json:"is_bid"`
@@ -101,7 +99,7 @@ func (c *Client) GetPools(ctx context.Context) ([]Pool, error) {
 	return pools, nil
 }
 
-func (c *Client) GetOrders(ctx context.Context, poolID uint64, isBid bool) ([]Order, error) {
+func (c *Client) getOrdersPage(ctx context.Context, poolID uint64, isBid bool, lowerBound string) ([]Order, string, error) {
 	tableName := "asks"
 	if isBid {
 		tableName = "bids"
@@ -112,23 +110,49 @@ func (c *Client) GetOrders(ctx context.Context, poolID uint64, isBid bool) ([]Or
 		Scope:      fmt.Sprintf("%d", poolID),
 		Table:      tableName,
 		JSON:       true,
-		LowerBound: "0",
+		LowerBound: lowerBound,
 		UpperBound: "-1",
-		Limit:      1000,
+		Limit:      500,
 	}
 
 	response, err := c.api.GetTableRows(ctx, request)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get orders: %w", err)
+		return nil, "", fmt.Errorf("failed to get orders: %w", err)
 	}
 
 	var orders []Order
 	err = json.Unmarshal(response.Rows, &orders)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal orders: %w", err)
+		return nil, "", fmt.Errorf("failed to unmarshal orders: %w", err)
 	}
 
-	return orders, nil
+	nextLowerBound := ""
+	if response.More && len(orders) > 0 {
+		nextLowerBound = fmt.Sprintf("%d", orders[len(orders)-1].ID+1)
+	}
+
+	return orders, nextLowerBound, nil
+}
+
+func (c *Client) GetOrders(ctx context.Context, poolID uint64, isBid bool) ([]Order, error) {
+	var allOrders []Order
+	lowerBound := "0"
+
+	for {
+		orders, nextLowerBound, err := c.getOrdersPage(ctx, poolID, isBid, lowerBound)
+		if err != nil {
+			return nil, err
+		}
+
+		allOrders = append(allOrders, orders...)
+
+		if nextLowerBound == "" {
+			break
+		}
+		lowerBound = nextLowerBound
+	}
+
+	return allOrders, nil
 }
 
 func (c *Client) GetUserFunds(ctx context.Context, account string) ([]Fund, error) {

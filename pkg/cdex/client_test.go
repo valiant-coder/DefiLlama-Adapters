@@ -7,7 +7,7 @@ import (
 
 func TestNewClient(t *testing.T) {
 	// jungle4
-	nodeUrl := "https://jungle4.cryptolions.io"
+	nodeUrl := "http://44.223.68.11:8888"
 	dexContract := "mightyjungle"
 	poolContract := "colorfuljung"
 	client := NewClient(nodeUrl, dexContract, poolContract)
@@ -16,7 +16,7 @@ func TestNewClient(t *testing.T) {
 		t.Fatalf("failed to get pools: %v", err)
 	}
 	t.Logf("pools: %+v", pools)
-	orders, err := client.GetOrders(context.Background(), 0, true)
+	orders, err := client.GetOrders(context.Background(), 1, true)
 	if err != nil {
 		t.Fatalf("failed to get orders: %v", err)
 	}

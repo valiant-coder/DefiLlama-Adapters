@@ -147,3 +147,7 @@ func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*Ord
 
 	return book, nil
 }
+
+func (r *Repo) ClearOpenOrders(ctx context.Context, poolID uint64) error {
+	return r.WithContext(ctx).Where("pool_id = ?", poolID).Delete(&OpenOrder{}).Error
+}
