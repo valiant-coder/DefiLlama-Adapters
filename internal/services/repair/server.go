@@ -78,8 +78,8 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			Trader:             string(bid.Trader.Actor),
 			Price:              decimal.RequireFromString(bid.Price).Shift(-int32(pool.PricePrecision)),
 			IsBid:              true,
-			OriginalQuantity:   decimal.New(int64(bid.Quantity.Amount), -int32(pool.QuoteCoinPrecision)),
-			ExecutedQuantity:   decimal.New(int64(bid.Filled.Amount), -int32(pool.QuoteCoinPrecision)),
+			OriginalQuantity:   decimal.New(int64(bid.Quantity.Amount), -int32(pool.BaseCoinPrecision)),
+			ExecutedQuantity:   decimal.New(int64(bid.Filled.Amount), -int32(pool.BaseCoinPrecision)),
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 			Status:             db.OrderStatusOpen,
 		}
@@ -122,8 +122,8 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			PoolQuoteCoin:      pool.QuoteCoin,
 			Price:              decimal.RequireFromString(ask.Price).Shift(-int32(pool.PricePrecision)),
 			IsBid:              false,
-			OriginalQuantity:   decimal.New(int64(ask.Quantity.Amount), -int32(pool.QuoteCoinPrecision)),
-			ExecutedQuantity:   decimal.New(int64(ask.Filled.Amount), -int32(pool.QuoteCoinPrecision)),
+			OriginalQuantity:   decimal.New(int64(ask.Quantity.Amount), -int32(pool.BaseCoinPrecision)),
+			ExecutedQuantity:   decimal.New(int64(ask.Filled.Amount), -int32(pool.BaseCoinPrecision)),
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 			Status:             db.OrderStatusOpen,
 		}
