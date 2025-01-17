@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
@@ -139,7 +138,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			}
 			if len(trades) == 0 {
 				log.Printf("no trades found for executed order: %v", orderTag)
-				return errors.New("no trades found for executed order")
+				return s.publisher.DeferPublishCreateOrder(action)
 			}
 			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
 			for _, trade := range trades {

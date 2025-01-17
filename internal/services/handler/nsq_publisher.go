@@ -2,6 +2,7 @@ package handler
 
 import (
 	"exapp-go/internal/entity"
+	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
 	"fmt"
 	"log"
@@ -190,4 +191,9 @@ func (p *NSQPublisher) PublishKlineUpdate(kline entity.Kline) error {
 		p.mutex.Unlock()
 	}
 	return err
+}
+
+func (p *NSQPublisher) DeferPublishCreateOrder(action hyperion.Action) error {
+	p.publisher.DeferredPublish(TopicActionSync, 1*time.Second, action)
+	return nil
 }
