@@ -5,7 +5,6 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/cdex"
-	"fmt"
 	"log"
 	"time"
 
@@ -85,7 +84,6 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			Status:             db.OrderStatusOpen,
 		}
 
-		fmt.Println(openOrder.Price.String())
 		// 4.2 Insert OpenOrder
 		err = s.repo.InsertOpenOrderIfNotExist(ctx, openOrder)
 		if err != nil {

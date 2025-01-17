@@ -170,7 +170,6 @@ func (c *Client) GetUserFunds(ctx context.Context, account string) ([]Fund, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to get funds: %w", err)
 	}
-	fmt.Println(string(response.Rows))
 
 	var funds []Fund
 	err = json.Unmarshal(response.Rows, &funds)
