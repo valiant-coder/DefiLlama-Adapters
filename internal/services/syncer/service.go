@@ -112,6 +112,14 @@ func (s *Service) Start(ctx context.Context) error {
 		},
 		{
 			Contract:  s.exappCfg.AssetContract,
+			Action:    "lognewacc",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.exappCfg.AssetContract,
 			Action:    "logdeposit",
 			Account:   "",
 			StartFrom: int64(s.lastBlockNum) + 1,
@@ -126,7 +134,6 @@ func (s *Service) Start(ctx context.Context) error {
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
-
 	})
 
 	if err != nil {
@@ -162,18 +169,19 @@ func (s *Service) syncHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf(
-				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled,%s:logdeposit,%s:logwithdraw",
+			Filter: fmt.Sprintf(
+				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled,%s:lognewacc,%s:logdeposit,%s:logwithdraw",
 				s.cdexCfg.PoolContract,
 				s.cdexCfg.EventContract,
 				s.cdexCfg.EventContract,
 				s.cdexCfg.EventContract,
 				s.exappCfg.AssetContract,
 				s.exappCfg.AssetContract,
+				s.exappCfg.AssetContract,
 			),
-			Limit:   s.hyperionCfg.BatchSize,
-			Sort:    "asc",
-			After:   strconv.FormatUint(s.lastBlockNum, 10),
+			Limit: s.hyperionCfg.BatchSize,
+			Sort:  "asc",
+			After: strconv.FormatUint(s.lastBlockNum, 10),
 		})
 		if err != nil {
 			return fmt.Errorf("get actions failed: %w", err)
