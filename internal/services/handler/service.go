@@ -85,8 +85,7 @@ func (s *Service) Start(ctx context.Context) error {
 		log.Printf("init kline cache failed: %v", err)
 	}
 
-	curInstance, _ := s.getInstanceInfo(ctx)
-	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("instance-%d", curInstance), s.HandleMessage)
+	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("%s#ephemeral", uuid.New().String()), s.HandleMessage)
 	if err != nil {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
