@@ -26,7 +26,7 @@ const (
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
 	RedisKeyHandlerLock      = "cdex:handler:lock"      // Distributed lock key
-	HandlerTTL               = 30 * time.Second         // Handler heartbeat timeout
+	HandlerTTL               = 10 * time.Second         // Handler heartbeat timeout
 )
 
 type Service struct {
@@ -78,6 +78,8 @@ func NewService() (*Service, error) {
 }
 
 func (s *Service) Start(ctx context.Context) error {
+	
+	s.redisCli.HSet(ctx, RedisKeyHandlerInstances, s.instanceID, time.Now().Unix())
 	// Start heartbeat goroutine
 	go s.heartbeat(ctx)
 
