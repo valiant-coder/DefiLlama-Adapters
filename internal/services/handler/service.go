@@ -180,8 +180,11 @@ func (s *Service) getInstanceInfo(ctx context.Context) (int, int) {
 			break
 		}
 	}
+	if s.curInstance != currentInstance {
+		s.curInstance = currentInstance
+		s.initKlineCache(ctx)
+	}
 
-	s.curInstance = currentInstance
 	return currentInstance, len(instances)
 }
 
