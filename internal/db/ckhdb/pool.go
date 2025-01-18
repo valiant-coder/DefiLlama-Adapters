@@ -28,10 +28,10 @@ func (PoolStats) TableName() string {
 	return "pool_stats"
 }
 
-func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryparams.QueryParams) ([]PoolStats, int64, error) {
+func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryparams.QueryParams) ([]*PoolStats, int64, error) {
 	queryParams.TableName = "pool_stats"
 	queryParams.Order = "pool_id desc"
-	pools := []PoolStats{}
+	pools := []*PoolStats{}
 	total, err := r.Query(ctx, &pools, queryParams, "base_coin", "quote_coin")
 	if err != nil {
 		return nil, 0, err
@@ -115,11 +115,9 @@ FROM aggregated;
 	return r.DB.WithContext(ctx).Exec(query).Error
 }
 
-
 func (r *ClickHouseRepo) CreatePoolStats(ctx context.Context, poolStats *PoolStats) error {
 	return r.DB.WithContext(ctx).Create(poolStats).Error
 }
-
 
 /*
 OPTIMIZE TABLE pool_stats FINAL;
@@ -137,4 +135,10 @@ func (r *ClickHouseRepo) GetPoolStats(ctx context.Context, poolID uint64) (*Pool
 		Where("pool_id = ?", poolID).
 		First(&stats).Error
 	return &stats, err
+}
+
+func (r *ClickHouseRepo) ListPoolStats(ctx context.Context) ([]*PoolStats, error) {
+	var pools []*PoolStats
+	err := r.DB.WithContext(ctx).Find(&pools).Error
+	return pools, err
 }

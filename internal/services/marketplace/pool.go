@@ -26,28 +26,14 @@ func NewPoolService() *PoolService {
 	}
 }
 
-func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.PoolStats, int64, error) {
+func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.QueryParams) ([]*entity.PoolStats, int64, error) {
 	pools, total, err := s.ckhRepo.QueryPoolStats(ctx, queryParams)
 	if err != nil {
 		return nil, 0, err
 	}
-	var result []entity.PoolStats
+	var result []*entity.PoolStats
 	for _, pool := range pools {
-		result = append(result, entity.PoolStats{
-			PoolID:     pool.PoolID,
-			BaseCoin:   pool.BaseCoin,
-			QuoteCoin:  pool.QuoteCoin,
-			Symbol:     pool.Symbol,
-			Change:     pool.Change.String(),
-			ChangeRate: pool.ChangeRate,
-			High:       pool.High.String(),
-			Low:        pool.Low.String(),
-			Volume:     pool.Volume.String(),
-			Turnover:   pool.QuoteVolume.String(),
-			Trades:     pool.Trades,
-			LastPrice:  pool.LastPrice.String(),
-			UpdatedAt:  entity.Time(pool.Timestamp),
-		})
+		result = append(result, entity.PoolStatusFromDB(pool))
 	}
 	return result, total, nil
 }
@@ -109,20 +95,6 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 		MakerFeeRate:       pool.MakerFeeRate,
 		MinAmount:          pool.MinAmount.String(),
 		Status:             uint8(pool.Status),
-		PoolStats: entity.PoolStats{
-			PoolID:     pool.PoolID,
-			Symbol:     pool.Symbol,
-			BaseCoin:   pool.BaseCoin,
-			QuoteCoin:  pool.QuoteCoin,
-			LastPrice:  poolStats.LastPrice.String(),
-			Change:     poolStats.Change.String(),
-			ChangeRate: poolStats.ChangeRate,
-			High:       poolStats.High.String(),
-			Low:        poolStats.Low.String(),
-			Volume:     poolStats.Volume.String(),
-			Turnover:   poolStats.QuoteVolume.String(),
-			Trades:     poolStats.Trades,
-			UpdatedAt:  entity.Time(poolStats.Timestamp),
-		},
+		PoolStats:          *entity.PoolStatusFromDB(poolStats),
 	}, nil
 }
