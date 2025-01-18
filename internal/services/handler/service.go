@@ -86,7 +86,7 @@ func (s *Service) Start(ctx context.Context) error {
 	}
 
 	curInstance, _ := s.getInstanceInfo(ctx)
-	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("instance-%d#ephemeral", curInstance), s.HandleMessage)
+	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("instance-%d", curInstance), s.HandleMessage)
 	if err != nil {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
