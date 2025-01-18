@@ -7,7 +7,6 @@ import (
 	"exapp-go/internal/db/plugins"
 	"exapp-go/pkg/cache"
 	"exapp-go/pkg/queryparams"
-	"exapp-go/pkg/utils"
 	"fmt"
 	"net/url"
 	"os"
@@ -25,11 +24,8 @@ import (
 
 type Repo struct {
 	*gorm.DB
-	rdb struct {
-		isCluster bool
-		single    *redis.Client
-		cluster   *redis.ClusterClient
-	}
+	redis        redis.Cmdable
+	redisCluster bool
 }
 
 var repo *Repo
@@ -60,22 +56,21 @@ func New() *Repo {
 			DB: db,
 		}
 		redisCfg := config.Conf().Redis
+		repo.redisCluster = redisCfg.IsCluster
 		if redisCfg.IsCluster {
-			repo.rdb.isCluster = true
 			clusterRDB := redis.NewClusterClient(&redis.ClusterOptions{
 				Addrs:    redisCfg.Cluster.Urls,
 				Username: redisCfg.Cluster.User,
 				Password: redisCfg.Cluster.Pass,
 			})
-			repo.rdb.cluster = clusterRDB
-
+			repo.redis = clusterRDB
 		} else {
 			rdb := redis.NewClient(&redis.Options{
 				Addr:     fmt.Sprintf("%s:%d", redisCfg.Host, redisCfg.Port),
 				Password: redisCfg.Pass,
 				DB:       redisCfg.DB,
 			})
-			repo.rdb.single = rdb
+			repo.redis = rdb
 		}
 		if len(migrateFuncs) > 0 && mysqlCfg.Migrate {
 			for _, f := range migrateFuncs {
@@ -253,133 +248,16 @@ func (r *Repo) Query(ctx context.Context, models interface{}, params *queryparam
 	return
 }
 
-func (r *Repo) CacheSet(ctx context.Context, key string, value interface{}, expire time.Duration) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.Set(ctx, key, utils.MarshalE(value), expire).Err()
-	} else {
-		return r.rdb.single.Set(ctx, key, utils.MarshalE(value), expire).Err()
-	}
-}
-
-func (r *Repo) CacheGet(ctx context.Context, key string, value interface{}) error {
-	if r.rdb.isCluster {
-		v, err := r.rdb.cluster.Get(ctx, key).Bytes()
-		if err != nil {
-			return err
-		}
-		return utils.Unmarshal(v, value)
-	} else {
-		v, err := r.rdb.single.Get(ctx, key).Bytes()
-		if err != nil {
-			return err
-		}
-		return utils.Unmarshal(v, value)
-	}
-}
-
-func (r *Repo) CacheExist(ctx context.Context, key string) (bool, error) {
-	if r.rdb.isCluster {
-		result, err := r.rdb.cluster.Exists(ctx, key).Result()
-		if err != nil {
-			return false, err
-		}
-		return result > 0, nil
-	} else {
-		result, err := r.rdb.single.Exists(ctx, key).Result()
-		if err != nil {
-			return false, err
-		}
-		return result > 0, nil
-	}
-}
-
-func (r *Repo) CacheDel(ctx context.Context, keys ...string) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.Del(ctx, keys...).Err()
-	} else {
-		return r.rdb.single.Del(ctx, keys...).Err()
-	}
-}
-func (r *Repo) CacheSAdd(ctx context.Context, key string, members ...interface{}) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.SAdd(ctx, key, members...).Err()
-	} else {
-		return r.rdb.single.SAdd(ctx, key, members...).Err()
-	}
-}
-func (r *Repo) CacheSRem(ctx context.Context, key string, members ...interface{}) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.SRem(ctx, key, members...).Err()
-	} else {
-		return r.rdb.single.SRem(ctx, key, members...).Err()
-	}
-}
-func (r *Repo) CacheSPop(ctx context.Context, key string) (string, error) {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.SPop(ctx, key).Result()
-	} else {
-		return r.rdb.single.SPop(ctx, key).Result()
-	}
-}
-func (r *Repo) CacheSPopN(ctx context.Context, key string, count int64) ([]string, error) {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.SPopN(ctx, key, count).Result()
-	} else {
-		return r.rdb.single.SPopN(ctx, key, count).Result()
-	}
-}
-func (r *Repo) CacheSCard(ctx context.Context, key string) (int64, error) {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.SCard(ctx, key).Result()
-	} else {
-		return r.rdb.single.SCard(ctx, key).Result()
-	}
-}
-
-func (r *Repo) CacheZAdd(ctx context.Context, key string, members ...redis.Z) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.ZAdd(ctx, key, members...).Err()
-	} else {
-		return r.rdb.single.ZAdd(ctx, key, members...).Err()
-	}
-}
-func (r *Repo) CacheZRem(ctx context.Context, key string, members ...interface{}) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.ZRem(ctx, key, members...).Err()
-	} else {
-		return r.rdb.single.ZRem(ctx, key, members...).Err()
-	}
-}
-func (r *Repo) GetZScore(ctx context.Context, key string, member string) (float64, error) {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.ZScore(ctx, key, member).Result()
-	} else {
-		return r.rdb.single.ZScore(ctx, key, member).Result()
-	}
-}
-
 func (r *Repo) Watch(ctx context.Context, f func(tx *redis.Tx) error, keys ...string) error {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.Watch(ctx, f, keys...)
+	if r.redisCluster {
+		return r.redis.(*redis.ClusterClient).Watch(ctx, f, keys...)
 	} else {
-		return r.rdb.single.Watch(ctx, f, keys...)
-	}
-}
-
-func (r *Repo) IsMember(ctx context.Context, key string, member interface{}) (bool, error) {
-	if r.rdb.isCluster {
-		return r.rdb.cluster.SIsMember(ctx, key, member).Result()
-	} else {
-		return r.rdb.single.SIsMember(ctx, key, member).Result()
+		return r.redis.(*redis.Client).Watch(ctx, f, keys...)
 	}
 }
 
 func (r *Repo) Redis() redis.Cmdable {
-	if r.rdb.isCluster {
-		return r.rdb.cluster
-	} else {
-		return r.rdb.single
-	}
+	return r.redis
 }
 
 type MigrateFunc func(r *Repo) error

@@ -69,7 +69,7 @@ type DepthChange struct {
 func (s *Repo) UpdateDepth(ctx context.Context, params []UpdateDepthParams) ([]DepthChange, error) {
 	for _, param := range params {
 		if param.UniqID != "" {
-			exists, err := s.IsMember(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID)
+			exists, err := s.redis.SIsMember(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID).Result()
 			if err != nil {
 				return nil, fmt.Errorf("check uniq id error: %w", err)
 			}
@@ -177,7 +177,7 @@ func (s *Repo) GetDepth(ctx context.Context, poolId uint64) (Depth, error) {
 	asksKey := fmt.Sprintf("depth:%d:asks", poolId)
 
 	// Bids from high to low, limit 100
-	bidsResult, err := s.rdb.single.ZRevRange(ctx, bidsKey, 0, 99).Result()
+	bidsResult, err := s.redis.ZRevRange(ctx, bidsKey, 0, 99).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return depth, nil
@@ -185,7 +185,7 @@ func (s *Repo) GetDepth(ctx context.Context, poolId uint64) (Depth, error) {
 		return depth, err
 	}
 	// Asks from low to high, limit 100
-	asksResult, err := s.rdb.single.ZRange(ctx, asksKey, 0, 99).Result()
+	asksResult, err := s.redis.ZRange(ctx, asksKey, 0, 99).Result()
 	if err != nil {
 		return depth, err
 	}
@@ -222,5 +222,5 @@ func (s *Repo) ClearDepths(ctx context.Context, poolID uint64) error {
 		fmt.Sprintf("depth:%d:asks", poolID),
 		fmt.Sprintf("depth:%d:processed_ids", poolID),
 	}
-	return s.CacheDel(ctx, keys...)
+	return s.redis.Del(ctx, keys...).Err()
 }
