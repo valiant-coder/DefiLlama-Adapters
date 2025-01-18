@@ -56,9 +56,15 @@ socket.emit('subscribe_depth', 1);
 socket.emit('subscribe_trades', poolId);
 
 socket.emit('subscribe_trades', 1);
+
+### 4. Pool Stats Data Subscription
+```javascript
+socket.emit('subscribe_pool_stats', poolId);
+
+socket.emit('subscribe_pool_stats', 1);
 ```
 
-### 4. Unsubscribe
+### 5. Unsubscribe
 ```javascript
 socket.emit('unsubscribe', subscriptionType, poolId, interval);
 
@@ -67,6 +73,8 @@ socket.emit('unsubscribe', 'kline', 1, '1m');
 socket.emit('unsubscribe', 'depth', 1);
 
 socket.emit('unsubscribe', 'trades', 1);
+
+socket.emit('unsubscribe', 'pool_stats', 1);
 ```
 
 ## Subscription Success Response
@@ -89,6 +97,11 @@ socket.on('subscribed', (response) => {
     
     // {
     //     "type": "trades",
+    //     "poolID": 1
+    // }
+
+    // {
+    //     "type": "pool_stats",
     //     "poolID": 1
     // }
 });
@@ -161,6 +174,28 @@ socket.on('order_update', (data) => {
 });
 ```
 
+### 5. Pool Stats Data Format
+```javascript
+socket.on('pool_stats', (data) => {
+    // data:
+    // {
+    //     "pool_id": 1,
+    //     "base_coin": "BTC",
+    //     "quote_coin": "USDT",
+    //     "symbol": "BTC/USDT",
+    //     "last_price": "100.5",
+    //     "change": "1.0",
+    //     "change_rate": 0.01,
+    //     "high": "101.5",
+    //     "low": "99.5",
+    //     "volume": "1000.5",
+    //     "turnover": "100500.5",
+    //     "trades": 100,
+    //     "updated_at": 1234567890
+    // }
+});
+```
+
 ## Example Code
 
 ```javascript
@@ -202,6 +237,10 @@ socket.on('trades', (data) => {
     console.log('Trades update:', data);
 });
 
+socket.on('pool_stats', (data) => {
+    console.log('Pool stats update:', data);
+});
+
 socket.on('order_update', (data) => {
     console.log('Order update:', data);
 });
@@ -213,4 +252,6 @@ socket.on('balance_update', (data) => {
 socket.on('disconnect', () => {
     console.log('Disconnected from WebSocket server');
 });
+
+
 ```
