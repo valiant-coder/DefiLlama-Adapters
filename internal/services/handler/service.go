@@ -15,13 +15,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/nsqio/go-nsq"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
-	TopicActionSync   = "cdex_action_sync"
+	TopicActionSync = "cdex_action_sync"
 
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
@@ -39,7 +39,7 @@ type Service struct {
 	cdexCfg    config.CdexConfig
 	exappCfg   config.ExappConfig
 	publisher  *NSQPublisher
-	redisCli   *redis.Client
+	redisCli   redis.Cmdable
 	instanceID string
 }
 
@@ -53,21 +53,7 @@ func NewService() (*Service, error) {
 		return nil, err
 	}
 
-	redisOpts := &redis.Options{
-		Addr: fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
-		DB:   cfg.Redis.DB,
-	}
-	
-	if cfg.Redis.Pass != "" {
-		log.Println("redis password: ", cfg.Redis.Pass)
-		redisOpts.Password = cfg.Redis.Pass
-	}
-
-	redisCli := redis.NewClient(redisOpts)
-
-	if err := redisCli.Ping(context.Background()).Err(); err != nil {
-		return nil, fmt.Errorf("redis connection failed: %v", err)
-	}
+	redisCli := repo.Redis()
 	// Generate unique instance ID
 	instanceID := uuid.New().String()
 
@@ -86,7 +72,7 @@ func NewService() (*Service, error) {
 }
 
 func (s *Service) Start(ctx context.Context) error {
-	
+
 	s.redisCli.HSet(ctx, RedisKeyHandlerInstances, s.instanceID, time.Now().Unix())
 	// Start heartbeat goroutine
 	go s.heartbeat(ctx)

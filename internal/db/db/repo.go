@@ -374,6 +374,14 @@ func (r *Repo) IsMember(ctx context.Context, key string, member interface{}) (bo
 	}
 }
 
+func (r *Repo) Redis() redis.Cmdable {
+	if r.rdb.isCluster {
+		return r.rdb.cluster
+	} else {
+		return r.rdb.single
+	}
+}
+
 type MigrateFunc func(r *Repo) error
 
 var migrateFuncs []MigrateFunc
