@@ -26,7 +26,7 @@ const (
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
 	RedisKeyHandlerLock      = "cdex:handler:lock"      // Distributed lock key
-	HandlerTTL               = 10 * time.Second         // Handler heartbeat timeout
+	HandlerTTL               = 4 * time.Second         // Handler heartbeat timeout
 )
 
 type Service struct {
