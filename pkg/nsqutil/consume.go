@@ -12,31 +12,33 @@ func IsNsqMessageExpired(message *nsq.Message, expiredSecond float64) bool {
 	return time.Since(time.Unix(0, message.Timestamp)).Seconds() > expiredSecond
 }
 
-type Worker struct {
-	addr    string
-	cfg     *nsq.Config
-	channel string
-	ncs     map[string]*nsq.Consumer
+type Consumer struct {
+	addr string
+	cfg  *nsq.Config
+	ncs  map[string]map[string]*nsq.Consumer
 }
 
-func NewWorker(channel string, lookupd string, lookupTTl time.Duration) *Worker {
+func NewConsumer(lookupd string, lookupTTl time.Duration) *Consumer {
 	nCfg := nsq.NewConfig()
 	nCfg.LookupdPollInterval = lookupTTl
-	return &Worker{
-		addr:    lookupd,
-		cfg:     nCfg,
-		channel: channel,
-		ncs:     map[string]*nsq.Consumer{},
+	return &Consumer{
+		addr: lookupd,
+		cfg:  nCfg,
+		ncs:  make(map[string]map[string]*nsq.Consumer),
 	}
 }
 
-func (w *Worker) Consume(topic string, handler nsq.HandlerFunc) error {
-	if nc, ok := w.ncs[topic]; ok {
+func (w *Consumer) Consume(topic string, channel string, handler nsq.HandlerFunc) error {
+	if _, ok := w.ncs[topic]; !ok {
+		w.ncs[topic] = make(map[string]*nsq.Consumer)
+	}
+
+	if nc, ok := w.ncs[topic][channel]; ok {
 		nc.AddHandler(handler)
 		return nil
 	}
 
-	nc, err := nsq.NewConsumer(topic, w.channel, w.cfg)
+	nc, err := nsq.NewConsumer(topic, channel, w.cfg)
 	if err != nil {
 		return err
 	}
@@ -48,12 +50,27 @@ func (w *Worker) Consume(topic string, handler nsq.HandlerFunc) error {
 		return err
 	}
 
-	w.ncs[topic] = nc
+	w.ncs[topic][channel] = nc
 	return nil
 }
 
-func (w *Worker) StopConsume() {
-	for _, nc := range w.ncs {
-		nc.Stop()
+func (w *Consumer) StopConsumeByTopic(topic string) {
+	if nc, ok := w.ncs[topic]; ok {
+		for _, nc := range nc {
+			nc.Stop()
+		}
+		delete(w.ncs, topic)
 	}
+}
+
+
+
+
+func (w *Consumer) Stop() {
+	for _, nc := range w.ncs {
+		for _, nc := range nc {
+			nc.Stop()
+		}
+	}
+	w.ncs = make(map[string]map[string]*nsq.Consumer)
 }

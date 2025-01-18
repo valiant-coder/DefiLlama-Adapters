@@ -30,10 +30,9 @@ const (
 )
 
 type Service struct {
-	nsqCfg     config.NsqConfig
 	ckhRepo    *ckhdb.ClickHouseRepo
 	repo       *db.Repo
-	worker     *nsqutil.Worker
+	consumer   *nsqutil.Consumer
 	poolCache  map[uint64]*db.Pool
 	eosCfg     config.EosConfig
 	cdexCfg    config.CdexConfig
@@ -41,6 +40,7 @@ type Service struct {
 	publisher  *NSQPublisher
 	redisCli   redis.Cmdable
 	instanceID string
+	curInstance int
 	klineCache map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
 }
 
@@ -57,11 +57,11 @@ func NewService() (*Service, error) {
 	redisCli := repo.Redis()
 	// Generate unique instance ID
 	instanceID := uuid.New().String()
+	consumer := nsqutil.NewConsumer(cfg.Nsq.Lookupd, cfg.Nsq.LookupTTl)
 
 	return &Service{
 		ckhRepo:    ckhRepo,
 		repo:       repo,
-		nsqCfg:     cfg.Nsq,
 		poolCache:  make(map[uint64]*db.Pool),
 		eosCfg:     cfg.Eos,
 		cdexCfg:    cfg.Eos.CdexConfig,
@@ -69,6 +69,7 @@ func NewService() (*Service, error) {
 		publisher:  publisher,
 		redisCli:   redisCli,
 		instanceID: instanceID,
+		consumer:   consumer,
 		klineCache: make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
 	}, nil
 }
@@ -84,13 +85,15 @@ func (s *Service) Start(ctx context.Context) error {
 		log.Printf("init kline cache failed: %v", err)
 	}
 
-	worker := nsqutil.NewWorker(fmt.Sprintf("%s#ephemeral", s.instanceID), s.nsqCfg.Lookupd, s.nsqCfg.LookupTTl)
-	s.worker = worker
-	err := s.worker.Consume(TopicActionSync, s.HandleMessage)
+	curInstance, _ := s.getInstanceInfo(ctx)
+	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("instance-%d#ephemeral", curInstance), s.HandleMessage)
 	if err != nil {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
 	}
+	
+
+	
 	<-ctx.Done()
 	return nil
 }
@@ -99,7 +102,7 @@ func (s *Service) Stop(ctx context.Context) error {
 	// Remove instance info from Redis
 	s.redisCli.HDel(ctx, RedisKeyHandlerInstances, s.instanceID)
 
-	s.worker.StopConsume()
+	s.consumer.Stop()
 	if s.publisher != nil {
 		s.publisher.Close()
 	}
@@ -178,6 +181,7 @@ func (s *Service) getInstanceInfo(ctx context.Context) (int, int) {
 		}
 	}
 
+	s.curInstance = currentInstance
 	return currentInstance, len(instances)
 }
 

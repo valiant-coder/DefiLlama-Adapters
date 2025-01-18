@@ -32,9 +32,9 @@ type Subscription struct {
 }
 
 type Server struct {
-	io     *socket.Server
-	pusher *Pusher
-	worker *nsqutil.Worker
+	io       *socket.Server
+	pusher   *Pusher
+	consumer *nsqutil.Consumer
 }
 
 // Create new WebSocket server
@@ -58,8 +58,8 @@ func NewServer(ctx context.Context) *Server {
 
 	nsqCfg := config.Conf().Nsq
 	server := &Server{
-		io:     io,
-		worker: nsqutil.NewWorker(fmt.Sprintf("%s#ephemeral", uuid.New().String()), nsqCfg.Lookupd, nsqCfg.LookupTTl),
+		io:       io,
+		consumer: nsqutil.NewConsumer(nsqCfg.Lookupd, nsqCfg.LookupTTl),
 	}
 	server.pusher = NewPusher(ctx, server)
 
@@ -74,8 +74,8 @@ func NewServer(ctx context.Context) *Server {
 
 // Setup NSQ message handlers
 func (s *Server) setupNSQHandlers() {
-	if s.worker != nil {
-		s.worker.Consume(TopicCdexUpdates, s.handleNSQMessage)
+	if s.consumer != nil {
+		s.consumer.Consume(TopicCdexUpdates, fmt.Sprintf("%s#ephemeral", uuid.New().String()), s.handleNSQMessage)
 	}
 }
 
@@ -374,8 +374,8 @@ func (s *Server) Broadcast(sub Subscription, event string, data interface{}) {
 
 // Close server
 func (s *Server) Close() error {
-	if s.worker != nil {
-		s.worker.StopConsume()
+	if s.consumer != nil {
+		s.consumer.Stop()
 	}
 	if s.pusher != nil {
 		s.pusher.Stop()
