@@ -53,13 +53,21 @@ func NewService() (*Service, error) {
 		return nil, err
 	}
 
-	// Initialize Redis client
-	redisCli := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
-		Password: cfg.Redis.Pass,
-		DB:       cfg.Redis.DB,
-	})
+	redisOpts := &redis.Options{
+		Addr: fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+		DB:   cfg.Redis.DB,
+	}
+	
+	if cfg.Redis.Pass != "" {
+		log.Println("redis password: ", cfg.Redis.Pass)
+		redisOpts.Password = cfg.Redis.Pass
+	}
 
+	redisCli := redis.NewClient(redisOpts)
+
+	if err := redisCli.Ping(context.Background()).Err(); err != nil {
+		return nil, fmt.Errorf("redis connection failed: %v", err)
+	}
 	// Generate unique instance ID
 	instanceID := uuid.New().String()
 
