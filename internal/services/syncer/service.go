@@ -21,7 +21,7 @@ const (
 type Service struct {
 	hyperionClient *hyperion.Client
 	streamClient   *hyperion.StreamClient
-	publisher      *nsqutil.Client
+	publisher      *nsqutil.Publisher
 	lastBlockNum   uint64
 	hyperionCfg    config.HyperionConfig
 	nsqCfg         config.NsqConfig

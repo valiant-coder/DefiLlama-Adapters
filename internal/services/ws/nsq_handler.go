@@ -14,11 +14,12 @@ const (
 
 // NSQ message types
 const (
-	MsgTypeOrderUpdate   = "order_update"
-	MsgTypeBalanceUpdate = "balance_update"
-	MsgTypeTradeUpdate   = "trade_update"
-	MsgTypeDepthUpdate   = "depth_update"
-	MsgTypeKlineUpdate   = "kline_update"
+	MsgTypeOrderUpdate     = "order_update"
+	MsgTypeBalanceUpdate   = "balance_update"
+	MsgTypeTradeUpdate     = "trade_update"
+	MsgTypeDepthUpdate     = "depth_update"
+	MsgTypeKlineUpdate     = "kline_update"
+	MsgTypePoolStatsUpdate = "pool_stats_update"
 )
 
 // Base NSQ message structure
@@ -77,6 +78,15 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 		}
 		// Broadcast kline update
 		s.pusher.PushKline(klineData)
+
+	case MsgTypePoolStatsUpdate:
+		var poolStatsData entity.PoolStats
+		if err := json.Unmarshal(nsqMsg.Data, &poolStatsData); err != nil {
+			log.Printf("Failed to unmarshal pool stats data: %v", err)
+			return nil
+		}
+		// Broadcast pool stats update
+		s.pusher.PushPoolStats(poolStatsData)
 
 	default:
 		log.Printf("Unknown message type: %s", nsqMsg.Type)

@@ -12,13 +12,13 @@ import (
 
 const retry = 3
 
-type Client struct {
+type Publisher struct {
 	nps       []*nsq.Producer
 	tick      int
 	tickMutex sync.RWMutex
 }
 
-func NewPublisher(nsqdAddrs []string) *Client {
+func NewPublisher(nsqdAddrs []string) *Publisher {
 	nCfg := nsq.NewConfig()
 
 	var nps []*nsq.Producer
@@ -31,13 +31,13 @@ func NewPublisher(nsqdAddrs []string) *Client {
 		nps = append(nps, np)
 	}
 
-	return &Client{
+	return &Publisher{
 		nps:  nps,
 		tick: 0,
 	}
 }
 
-func (c *Client) assignProducer() *nsq.Producer {
+func (c *Publisher) assignProducer() *nsq.Producer {
 	c.tickMutex.Lock()
 	defer c.tickMutex.Unlock()
 
@@ -49,7 +49,7 @@ func (c *Client) assignProducer() *nsq.Producer {
 	return c.nps[assigned]
 }
 
-func (c *Client) Publish(topic string, payload interface{}) error {
+func (c *Publisher) Publish(topic string, payload interface{}) error {
 	data, err := utils.Marshal(payload)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (c *Client) Publish(topic string, payload interface{}) error {
 	return nil
 }
 
-func (c *Client) publish(topic string, data []byte, retry int) error {
+func (c *Publisher) publish(topic string, data []byte, retry int) error {
 	if err := c.assignProducer().Publish(topic, data); err != nil {
 		if retry > 0 {
 			retry--
@@ -75,7 +75,7 @@ func (c *Client) publish(topic string, data []byte, retry int) error {
 	return nil
 }
 
-func (c *Client) DeferredPublish(topic string, delay time.Duration, payload interface{}) error {
+func (c *Publisher) DeferredPublish(topic string, delay time.Duration, payload interface{}) error {
 	data, err := utils.Marshal(payload)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (c *Client) DeferredPublish(topic string, delay time.Duration, payload inte
 	return nil
 }
 
-func (c *Client) deferredPublish(topic string, delay time.Duration, data []byte, retry int) error {
+func (c *Publisher) deferredPublish(topic string, delay time.Duration, data []byte, retry int) error {
 	if err := c.assignProducer().DeferredPublish(topic, delay, data); err != nil {
 		if match, _ := regexp.MatchString("E_INVALID DPUB timeout \\d+ out of range 0-\\d+", err.Error()); match {
 			return err
@@ -104,8 +104,7 @@ func (c *Client) deferredPublish(topic string, delay time.Duration, data []byte,
 	return nil
 }
 
-
-func (c *Client) Stop() {
+func (c *Publisher) Stop() {
 	for _, np := range c.nps {
 		np.Stop()
 	}

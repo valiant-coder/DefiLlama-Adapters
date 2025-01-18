@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	PushEventBalanceUpdate = "balance_update"
-	PushEventOrderUpdate   = "order_update"
-	PushEventTradeUpdate   = "trade"
-	PushEventDepthUpdate   = "depth"
-	PushEventKlineUpdate   = "kline"
+	PushEventBalanceUpdate   = "balance_update"
+	PushEventOrderUpdate     = "order_update"
+	PushEventTradeUpdate     = "trade"
+	PushEventDepthUpdate     = "depth"
+	PushEventKlineUpdate     = "kline"
+	PushEventPoolStatsUpdate = "pool_stats"
 )
 
 // Balance update
@@ -79,6 +80,15 @@ func (p *Pusher) PushBalanceUpdate(account string) {
 func (p *Pusher) PushOrderUpdate(account string, update OrderUpdate) {
 	// Push order update to specific user
 	p.pushToUser(account, PushEventOrderUpdate, update)
+}
+
+// Push pool stats data
+func (p *Pusher) PushPoolStats(data entity.PoolStats) {
+	sub := Subscription{
+		PoolID: data.PoolID,
+		Type:   SubTypePoolStats,
+	}
+	p.server.Broadcast(sub, PushEventPoolStatsUpdate, data)
 }
 
 // Push data to specific user

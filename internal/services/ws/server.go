@@ -19,9 +19,10 @@ import (
 type SubscriptionType string
 
 const (
-	SubTypeKline  SubscriptionType = "kline"
-	SubTypeDepth  SubscriptionType = "depth"
-	SubTypeTrades SubscriptionType = "trades"
+	SubTypeKline     SubscriptionType = "kline"
+	SubTypeDepth     SubscriptionType = "depth"
+	SubTypeTrades    SubscriptionType = "trades"
+	SubTypePoolStats SubscriptionType = "pool_stats"
 )
 
 type Subscription struct {
@@ -257,6 +258,36 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
 			"type":    SubTypeTrades,
+			"pool_id": poolID,
+		})
+	})
+
+	// Subscribe to pool stats data
+	client.On("subscribe_pool_stats", func(args ...interface{}) {
+		if len(args) < 1 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid pool stats subscription parameters",
+			})
+			return
+		}
+
+		poolIDFloat, ok := safeGetFloat64(args[0])
+		if !ok {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid pool_id format",
+			})
+			return
+		}
+		poolID := uint64(poolIDFloat)
+
+		room := socket.Room(getRoomName(string(SubTypePoolStats), cast.ToString(poolID), ""))
+		if room == "" {
+			return
+		}
+
+		client.Join(room)
+		client.Emit("subscribed", map[string]interface{}{
+			"type":    SubTypePoolStats,
 			"pool_id": poolID,
 		})
 	})

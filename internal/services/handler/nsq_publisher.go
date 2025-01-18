@@ -33,7 +33,7 @@ type OrderUpdate struct {
 
 // NSQPublisher handles publishing messages to NSQ
 type NSQPublisher struct {
-	publisher *nsqutil.Client
+	publisher *nsqutil.Publisher
 	lastKline map[string]entity.Kline // key: symbol
 	lastOrder map[string]OrderUpdate  // key: account-id
 	mutex     sync.RWMutex
