@@ -15,8 +15,8 @@ func PowerUp(
 	endpoint,
 	accountName,
 	privKey string,
-	cpuEOS uint64,
 	netEOS uint64,
+	cpuEOS uint64,
 	maxPayment uint64,
 ) error {
 	// Get weight values
