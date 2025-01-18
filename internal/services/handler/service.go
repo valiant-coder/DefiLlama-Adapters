@@ -41,6 +41,7 @@ type Service struct {
 	publisher  *NSQPublisher
 	redisCli   redis.Cmdable
 	instanceID string
+	klineCache map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
 }
 
 func NewService() (*Service, error) {
@@ -68,6 +69,7 @@ func NewService() (*Service, error) {
 		publisher:  publisher,
 		redisCli:   redisCli,
 		instanceID: instanceID,
+		klineCache: make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
 	}, nil
 }
 
@@ -76,6 +78,11 @@ func (s *Service) Start(ctx context.Context) error {
 	s.redisCli.HSet(ctx, RedisKeyHandlerInstances, s.instanceID, time.Now().Unix())
 	// Start heartbeat goroutine
 	go s.heartbeat(ctx)
+
+	// Initialize kline cache
+	if err := s.initKlineCache(ctx); err != nil {
+		log.Printf("init kline cache failed: %v", err)
+	}
 
 	worker := nsqutil.NewWorker(fmt.Sprintf("%s#ephemeral", s.instanceID), s.nsqCfg.Lookupd, s.nsqCfg.LookupTTl)
 	s.worker = worker
@@ -268,4 +275,43 @@ func (s *Service) shouldProcessMessage(partitionKey string) bool {
 	// Use hash value to determine which instance should process the message
 	targetInstance := int(hash % uint32(totalInstances))
 	return targetInstance == currentInstance
+}
+
+// initKlineCache initializes the kline cache
+func (s *Service) initKlineCache(ctx context.Context) error {
+	// Get all trading pairs
+	pools, err := s.repo.GetAllPools(ctx)
+	if err != nil {
+		return fmt.Errorf("get all pools failed: %w", err)
+	}
+
+	// Get latest two klines for each trading pair
+	for _, pool := range pools {
+		klines, err := s.ckhRepo.GetLatestTwoKlines(ctx, pool.PoolID)
+		if err != nil {
+			log.Printf("get latest two klines failed for pool %d: %v", pool.PoolID, err)
+			continue
+		}
+
+		// Initialize kline cache for this trading pair
+		s.klineCache[pool.PoolID] = make(map[ckhdb.KlineInterval]*ckhdb.Kline)
+
+		// Group kline data by interval
+		klineMap := make(map[ckhdb.KlineInterval][]*ckhdb.Kline)
+		for _, kline := range klines {
+			klineMap[kline.Interval] = append(klineMap[kline.Interval], kline)
+		}
+
+		// Process klines for each interval
+		for interval, intervalKlines := range klineMap {
+			if len(intervalKlines) > 0 {
+				// If there are two klines, set the latest kline's open price to previous kline's close price
+				if len(intervalKlines) == 2 {
+					intervalKlines[0].Open = intervalKlines[1].Close
+				}
+				s.klineCache[pool.PoolID][interval] = intervalKlines[0] // Only cache the latest kline
+			}
+		}
+	}
+	return nil
 }

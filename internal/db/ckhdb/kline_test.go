@@ -33,3 +33,14 @@ func TestClickHouseRepo_GetLatestKlines(t *testing.T) {
 	}
 	t.Logf("latest klines: %+v", klines)
 }
+
+func TestClickHouseRepo_GetLatestKlinesV2(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config_dev.yaml")
+	repo := New()
+	klines, err := repo.GetLatestTwoKlines(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("failed to get latest klines: %v", err)
+	}
+	t.Logf("latest klines: %+v", klines)
+}

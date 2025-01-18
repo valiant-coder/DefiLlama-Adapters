@@ -81,3 +81,11 @@ func (r *Repo) GetPoolSymbolsByIDs(ctx context.Context, poolID []uint64) (map[ui
 	}
 	return poolSymbols, nil
 }
+
+func (r *Repo) GetAllPools(ctx context.Context) ([]*Pool, error) {
+	var pools []*Pool
+	if err := r.WithContext(ctx).Find(&pools).Error; err != nil {
+		return nil, err
+	}
+	return pools, nil
+}

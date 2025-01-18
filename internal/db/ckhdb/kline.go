@@ -136,3 +136,31 @@ func (r *ClickHouseRepo) BatchGetLatestKlines(ctx context.Context, poolIDs []uin
 	}
 	return result, nil
 }
+
+
+func (r *ClickHouseRepo) GetLatestTwoKlines(ctx context.Context, poolID uint64) ([]*Kline, error) {
+	var klines []*Kline
+	err := r.WithContext(ctx).Raw(`	
+SELECT 
+    pool_id,
+    interval,
+    interval_start,
+    open,
+    high,
+    low,
+    close,
+    volume,
+    quote_volume,
+    trades,
+    rank
+FROM (
+    SELECT 
+        *,
+        row_number() OVER (PARTITION BY pool_id, interval ORDER BY interval_start DESC) as rank
+    FROM klines_view
+    where pool_id = ?
+)
+WHERE rank <= 2
+	`, poolID).Scan(&klines).Error
+	return klines, err
+}
