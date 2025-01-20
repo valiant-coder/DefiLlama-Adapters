@@ -29,13 +29,16 @@ const (
 
 type DepositRecord struct {
 	gorm.Model
-	Symbol string          `gorm:"column:symbol;type:varchar(255);not null"`
-	UID    string          `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
-	Amount decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
-	Fee    decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
-	Status DepositStatus   `gorm:"column:status;type:tinyint(3);not null"`
-	TxHash string          `gorm:"column:tx_hash;type:varchar(255);not null"`
-	Time   time.Time       `gorm:"column:time;type:datetime;not null"`
+	Symbol         string          `gorm:"column:symbol;type:varchar(255);not null"`
+	UID            string          `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
+	ChainName      string          `gorm:"column:chain_name;type:varchar(255);not null"`
+	SourceTxID     string          `gorm:"column:source_tx_id;type:varchar(255);not null"`
+	DepositAddress string          `gorm:"column:deposit_address;type:varchar(255);not null"`
+	Amount         decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
+	Fee            decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
+	Status         DepositStatus   `gorm:"column:status;type:tinyint(3);not null"`
+	TxHash         string          `gorm:"column:tx_hash;type:varchar(255);not null"`
+	Time           time.Time       `gorm:"column:time;type:datetime;not null"`
 }
 
 func (d *DepositRecord) TableName() string {

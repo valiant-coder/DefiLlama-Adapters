@@ -43,12 +43,12 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		return nil
 	}
 	err = s.repo.CreateDepositRecord(ctx, &db.DepositRecord{
-		Symbol: asset.Symbol.Symbol,
-		UID:    uid,
-		Amount: decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
-		Status: db.DepositStatusSuccess,
-		TxHash: action.TrxID,
-		Time:   depositTime,
+		Symbol:    asset.Symbol.Symbol,
+		UID:       uid,
+		Amount:    decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
+		Status:    db.DepositStatusSuccess,
+		TxHash:    action.TrxID,
+		Time:      depositTime,
 	})
 	if err != nil {
 		log.Printf("Create deposit record failed: %v-%v", data, err)
