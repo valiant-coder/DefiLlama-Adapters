@@ -55,12 +55,12 @@ type RespWithdrawRecord struct {
 	ChainName string `json:"chain_name"`
 	Fee       string `json:"fee"`
 	// 0 pending 1success 2 fail
-	Status     uint8 `json:"status"`
+	Status     uint8  `json:"status"`
 	SendTxID   string `json:"send_tx_id"`
-	WithdrawAt Time  `json:"withdraw_at"`
+	WithdrawAt Time   `json:"withdraw_at"`
 }
 
-func FormatWithdrawRecord(record *db.UserWithdrawRecord) RespWithdrawRecord {
+func FormatWithdrawRecord(record *db.WithdrawRecord) RespWithdrawRecord {
 	return RespWithdrawRecord{
 		Symbol:     record.Symbol,
 		Amount:     record.Amount.String(),

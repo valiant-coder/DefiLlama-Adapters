@@ -15,7 +15,7 @@ func init() {
 		return repo.AutoMigrate(
 			&DepositRecord{},
 			&UserDepositAddress{},
-			&UserWithdrawRecord{},
+			&WithdrawRecord{},
 		)
 	})
 }
@@ -102,7 +102,7 @@ const (
 	WithdrawStatusFailed
 )
 
-type UserWithdrawRecord struct {
+type WithdrawRecord struct {
 	gorm.Model
 	UID       string          `gorm:"column:uid;type:varchar(255);not null"`
 	Symbol    string          `gorm:"column:symbol;type:varchar(255);not null"`
@@ -115,17 +115,17 @@ type UserWithdrawRecord struct {
 	Time      time.Time       `gorm:"column:time;type:datetime;not null"`
 }
 
-func (u *UserWithdrawRecord) TableName() string {
-	return "user_withdraw_records"
+func (u *WithdrawRecord) TableName() string {
+	return "withdraw_records"
 }
 
-func (r *Repo) CreateWithdrawRecord(ctx context.Context, record *UserWithdrawRecord) error {
+func (r *Repo) CreateWithdrawRecord(ctx context.Context, record *WithdrawRecord) error {
 	return r.DB.WithContext(ctx).Create(record).Error
 }
 
-func (r *Repo) GetWithdrawRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]*UserWithdrawRecord, int64, error) {
+func (r *Repo) GetWithdrawRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]*WithdrawRecord, int64, error) {
 	queryParams.Add("uid", uid)
-	var records []*UserWithdrawRecord
+	var records []*WithdrawRecord
 	total, err := r.Query(ctx, &records, queryParams, "uid")
 	return records, total, err
 }

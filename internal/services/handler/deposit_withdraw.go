@@ -14,10 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
-
-
 func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 	ctx := context.Background()
 	var data struct {
@@ -133,7 +129,7 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		return nil
 	}
 
-	err = s.repo.CreateWithdrawRecord(ctx, &db.UserWithdrawRecord{
+	err = s.repo.CreateWithdrawRecord(ctx, &db.WithdrawRecord{
 		UID:       uid,
 		Symbol:    asset.Symbol.Symbol,
 		ChainName: data.ChainName,
@@ -152,7 +148,6 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 
 	return nil
 }
-
 
 func (s *Service) updateWithdraw(action hyperion.Action) error {
 
