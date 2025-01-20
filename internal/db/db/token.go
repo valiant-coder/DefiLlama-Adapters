@@ -26,13 +26,13 @@ type Token struct {
 	EOSContractAddress string          `gorm:"column:eos_contract_address;type:varchar(255);not null"`
 	ExsatTokenAddress  string          `gorm:"column:exsat_token_address;type:varchar(255);not null"`
 	WithdrawalFee      decimal.Decimal `gorm:"column:withdrawal_fee;type:decimal(36,18);not null"`
+	MinWithdrawAmount  decimal.Decimal `gorm:"column:min_withdraw_amount;type:decimal(36,18);not null;default:0"`
 
 	ExsatHelperAddress string          `gorm:"column:exsat_helper_address;type:varchar(255);not null"`
 	ExsatDepositLimit  decimal.Decimal `gorm:"column:exsat_deposit_limit;type:decimal(36,18);not null;default:0"`
 	ExsatWithdrawMax   decimal.Decimal `gorm:"column:exsat_withdraw_max;type:decimal(36,18);not null;default:0"`
 	ExsatDepositFee    decimal.Decimal `gorm:"column:exsat_deposit_fee;type:decimal(36,18);not null;default:0"`
 	ExsatWithdrawFee   decimal.Decimal `gorm:"column:exsat_withdraw_fee;type:decimal(36,18);not null;default:0"`
-
 }
 
 func (t *Token) TableName() string {
@@ -45,9 +45,9 @@ func (r *Repo) GetToken(ctx context.Context, symbol string, chainName string) (*
 	return &token, err
 }
 
-func (r *Repo) GetTokenByEOS(ctx context.Context, eosContractAddress string,symbol string) (*Token, error) {
+func (r *Repo) GetTokenByEOS(ctx context.Context, eosContractAddress string, symbol string) (*Token, error) {
 	var token Token
-	err := r.WithContext(ctx).Where("eos_contract_address = ? and symbol = ?", eosContractAddress,symbol).First(&token).Error
+	err := r.WithContext(ctx).Where("eos_contract_address = ? and symbol = ?", eosContractAddress, symbol).First(&token).Error
 	return &token, err
 }
 

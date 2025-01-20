@@ -29,9 +29,9 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 		supportChains[token.Symbol] = append(supportChains[token.Symbol], entity.Chain{
 			ChainName:         token.ChainName,
 			MinDepositAmount:  token.ExsatDepositLimit.String(),
-			MinWithdrawAmount: token.ExsatWithdrawMax.String(),
 			WithdrawFee:       token.WithdrawalFee.String(),
 			ExsatWithdrawFee:  token.ExsatWithdrawFee.String(),
+			MinWithdrawAmount: token.MinWithdrawAmount.String(),
 		})
 		tokenNames[token.Symbol] = token.Name
 	}
