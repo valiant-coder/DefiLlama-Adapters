@@ -28,8 +28,6 @@ const (
 	DepositStatusFailed
 )
 
-
-
 type DepositRecord struct {
 	gorm.Model
 	Symbol         string          `gorm:"column:symbol;type:varchar(255);not null"`
@@ -112,6 +110,7 @@ type UserWithdrawRecord struct {
 	Amount    decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
 	Fee       decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
 	Status    WithdrawStatus  `gorm:"column:status;type:tinyint(3);not null"`
+	SendTxID  string          `gorm:"column:send_tx_id;type:varchar(255);default:null;uniqueIndex:idx_send_tx_id"`
 	TxHash    string          `gorm:"column:tx_hash;type:varchar(255);not null"`
 	Time      time.Time       `gorm:"column:time;type:datetime;not null"`
 }

@@ -1312,6 +1312,12 @@ const docTemplatemarketplace = `{
                 "fee": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
+                "send_tx_id": {
+                    "type": "string"
+                },
                 "status": {
                     "description": "0 pending 1success 2 fail",
                     "type": "integer"
