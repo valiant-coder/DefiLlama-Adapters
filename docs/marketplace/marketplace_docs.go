@@ -755,10 +755,16 @@ const docTemplatemarketplace = `{
                 "chain_name": {
                     "type": "string"
                 },
+                "exsat_withdraw_fee": {
+                    "type": "string"
+                },
                 "min_deposit_amount": {
                     "type": "string"
                 },
                 "min_withdraw_amount": {
+                    "type": "string"
+                },
+                "withdraw_fee": {
                     "type": "string"
                 }
             }

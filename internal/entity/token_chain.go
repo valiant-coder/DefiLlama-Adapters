@@ -7,7 +7,10 @@ type Token struct {
 }
 
 type Chain struct {
-	ChainName         string `json:"chain_name"`
+	ChainName string `json:"chain_name"`
+
 	MinDepositAmount  string `json:"min_deposit_amount"`
 	MinWithdrawAmount string `json:"min_withdraw_amount"`
+	WithdrawFee       string `json:"withdraw_fee"`
+	ExsatWithdrawFee  string `json:"exsat_withdraw_fee"`
 }

@@ -30,6 +30,8 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 			ChainName:         token.ChainName,
 			MinDepositAmount:  token.ExsatDepositLimit.String(),
 			MinWithdrawAmount: token.ExsatWithdrawMax.String(),
+			WithdrawFee:       token.WithdrawalFee.String(),
+			ExsatWithdrawFee:  token.ExsatWithdrawFee.String(),
 		})
 		tokenNames[token.Symbol] = token.Name
 	}
