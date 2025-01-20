@@ -7,6 +7,7 @@ import (
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func init() {
@@ -27,12 +28,14 @@ const (
 	DepositStatusFailed
 )
 
+
+
 type DepositRecord struct {
 	gorm.Model
 	Symbol         string          `gorm:"column:symbol;type:varchar(255);not null"`
 	UID            string          `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
 	ChainName      string          `gorm:"column:chain_name;type:varchar(255);not null"`
-	SourceTxID     string          `gorm:"column:source_tx_id;type:varchar(255);not null"`
+	SourceTxID     string          `gorm:"column:source_tx_id;type:varchar(255);default:null;uniqueIndex:idx_source_tx_id"`
 	DepositAddress string          `gorm:"column:deposit_address;type:varchar(255);not null"`
 	Amount         decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
 	Fee            decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
@@ -45,8 +48,11 @@ func (d *DepositRecord) TableName() string {
 	return "deposit_records"
 }
 
-func (r *Repo) CreateDepositRecord(ctx context.Context, record *DepositRecord) error {
-	return r.DB.WithContext(ctx).Create(record).Error
+func (r *Repo) UpsertDepositRecord(ctx context.Context, record *DepositRecord) error {
+	return r.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"status", "tx_hash"}),
+	}).Create(record).Error
 }
 
 func (r *Repo) GetDepositRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]*DepositRecord, int64, error) {
@@ -56,11 +62,17 @@ func (r *Repo) GetDepositRecords(ctx context.Context, uid string, queryParams *q
 	return records, total, err
 }
 
+func (r *Repo) GetDepositRecordBySourceTxID(ctx context.Context, sourceTxID string) (*DepositRecord, error) {
+	var record DepositRecord
+	err := r.WithContext(ctx).Where("source_tx_id = ?", sourceTxID).First(&record).Error
+	return &record, err
+}
+
 type UserDepositAddress struct {
 	gorm.Model
-	UID          string `gorm:"column:uid;type:varchar(255);not null"`
-	Address      string `gorm:"column:address;type:varchar(255);not null"`
-	PermissionID uint64 `gorm:"column:permission_id;type:bigint(20);not null"`
+	UID          string `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
+	Address      string `gorm:"column:address;type:varchar(255);not null;index:idx_address"`
+	PermissionID uint64 `gorm:"column:permission_id;type:bigint(20);not null;index:idx_permission_id"`
 	Remark       string `gorm:"column:remark;type:varchar(255);not null"`
 }
 
@@ -76,6 +88,12 @@ func (r *Repo) GetUserDepositAddress(ctx context.Context, uid string, permission
 	var addresses []UserDepositAddress
 	err := r.DB.WithContext(ctx).Where("uid = ? and permission_id = ?", uid, permissionID).Find(&addresses).Error
 	return addresses, err
+}
+
+func (r *Repo) GetUserDepositAddressByAddress(ctx context.Context, address string) (*UserDepositAddress, error) {
+	var userDepositAddress UserDepositAddress
+	err := r.DB.WithContext(ctx).Where("address = ?", address).First(&userDepositAddress).Error
+	return &userDepositAddress, err
 }
 
 type WithdrawStatus uint8

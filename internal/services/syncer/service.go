@@ -134,6 +134,14 @@ func (s *Service) Start(ctx context.Context) error {
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
+		{
+			Contract:  s.exsatCfg.BridgeContract,
+			Action:    "depositlog",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
 	})
 
 	if err != nil {
@@ -170,7 +178,7 @@ func (s *Service) syncHistory(ctx context.Context) error {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
 			Filter: fmt.Sprintf(
-				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled,%s:lognewacc,%s:logdeposit,%s:logwithdraw",
+				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled,%s:lognewacc,%s:logdeposit,%s:logwithdraw,%s:depositlog",
 				s.cdexCfg.PoolContract,
 				s.cdexCfg.EventContract,
 				s.cdexCfg.EventContract,
@@ -178,6 +186,7 @@ func (s *Service) syncHistory(ctx context.Context) error {
 				s.exappCfg.AssetContract,
 				s.exappCfg.AssetContract,
 				s.exappCfg.AssetContract,
+				s.exsatCfg.BridgeContract,
 			),
 			Limit: s.hyperionCfg.BatchSize,
 			Sort:  "asc",

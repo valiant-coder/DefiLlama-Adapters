@@ -3,59 +3,97 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
-	"exapp-go/pkg/utils"
 	"log"
 	"time"
 
 	eosgo "github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 )
 
-func (s *Service) handleDeposit(action hyperion.Action) error {
+
+
+
+
+func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
+	ctx := context.Background()
 	var data struct {
-		Account  string `json:"account"`
-		Contract string `json:"contract"`
-		Quantity string `json:"quantity"`
+		PermissionID     string `json:"permission_id"`
+		GlobalStatus     uint8  `json:"global_status"`
+		Applicant        string `json:"applicant"`
+		ChainName        string `json:"chain_name"`
+		SourceContract   string `json:"source_contract"`
+		SourceSymbol     string `json:"source_symbol"`
+		DestContract     string `json:"dest_contract"`
+		DestSymbol       string `json:"dest_symbol"`
+		SenderAddress    string `json:"sender_address"`
+		DepositAddress   string `json:"deposit_address"`
+		RecipientAddress string `json:"recipient_address"`
+		BlockHeight      string `json:"block_height"`
+		TxID             string `json:"tx_id"`
+		DepositAmount    string `json:"deposit_amount"`
+		DepositFee       string `json:"deposit_fee"`
+		TransferAmount   string `json:"transfer_amount"`
+		TxTimestamp      string `json:"tx_timestamp"`
+		CreateTimestamp  string `json:"create_timestamp"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal deposit failed: %v", err)
 		return nil
 	}
 
-	ctx := context.Background()
-	uid, err := s.repo.GetUIDByEOSAccount(ctx, data.Account)
-	if err != nil {
-		log.Printf("Get uid by eos account failed: %v-%v", data, err)
+	if data.Applicant != s.exappCfg.AssetContract {
+		log.Printf("Applicant is not %s, skip", s.exappCfg.AssetContract)
 		return nil
 	}
 
-	asset, err := eosgo.NewAssetFromString(data.Quantity)
+	depositAddress, err := s.repo.GetUserDepositAddressByAddress(ctx, data.DepositAddress)
 	if err != nil {
-		log.Printf("New asset from string failed: %v-%v", data, err)
+		log.Printf("not found deposit address: %v-%v", data.DepositAddress, err)
 		return nil
 	}
 
-	depositTime, err := utils.ParseTime(action.Timestamp)
+	token, err := s.repo.GetToken(ctx, data.DestSymbol, data.ChainName)
 	if err != nil {
-		log.Printf("parse action time failed: %v", err)
+		log.Printf("not found token: %v-%v", data.DestSymbol, err)
 		return nil
 	}
-	err = s.repo.CreateDepositRecord(ctx, &db.DepositRecord{
-		Symbol:    asset.Symbol.Symbol,
-		UID:       uid,
-		Amount:    decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
-		Status:    db.DepositStatusSuccess,
-		TxHash:    action.TrxID,
-		Time:      depositTime,
-	})
+
+	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(token.Decimals))
+	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(token.Decimals))
+
+	record, err := s.repo.GetDepositRecordBySourceTxID(ctx, data.TxID)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("Get deposit record by source tx id failed: %v-%v", data, err)
+			return nil
+		} else {
+			record = &db.DepositRecord{
+				Symbol:         data.DestSymbol,
+				UID:            depositAddress.UID,
+				Amount:         depositAmount,
+				Fee:            depositFee,
+				Status:         db.DepositStatus(data.GlobalStatus),
+				Time:           time.Now(),
+				TxHash:         action.TrxID,
+				SourceTxID:     data.TxID,
+				DepositAddress: data.DepositAddress,
+				ChainName:      data.ChainName,
+			}
+		}
+	} else {
+		record.Status = db.DepositStatus(data.GlobalStatus)
+		record.TxHash = action.TrxID
+	}
+
+	err = s.repo.UpsertDepositRecord(ctx, record)
 	if err != nil {
 		log.Printf("Create deposit record failed: %v-%v", data, err)
 		return nil
 	}
-
-	go s.updateUserTokenBalance(data.Account)
 
 	return nil
 }
@@ -116,11 +154,9 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 }
 
 
-
 func (s *Service) updateWithdraw(action hyperion.Action) error {
 
 	var data struct {
-		
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal withdraw failed: %v", err)
@@ -128,6 +164,5 @@ func (s *Service) updateWithdraw(action hyperion.Action) error {
 	}
 
 	return nil
-
 
 }

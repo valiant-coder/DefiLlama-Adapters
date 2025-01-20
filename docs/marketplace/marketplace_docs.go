@@ -1208,7 +1208,16 @@ const docTemplatemarketplace = `{
                 "amount": {
                     "type": "string"
                 },
+                "chain_name": {
+                    "type": "string"
+                },
+                "deposit_address": {
+                    "type": "string"
+                },
                 "deposit_at": {
+                    "type": "string"
+                },
+                "source_tx_id": {
                     "type": "string"
                 },
                 "status": {

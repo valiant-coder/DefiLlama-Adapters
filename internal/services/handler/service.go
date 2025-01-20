@@ -26,22 +26,24 @@ const (
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
 	RedisKeyHandlerLock      = "cdex:handler:lock"      // Distributed lock key
-	HandlerTTL               = 4 * time.Second         // Handler heartbeat timeout
+	HandlerTTL               = 4 * time.Second          // Handler heartbeat timeout
 )
 
 type Service struct {
-	ckhRepo    *ckhdb.ClickHouseRepo
-	repo       *db.Repo
-	consumer   *nsqutil.Consumer
-	poolCache  map[uint64]*db.Pool
-	eosCfg     config.EosConfig
-	cdexCfg    config.CdexConfig
-	exappCfg   config.ExappConfig
-	publisher  *NSQPublisher
-	redisCli   redis.Cmdable
-	instanceID string
+	ckhRepo     *ckhdb.ClickHouseRepo
+	repo        *db.Repo
+	consumer    *nsqutil.Consumer
+	poolCache   map[uint64]*db.Pool
+	eosCfg      config.EosConfig
+	cdexCfg     config.CdexConfig
+	exappCfg    config.ExappConfig
+	exsatCfg    config.ExsatConfig
+	publisher   *NSQPublisher
+	redisCli    redis.Cmdable
+	instanceID  string
 	curInstance int
-	klineCache map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
+	klineCache  map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
+	handlers    map[string]func(hyperion.Action) error
 }
 
 func NewService() (*Service, error) {
@@ -59,19 +61,26 @@ func NewService() (*Service, error) {
 	instanceID := uuid.New().String()
 	consumer := nsqutil.NewConsumer(cfg.Nsq.Lookupd, cfg.Nsq.LookupTTl)
 
-	return &Service{
+	s := &Service{
 		ckhRepo:    ckhRepo,
 		repo:       repo,
 		poolCache:  make(map[uint64]*db.Pool),
 		eosCfg:     cfg.Eos,
 		cdexCfg:    cfg.Eos.CdexConfig,
 		exappCfg:   cfg.Eos.Exapp,
+		exsatCfg:   cfg.Eos.Exsat,
 		publisher:  publisher,
 		redisCli:   redisCli,
 		instanceID: instanceID,
 		consumer:   consumer,
 		klineCache: make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
-	}, nil
+		handlers:   make(map[string]func(hyperion.Action) error),
+	}
+
+	// Register all handlers
+	s.registerHandlers()
+
+	return s, nil
 }
 
 func (s *Service) Start(ctx context.Context) error {
@@ -90,9 +99,7 @@ func (s *Service) Start(ctx context.Context) error {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
 	}
-	
 
-	
 	<-ctx.Done()
 	return nil
 }
@@ -187,6 +194,17 @@ func (s *Service) getInstanceInfo(ctx context.Context) (int, int) {
 	return currentInstance, len(instances)
 }
 
+func (s *Service) registerHandlers() {
+	// Use account:action as key
+	s.handlers[fmt.Sprintf("%s:emitplaced", s.cdexCfg.EventContract)] = s.handleCreateOrder
+	s.handlers[fmt.Sprintf("%s:emitcanceled", s.cdexCfg.EventContract)] = s.handleCancelOrder
+	s.handlers[fmt.Sprintf("%s:emitfilled", s.cdexCfg.EventContract)] = s.handleMatchOrder
+	s.handlers[fmt.Sprintf("%s:create", s.cdexCfg.PoolContract)] = s.handleCreatePool
+	s.handlers[fmt.Sprintf("%s:depositlog", s.exsatCfg.BridgeContract)] = s.handleBridgeDeposit
+	s.handlers[fmt.Sprintf("%s:lognewacc", s.exappCfg.AssetContract)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:logwithdraw", s.exappCfg.AssetContract)] = s.handleWithdraw
+}
+
 func (s *Service) HandleMessage(msg *nsq.Message) error {
 	log.Println("get new action")
 	var action hyperion.Action
@@ -194,7 +212,22 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		log.Printf("Unmarshal action failed: %v", err)
 		return nil
 	}
-	if action.Act.Account != s.cdexCfg.EventContract && action.Act.Account != s.cdexCfg.PoolContract && action.Act.Account != s.exappCfg.AssetContract {
+
+	// Check if should process this message
+	if action.Act.Account != s.cdexCfg.EventContract &&
+		action.Act.Account != s.cdexCfg.PoolContract &&
+		action.Act.Account != s.exappCfg.AssetContract &&
+		action.Act.Account != s.exsatCfg.BridgeContract {
+		return nil
+	}
+
+	// Get handler key
+	handlerKey := fmt.Sprintf("%s:%s", action.Act.Account, action.Act.Name)
+
+	// Find corresponding handler
+	handler, exists := s.handlers[handlerKey]
+	if !exists {
+		log.Printf("Unknown action: %s from account: %s", action.Act.Name, action.Act.Account)
 		return nil
 	}
 
@@ -205,31 +238,13 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return nil
 	}
 
-	// Check if should process this message
 	if !s.shouldProcessMessage(partitionKey) {
 		log.Printf("Skip message with partition key: %s", partitionKey)
 		return nil
 	}
 
-	switch action.Act.Name {
-	case "emitplaced":
-		return s.handleCreateOrder(action)
-	case "emitcanceled":
-		return s.handleCancelOrder(action)
-	case "emitfilled":
-		return s.handleMatchOrder(action)
-	case "create":
-		return s.handleCreatePool(action)
-	case "lognewacc":
-		return s.handleNewAccount(action)
-	case "logdeposit":
-		return s.handleDeposit(action)
-	case "logwithdraw":
-		return s.handleWithdraw(action)
-	default:
-		log.Printf("Unknown action: %s", action.Act.Name)
-		return nil
-	}
+	// Execute handler
+	return handler(action)
 }
 
 // getPartitionKey returns partition key based on action type
