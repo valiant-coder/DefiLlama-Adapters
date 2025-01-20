@@ -265,7 +265,7 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 	case "create":
 		// Use fixed partition key for pool creation
 		return "pool-creation"
-	case "lognewacc", "logdeposit", "logwithdraw":
+	case "lognewacc", "logwithdraw":
 		// Use account name as partition key for account related operations
 		var data struct {
 			Account string `json:"account"`
@@ -275,6 +275,17 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 			return ""
 		}
 		return fmt.Sprintf("account-%s", data.Account)
+	
+	case "depositlog":
+		var data struct {
+			TxID string `json:"tx_id"`
+		}
+		if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+			log.Printf("Unmarshal action data failed: %v", err)
+			return ""
+		}
+		return fmt.Sprintf("deposit-%s", data.TxID)
+
 	default:
 		return ""
 	}
