@@ -6,6 +6,7 @@ import (
 	"errors"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
+	"exapp-go/pkg/utils"
 	"log"
 	"time"
 
@@ -61,6 +62,12 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(token.Decimals))
 	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(token.Decimals))
 
+	depositTime, err := utils.ParseTime(action.Timestamp)
+	if err != nil {
+		log.Printf("parse action time failed: %v", err)
+		return nil
+	}
+
 	record, err := s.repo.GetDepositRecordBySourceTxID(ctx, data.TxID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -73,7 +80,7 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 				Amount:         depositAmount,
 				Fee:            depositFee,
 				Status:         db.DepositStatus(data.GlobalStatus),
-				Time:           time.Now(),
+				Time:           depositTime,
 				TxHash:         action.TrxID,
 				SourceTxID:     data.TxID,
 				DepositAddress: data.DepositAddress,
