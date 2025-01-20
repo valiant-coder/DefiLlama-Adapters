@@ -1217,6 +1217,9 @@ const docTemplatemarketplace = `{
                 "deposit_at": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "source_tx_id": {
                     "type": "string"
                 },

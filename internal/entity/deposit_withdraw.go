@@ -24,6 +24,7 @@ type RespDeposit struct {
 }
 
 type RespDepositRecord struct {
+	ID             uint64 `json:"id"`
 	Symbol         string `json:"symbol"`
 	Amount         string `json:"amount"`
 	ChainName      string `json:"chain_name"`
@@ -36,6 +37,7 @@ type RespDepositRecord struct {
 
 func FormatDepositRecord(record *db.DepositRecord) RespDepositRecord {
 	return RespDepositRecord{
+		ID:             uint64(record.ID),
 		Symbol:         record.Symbol,
 		Amount:         record.Amount.String(),
 		ChainName:      record.ChainName,
