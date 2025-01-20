@@ -23,17 +23,21 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 	}
 	var supportTokens []entity.Token
 	supportChains := make(map[string][]entity.Chain)
+	tokenNames := make(map[string]string)
+
 	for _, token := range tokens {
 		supportChains[token.Symbol] = append(supportChains[token.Symbol], entity.Chain{
 			ChainName:         token.ChainName,
 			MinDepositAmount:  token.ExsatDepositLimit.String(),
 			MinWithdrawAmount: token.ExsatWithdrawMax.String(),
 		})
+		tokenNames[token.Symbol] = token.Name
 	}
 	for symbol, chains := range supportChains {
 		supportTokens = append(supportTokens, entity.Token{
 			Symbol:       symbol,
 			SupportChain: chains,
+			Name:         tokenNames[symbol],
 		})
 	}
 

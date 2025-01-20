@@ -18,6 +18,7 @@ func init() {
 type Token struct {
 	gorm.Model
 	Symbol       string `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol_chain_name"`
+	Name         string `gorm:"column:name;type:varchar(255);default:null"`
 	ChainName    string `gorm:"column:chain_name;type:varchar(255);not null;uniqueIndex:idx_symbol_chain_name"`
 	PermissionID uint64 `gorm:"column:permission_id;type:bigint(20);not null"`
 	Decimals     uint8  `gorm:"column:decimals;type:tinyint(3);not null"`
@@ -31,6 +32,7 @@ type Token struct {
 	ExsatWithdrawMax   decimal.Decimal `gorm:"column:exsat_withdraw_max;type:decimal(36,18);not null;default:0"`
 	ExsatDepositFee    decimal.Decimal `gorm:"column:exsat_deposit_fee;type:decimal(36,18);not null;default:0"`
 	ExsatWithdrawFee   decimal.Decimal `gorm:"column:exsat_withdraw_fee;type:decimal(36,18);not null;default:0"`
+
 }
 
 func (t *Token) TableName() string {

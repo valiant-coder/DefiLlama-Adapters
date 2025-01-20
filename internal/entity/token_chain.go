@@ -2,6 +2,7 @@ package entity
 
 type Token struct {
 	Symbol       string  `json:"symbol"`
+	Name         string  `json:"name"`
 	SupportChain []Chain `json:"support_chain"`
 }
 

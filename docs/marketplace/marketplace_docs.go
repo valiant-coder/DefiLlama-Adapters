@@ -1335,6 +1335,9 @@ const docTemplatemarketplace = `{
         "entity.Token": {
             "type": "object",
             "properties": {
+                "name": {
+                    "type": "string"
+                },
                 "support_chain": {
                     "type": "array",
                     "items": {
