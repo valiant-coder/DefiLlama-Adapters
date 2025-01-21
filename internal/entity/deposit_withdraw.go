@@ -63,6 +63,7 @@ type RespWithdrawRecord struct {
 
 func FormatWithdrawRecord(record *db.WithdrawRecord) RespWithdrawRecord {
 	return RespWithdrawRecord{
+		ID:          uint64(record.ID),
 		Symbol:      record.Symbol,
 		Amount:      record.Amount.String(),
 		ChainName:   record.ChainName,
