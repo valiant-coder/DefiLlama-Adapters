@@ -140,12 +140,27 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		return nil
 	}
 
+	token, err := s.repo.GetToken(ctx, asset.Symbol.Symbol)
+	if err != nil {
+		log.Printf("Get token failed: %v-%v", data, err)
+		return nil
+	}
+	var targetChain db.ChainInfo
+	for _, chain := range token.Chains {
+		if chain.ChainName == data.ChainName {
+			targetChain = chain
+			break
+		}
+	}
+
+
 	err = s.repo.CreateWithdrawRecord(ctx, &db.WithdrawRecord{
 		UID:         uid,
 		Symbol:      asset.Symbol.Symbol,
 		ChainName:   data.ChainName,
 		Amount:      decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
 		Fee:         decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
+		BridgeFee:   targetChain.ExsatWithdrawFee,
 		Status:      db.WithdrawStatusPending,
 		TxHash:      action.TrxID,
 		WithdrawAt:  withdrawAt,
