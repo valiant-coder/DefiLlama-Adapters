@@ -88,6 +88,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 	if err := s.syncTradeHistory(ctx); err != nil {
 		return nil, fmt.Errorf("sync trade history failed: %w", err)
 	}
+	log.Printf("sync trade history done, last block number: %d", s.tradeLastBlockNum)
 
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{

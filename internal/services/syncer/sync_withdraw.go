@@ -4,6 +4,7 @@ import (
 	"context"
 	"exapp-go/pkg/hyperion"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -42,6 +43,7 @@ func (s *Service) syncWithdrawHistory(ctx context.Context) error {
 		if len(resp.Actions) == 0 {
 			break
 		}
+		log.Printf("sync withdraw actions history: %d", len(resp.Actions))
 
 		for _, action := range resp.Actions {
 			if err := s.publishAction(action); err != nil {
@@ -63,7 +65,7 @@ func (s *Service) SyncWithdraw(ctx context.Context) (<-chan hyperion.Action, err
 	if err := s.syncWithdrawHistory(ctx); err != nil {
 		return nil, fmt.Errorf("sync withdraw history failed: %w", err)
 	}
-
+	log.Printf("sync withdraw history done, last block number: %d", s.withdrawLastBlockNum)
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
 			Contract:  s.exappCfg.AssetContract,

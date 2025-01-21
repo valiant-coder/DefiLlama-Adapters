@@ -72,7 +72,7 @@ func (s *Service) SyncDeposit(ctx context.Context) (<-chan hyperion.Action, erro
 	if err := s.syncDepositHistory(ctx); err != nil {
 		return nil, fmt.Errorf("sync deposit history failed: %w", err)
 	}
-
+	log.Printf("sync deposit history done, last block number: %d", s.depositLastBlockNum)
 	depositActionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
 			Contract:  s.exsatCfg.BridgeContract,
