@@ -95,14 +95,14 @@ SELECT
     base_coin,
     quote_coin,
     symbol,
-    COALESCE(high, last_known_price) as high,
-    COALESCE(low, last_known_price) as low,
-    trades,
-    COALESCE(volume, 0) as volume,
-    COALESCE(quote_volume, 0) as quote_volume,
-    COALESCE(last_price, last_known_price) as last_price,
+    COALESCE(NULLIF(high, 0), last_known_price) as high,
+    COALESCE(NULLIF(low, 0), last_known_price) as low,
+    trades-1 as trades,
+    COALESCE(NULLIF(volume, 0), 0) as volume,
+    COALESCE(NULLIF(quote_volume, 0), 0) as quote_volume,
+    COALESCE(NULLIF(last_price, 0), last_known_price) as last_price,
     CASE 
-        WHEN first_price IS NOT NULL THEN (COALESCE(last_price, last_known_price) - first_price)
+        WHEN first_price != 0 THEN (COALESCE(last_price, last_known_price) - first_price)
         ELSE 0
     END as change,
     CASE 
