@@ -86,7 +86,6 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 		if event != "message" {
 			return
 		}
-		log.Printf("get new action: %v", args[0].(map[string]any)["message"].(string))
 		message := args[0].(map[string]any)
 		messageType, ok := message["type"].(string)
 		if !ok {
