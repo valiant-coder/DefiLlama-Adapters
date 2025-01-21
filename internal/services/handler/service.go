@@ -277,14 +277,7 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return fmt.Sprintf("account-%s", data.Account)
 	
 	case "depositlog":
-		var data struct {
-			TxID string `json:"tx_id"`
-		}
-		if err := json.Unmarshal(action.Act.Data, &data); err != nil {
-			log.Printf("Unmarshal action data failed: %v", err)
-			return ""
-		}
-		return fmt.Sprintf("deposit-%s", data.TxID)
+		return fmt.Sprintf("deposit")
 
 	default:
 		return ""

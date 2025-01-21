@@ -16,6 +16,7 @@ import (
 )
 
 func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
+	log.Printf("handleBridgeDeposit: %v", action)
 	ctx := context.Background()
 	var data struct {
 		PermissionID     string `json:"permission_id"`
@@ -74,6 +75,7 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 			log.Printf("Get deposit record by source tx id failed: %v-%v", data, err)
 			return nil
 		} else {
+			log.Printf("new deposit record: %v", data)
 			record = &db.DepositRecord{
 				Symbol:         data.DestSymbol,
 				UID:            depositAddress.UID,
@@ -88,6 +90,7 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 			}
 		}
 	} else {
+		log.Printf("update deposit record: %v", data)
 		record.Status = db.DepositStatus(data.GlobalStatus)
 		record.TxHash = action.TrxID
 	}
