@@ -59,6 +59,7 @@ type RespWithdrawRecord struct {
 	SendTxID    string `json:"send_tx_id"`
 	WithdrawAt  Time   `json:"withdraw_at"`
 	CompletedAt Time   `json:"completed_at"`
+	Recipient   string `json:"recipient"`
 }
 
 func FormatWithdrawRecord(record *db.WithdrawRecord) RespWithdrawRecord {
@@ -72,5 +73,6 @@ func FormatWithdrawRecord(record *db.WithdrawRecord) RespWithdrawRecord {
 		SendTxID:    record.SendTxID,
 		WithdrawAt:  Time(record.WithdrawAt),
 		CompletedAt: Time(record.CompletedAt),
+		Recipient:   record.Recipient,
 	}
 }

@@ -150,6 +150,7 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		TxHash:      action.TrxID,
 		WithdrawAt:  withdrawAt,
 		BlockNumber: action.BlockNum,
+		Recipient:   data.Recipient,
 	})
 	if err != nil {
 		log.Printf("Create withdraw record failed: %v-%v", data, err)

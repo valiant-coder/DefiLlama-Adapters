@@ -1327,6 +1327,9 @@ const docTemplatemarketplace = `{
                 "id": {
                     "type": "integer"
                 },
+                "recipient": {
+                    "type": "string"
+                },
                 "send_tx_id": {
                     "type": "string"
                 },

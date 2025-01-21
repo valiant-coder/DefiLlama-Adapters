@@ -129,6 +129,7 @@ type WithdrawRecord struct {
 	WithdrawAt  time.Time       `gorm:"column:withdraw_at;type:timestamp;default:null"`
 	CompletedAt time.Time       `gorm:"column:completed_at;type:timestamp;default:null"`
 	BlockNumber uint64          `gorm:"column:block_number;type:bigint(20);default:0"`
+	Recipient   string          `gorm:"column:recipient;type:varchar(255);default:null"`
 }
 
 func (u *WithdrawRecord) TableName() string {
