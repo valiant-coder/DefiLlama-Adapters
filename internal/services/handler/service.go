@@ -203,7 +203,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:depositlog", s.exsatCfg.BridgeContract)] = s.handleBridgeDeposit
 	s.handlers[fmt.Sprintf("%s:lognewacc", s.exappCfg.AssetContract)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:logwithdraw", s.exappCfg.AssetContract)] = s.handleWithdraw
-	s.handlers[fmt.Sprintf("%s:withdrawlog", s.exappCfg.AssetContract)] = s.updateWithdraw
+	s.handlers[fmt.Sprintf("%s:withdrawlog", s.exsatCfg.BridgeContract)] = s.updateWithdraw
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
