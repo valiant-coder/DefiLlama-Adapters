@@ -69,6 +69,7 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 		nsqCfg:         nsqCfg,
 		cdexCfg:        eosCfg.CdexConfig,
 		exappCfg:       eosCfg.Exapp,
+		exsatCfg:       eosCfg.Exsat,
 	}, nil
 }
 
