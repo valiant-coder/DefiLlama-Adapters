@@ -65,3 +65,8 @@ func (r *Repo) ListTokens(ctx context.Context) ([]Token, error) {
 	err := r.WithContext(ctx).Find(&tokens).Error
 	return tokens, err
 }
+
+
+func (r *Repo) InsertToken(ctx context.Context, token *Token) error {
+	return r.WithContext(ctx).Create(token).Error
+}
