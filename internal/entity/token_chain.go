@@ -9,6 +9,7 @@ type Token struct {
 type Chain struct {
 	ChainID   uint8  `json:"chain_id"`
 	ChainName string `json:"chain_name"`
+	Decimals  uint8  `json:"decimals"`
 
 	MinDepositAmount  string `json:"min_deposit_amount"`
 	MinWithdrawAmount string `json:"min_withdraw_amount"`

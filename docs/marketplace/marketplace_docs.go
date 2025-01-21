@@ -758,6 +758,9 @@ const docTemplatemarketplace = `{
                 "chain_name": {
                     "type": "string"
                 },
+                "decimals": {
+                    "type": "integer"
+                },
                 "exsat_withdraw_fee": {
                     "type": "string"
                 },
