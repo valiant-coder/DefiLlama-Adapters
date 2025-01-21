@@ -39,7 +39,7 @@ type DepositRecord struct {
 	Fee            decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
 	Status         DepositStatus   `gorm:"column:status;type:tinyint(3);not null"`
 	TxHash         string          `gorm:"column:tx_hash;type:varchar(255);not null"`
-	Time           time.Time       `gorm:"column:time;type:datetime;not null"`
+	Time           time.Time       `gorm:"column:time;type:timestamp;not null"`
 }
 
 func (d *DepositRecord) TableName() string {
@@ -112,7 +112,7 @@ type WithdrawRecord struct {
 	Status    WithdrawStatus  `gorm:"column:status;type:tinyint(3);not null"`
 	SendTxID  string          `gorm:"column:send_tx_id;type:varchar(255);default:null;uniqueIndex:idx_send_tx_id"`
 	TxHash    string          `gorm:"column:tx_hash;type:varchar(255);not null"`
-	Time      time.Time       `gorm:"column:time;type:datetime;not null"`
+	Time      time.Time       `gorm:"column:time;type:timestamp;not null"`
 }
 
 func (u *WithdrawRecord) TableName() string {
