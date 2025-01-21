@@ -85,6 +85,13 @@ func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
 		orderType = 0
 	}
 
+	var orderPrice string
+	if order.IsMarket {
+		orderPrice = "--"
+	} else {
+		orderPrice = order.Price.String()
+	}
+
 	return HistoryOrder{
 		OrderTime:      Time(order.CreatedAt),
 		ID:             fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
@@ -97,7 +104,7 @@ func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
 		Trader:         order.Trader,
 		Side:           side,
 		Type:           orderType,
-		OrderPrice:     order.Price.String(),
+		OrderPrice:     orderPrice,
 		AvgPrice:       order.AvgPrice.String(),
 		OrderAmount:    order.OriginalQuantity.String(),
 		ExecutedAmount: order.ExecutedQuantity.String(),
