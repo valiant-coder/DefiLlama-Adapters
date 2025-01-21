@@ -752,6 +752,9 @@ const docTemplatemarketplace = `{
         "entity.Chain": {
             "type": "object",
             "properties": {
+                "chain_id": {
+                    "type": "integer"
+                },
                 "chain_name": {
                     "type": "string"
                 },
