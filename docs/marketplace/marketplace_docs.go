@@ -758,9 +758,6 @@ const docTemplatemarketplace = `{
                 "chain_name": {
                     "type": "string"
                 },
-                "decimals": {
-                    "type": "integer"
-                },
                 "exsat_withdraw_fee": {
                     "type": "string"
                 },
@@ -1359,6 +1356,12 @@ const docTemplatemarketplace = `{
         "entity.Token": {
             "type": "object",
             "properties": {
+                "decimals": {
+                    "type": "integer"
+                },
+                "eos_contract": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },

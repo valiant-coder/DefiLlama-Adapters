@@ -73,15 +73,25 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		return entity.RespFirstDeposit{}, errors.New("no found passkey")
 	}
 
-	token, err := s.repo.GetToken(ctx, req.Symbol, req.ChainName)
+	token, err := s.repo.GetToken(ctx, req.Symbol)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return entity.RespFirstDeposit{}, errors.New("token not found")
 		}
 		return entity.RespFirstDeposit{}, err
 	}
+	var targetChain db.ChainInfo
+	for _, chain := range token.Chains {
+		if chain.ChainName == req.ChainName {
+			targetChain = chain
+			break
+		}
+	}
+	if targetChain.ChainName == "" {
+		return entity.RespFirstDeposit{}, errors.New("chain not found")
+	}
 	remark := fmt.Sprintf("new-%s-%s", uid, req.PublicKey)
-	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, token.PermissionID)
+	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
 	if err != nil {
 		return entity.RespFirstDeposit{}, err
 	}
@@ -103,7 +113,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	)
 
 	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
-		PermissionID:     token.PermissionID,
+		PermissionID:     targetChain.PermissionID,
 		RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		Remark:           remark,
 	})
@@ -113,7 +123,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	log.Printf("mapping new address txid: %v", resp.TransactionID)
 
 	newDepositAddress, err := s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
-		PermissionID: token.PermissionID,
+		PermissionID: targetChain.PermissionID,
 		Remark:       remark,
 		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
 	})
@@ -125,7 +135,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
 		Address:      newDepositAddress,
-		PermissionID: token.PermissionID,
+		PermissionID: targetChain.PermissionID,
 		Remark:       remark,
 	})
 	if err != nil {
@@ -155,15 +165,25 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		return entity.RespDeposit{}, errors.New("no eos account found")
 	}
 
-	token, err := s.repo.GetToken(ctx, req.Symbol, req.ChainName)
+	token, err := s.repo.GetToken(ctx, req.Symbol	)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return entity.RespDeposit{}, errors.New("token not found")
 		}
 		return entity.RespDeposit{}, err
 	}
+	var targetChain db.ChainInfo
+	for _, chain := range token.Chains {
+		if chain.ChainName == req.ChainName {
+			targetChain = chain
+			break
+		}
+	}
+	if targetChain.ChainName == "" {
+		return entity.RespDeposit{}, errors.New("chain not found")
+	}
 
-	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, token.PermissionID)
+	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
 	if err != nil {
 		return entity.RespDeposit{}, err
 	}
@@ -187,7 +207,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	)
 
 	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
-		PermissionID:     token.PermissionID,
+		PermissionID:     targetChain.PermissionID,
 		RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		Remark:           remark,
 	})
@@ -197,7 +217,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	log.Printf("mapping new address txid: %v", resp.TransactionID)
 
 	newDepositAddress, err := s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
-		PermissionID: token.PermissionID,
+		PermissionID: targetChain.PermissionID,
 		Remark:       remark,
 		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
 	})
@@ -209,7 +229,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
 		Address:      newDepositAddress,
-		PermissionID: token.PermissionID,
+		PermissionID: targetChain.PermissionID,
 		Remark:       remark,
 	})
 	if err != nil {

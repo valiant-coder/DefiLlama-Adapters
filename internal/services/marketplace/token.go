@@ -22,28 +22,28 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 		return nil, err
 	}
 	var supportTokens []entity.Token
-	supportChains := make(map[string][]entity.Chain)
-	tokenNames := make(map[string]string)
 
 	for _, token := range tokens {
-		supportChains[token.Symbol] = append(supportChains[token.Symbol], entity.Chain{
-			ChainID:           token.ChainID,
-			ChainName:         token.ChainName,
-			Decimals:          token.Decimals,
-			MinDepositAmount:  token.ExsatDepositLimit.String(),
-			WithdrawFee:       token.WithdrawalFee.String(),
-			ExsatWithdrawFee:  token.ExsatWithdrawFee.String(),
-			MinWithdrawAmount: token.MinWithdrawAmount.String(),
-		})
-		tokenNames[token.Symbol] = token.Name
-	}
-	for symbol, chains := range supportChains {
-		supportTokens = append(supportTokens, entity.Token{
-			Symbol:       symbol,
-			SupportChain: chains,
-			Name:         tokenNames[symbol],
-		})
-	}
+		var supportChains []entity.Chain
+		for _, chain := range token.Chains {
+			supportChains = append(supportChains, entity.Chain{
+				ChainName: chain.ChainName,
+				ChainID:   chain.ChainID,
 
+				MinDepositAmount:  chain.ExsatDepositLimit.String(),
+				MinWithdrawAmount: chain.MinWithdrawAmount.String(),
+
+				WithdrawFee:      chain.WithdrawalFee.String(),
+				ExsatWithdrawFee: chain.ExsatWithdrawFee.String(),
+			})
+		}
+		supportTokens = append(supportTokens, entity.Token{
+			Symbol:       token.Symbol,
+			SupportChain: supportChains,
+			Name:         token.Name,
+			Decimals:     token.Decimals,
+			EOSContract:  token.EOSContractAddress,
+		})
+	}
 	return supportTokens, nil
 }

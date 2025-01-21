@@ -37,6 +37,7 @@ require (
 	golang.org/x/sync v0.10.0
 	google.golang.org/api v0.216.0
 	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/datatypes v1.2.5
 	gorm.io/driver/clickhouse v0.6.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
@@ -47,6 +48,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.6 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.2 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
@@ -73,8 +75,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-redis/redis/v8 v8.11.5 // indirect
-	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-webauthn/x v0.1.14 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
