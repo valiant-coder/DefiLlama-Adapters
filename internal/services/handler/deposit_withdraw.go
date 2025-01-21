@@ -84,6 +84,7 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 				SourceTxID:     data.TxID,
 				DepositAddress: data.DepositAddress,
 				ChainName:      data.ChainName,
+				BlockNumber:    uint64(action.BlockNum),
 			}
 		}
 	} else {
