@@ -67,7 +67,7 @@ func FormatWithdrawRecord(record *db.WithdrawRecord) RespWithdrawRecord {
 		Symbol:      record.Symbol,
 		Amount:      record.Amount.String(),
 		ChainName:   record.ChainName,
-		Fee:         record.Fee.String(),
+		Fee:         record.Fee.Add(record.BridgeFee).String(),
 		Status:      uint8(record.Status),
 		SendTxID:    record.SendTxID,
 		WithdrawAt:  Time(record.WithdrawAt),
