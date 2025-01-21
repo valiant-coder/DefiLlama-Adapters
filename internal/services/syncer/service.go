@@ -79,6 +79,14 @@ func (s *Service) Start(ctx context.Context) error {
 
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
+			Contract:  s.exsatCfg.BridgeContract,
+			Action:    "depositlog",
+			Account:   "",
+			StartFrom: int64(s.lastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
 			Contract:  s.cdexCfg.PoolContract,
 			Action:    "create",
 			Account:   "",
@@ -126,14 +134,7 @@ func (s *Service) Start(ctx context.Context) error {
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
-		{
-			Contract:  s.exsatCfg.BridgeContract,
-			Action:    "depositlog",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
+	
 	})
 
 	if err != nil {
