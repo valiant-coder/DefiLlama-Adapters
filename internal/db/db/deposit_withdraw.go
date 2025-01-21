@@ -40,6 +40,7 @@ type DepositRecord struct {
 	Status         DepositStatus   `gorm:"column:status;type:tinyint(3);not null"`
 	TxHash         string          `gorm:"column:tx_hash;type:varchar(255);not null"`
 	Time           time.Time       `gorm:"column:time;type:timestamp;not null"`
+	BlockNumber    uint64          `gorm:"column:block_number;type:bigint(20);default:0"`
 }
 
 func (d *DepositRecord) TableName() string {
@@ -94,6 +95,18 @@ func (r *Repo) GetUserDepositAddressByAddress(ctx context.Context, address strin
 	return &userDepositAddress, err
 }
 
+func (r *Repo) GetDepositMaxBlockNumber(ctx context.Context) (uint64, error) {
+	var blockNumber *uint64
+	err := r.WithContext(ctx).Model(&DepositRecord{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
+	if err != nil {
+		return 0, err
+	}
+	if blockNumber == nil {
+		return 0, nil
+	}
+	return *blockNumber, nil
+}
+
 type WithdrawStatus uint8
 
 const (
@@ -104,15 +117,18 @@ const (
 
 type WithdrawRecord struct {
 	gorm.Model
-	UID       string          `gorm:"column:uid;type:varchar(255);not null"`
-	Symbol    string          `gorm:"column:symbol;type:varchar(255);not null"`
-	ChainName string          `gorm:"column:chain_name;type:varchar(255);not null"`
-	Amount    decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
-	Fee       decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
-	Status    WithdrawStatus  `gorm:"column:status;type:tinyint(3);not null"`
-	SendTxID  string          `gorm:"column:send_tx_id;type:varchar(255);default:null;uniqueIndex:idx_send_tx_id"`
-	TxHash    string          `gorm:"column:tx_hash;type:varchar(255);not null"`
-	Time      time.Time       `gorm:"column:time;type:timestamp;not null"`
+	UID         string          `gorm:"column:uid;type:varchar(255);not null"`
+	Symbol      string          `gorm:"column:symbol;type:varchar(255);not null"`
+	ChainName   string          `gorm:"column:chain_name;type:varchar(255);not null"`
+	Amount      decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
+	Fee         decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
+	BridgeFee   decimal.Decimal `gorm:"column:bridge_fee;type:decimal(36,18);default:0"`
+	Status      WithdrawStatus  `gorm:"column:status;type:tinyint(3);not null"`
+	SendTxID    string          `gorm:"column:send_tx_id;type:varchar(255);default:null;uniqueIndex:idx_send_tx_id"`
+	TxHash      string          `gorm:"column:tx_hash;type:varchar(255);not null;uniqueIndex:idx_tx_hash"`
+	WithdrawAt  time.Time       `gorm:"column:withdraw_at;type:timestamp;default:null"`
+	CompletedAt time.Time       `gorm:"column:completed_at;type:timestamp;default:null"`
+	BlockNumber uint64          `gorm:"column:block_number;type:bigint(20);default:0"`
 }
 
 func (u *WithdrawRecord) TableName() string {
@@ -123,9 +139,31 @@ func (r *Repo) CreateWithdrawRecord(ctx context.Context, record *WithdrawRecord)
 	return r.DB.WithContext(ctx).Create(record).Error
 }
 
+func (r *Repo) UpdateWithdrawRecord(ctx context.Context, record *WithdrawRecord) error {
+	return r.DB.WithContext(ctx).Model(&WithdrawRecord{}).Where("id = ?", record.ID).Updates(record).Error
+}
+
+func (r *Repo) GetWithdrawRecordByTxHash(ctx context.Context, txHash string) (*WithdrawRecord, error) {
+	var record WithdrawRecord
+	err := r.DB.WithContext(ctx).Where("tx_hash = ?", txHash).First(&record).Error
+	return &record, err
+}
+
 func (r *Repo) GetWithdrawRecords(ctx context.Context, uid string, queryParams *queryparams.QueryParams) ([]*WithdrawRecord, int64, error) {
 	queryParams.Add("uid", uid)
 	var records []*WithdrawRecord
 	total, err := r.Query(ctx, &records, queryParams, "uid")
 	return records, total, err
+}
+
+func (r *Repo) GetWithdrawMaxBlockNumber(ctx context.Context) (uint64, error) {
+	var blockNumber *uint64
+	err := r.WithContext(ctx).Model(&WithdrawRecord{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
+	if err != nil {
+		return 0, err
+	}
+	if blockNumber == nil {
+		return 0, nil
+	}
+	return *blockNumber, nil
 }

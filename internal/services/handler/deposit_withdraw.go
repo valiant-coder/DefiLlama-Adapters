@@ -8,7 +8,6 @@ import (
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"log"
-	"time"
 
 	eosgo "github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
@@ -135,16 +134,22 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		log.Printf("Get uid by eos account failed: %v-%v", data, err)
 		return nil
 	}
+	withdrawAt, err := utils.ParseTime(action.Timestamp)
+	if err != nil {
+		log.Printf("Parse withdraw timestamp failed: %v-%v", data, err)
+		return nil
+	}
 
 	err = s.repo.CreateWithdrawRecord(ctx, &db.WithdrawRecord{
-		UID:       uid,
-		Symbol:    asset.Symbol.Symbol,
-		ChainName: data.ChainName,
-		Amount:    decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
-		Fee:       decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
-		Status:    db.WithdrawStatusPending,
-		TxHash:    action.TrxID,
-		Time:      time.Now(),
+		UID:         uid,
+		Symbol:      asset.Symbol.Symbol,
+		ChainName:   data.ChainName,
+		Amount:      decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
+		Fee:         decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
+		Status:      db.WithdrawStatusPending,
+		TxHash:      action.TrxID,
+		WithdrawAt:  withdrawAt,
+		BlockNumber: action.BlockNum,
 	})
 	if err != nil {
 		log.Printf("Create withdraw record failed: %v-%v", data, err)
@@ -156,12 +161,48 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 	return nil
 }
 
-func (s *Service) updateWithdraw(action hyperion.Action) error {
 
+func (s *Service) updateWithdraw(action hyperion.Action) error {
 	var data struct {
+		GlobalStatus     uint8  `json:"global_status"`
+		// target send tx id
+		TxID              string `json:"tx_id"`
+		WithdrawAmount    string `json:"withdraw_amount"`
+		WithdrawFee       string `json:"withdraw_fee"`
+		TransactionID     string `json:"transaction_id"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal withdraw failed: %v", err)
+		return nil
+	}
+	ctx := context.Background()
+
+	record, err := s.repo.GetWithdrawRecordByTxHash(ctx, data.TransactionID)
+	if err != nil {
+		log.Printf("Get withdraw record by tx hash failed: %v-%v", data, err)
+		return nil
+	}
+
+	completedAt, err := utils.ParseTime(action.Timestamp)
+	if err != nil {
+		log.Printf("Parse withdraw timestamp failed: %v-%v", data, err)
+		return nil
+	}
+
+	token, err := s.repo.GetToken(ctx, record.Symbol, record.ChainName)
+	if err != nil {
+		log.Printf("Get token failed: %v-%v", data, err)
+		return nil
+	}
+	bridgeFee := decimal.RequireFromString(data.WithdrawFee).Shift(-int32(token.Decimals))
+
+	record.Status = db.WithdrawStatus(data.GlobalStatus)
+	record.CompletedAt = completedAt
+	record.BridgeFee = bridgeFee
+	record.SendTxID = data.TxID
+	err = s.repo.UpdateWithdrawRecord(ctx, record)
+	if err != nil {
+		log.Printf("Update withdraw record failed: %v-%v", data, err)
 		return nil
 	}
 

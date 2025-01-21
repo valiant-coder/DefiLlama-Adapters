@@ -203,6 +203,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:depositlog", s.exsatCfg.BridgeContract)] = s.handleBridgeDeposit
 	s.handlers[fmt.Sprintf("%s:lognewacc", s.exappCfg.AssetContract)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:logwithdraw", s.exappCfg.AssetContract)] = s.handleWithdraw
+	s.handlers[fmt.Sprintf("%s:withdrawlog", s.exappCfg.AssetContract)] = s.updateWithdraw
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
@@ -265,19 +266,11 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 	case "create":
 		// Use fixed partition key for pool creation
 		return "pool-creation"
-	case "lognewacc", "logwithdraw":
-		// Use account name as partition key for account related operations
-		var data struct {
-			Account string `json:"account"`
-		}
-		if err := json.Unmarshal(action.Act.Data, &data); err != nil {
-			log.Printf("Unmarshal action data failed: %v", err)
-			return ""
-		}
-		return fmt.Sprintf("account-%s", data.Account)
-	
-	case "depositlog":
-		return fmt.Sprintf("deposit")
+	case "lognewacc", "depositlog":
+		return fmt.Sprintf("deposit-or-create-account")
+
+	case "withdrawlog", "logwithdraw":
+		return fmt.Sprintf("withdraw")
 
 	default:
 		return ""

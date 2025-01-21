@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
-	"time"
 
 	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
@@ -19,15 +17,19 @@ const (
 )
 
 type Service struct {
-	hyperionClient *hyperion.Client
-	streamClient   *hyperion.StreamClient
-	publisher      *nsqutil.Publisher
-	lastBlockNum   uint64
-	hyperionCfg    config.HyperionConfig
-	nsqCfg         config.NsqConfig
-	cdexCfg        config.CdexConfig
-	exappCfg       config.ExappConfig
-	exsatCfg       config.ExsatConfig
+	repo                 *db.Repo
+	ckhRepo              *ckhdb.ClickHouseRepo
+	hyperionClient       *hyperion.Client
+	streamClient         *hyperion.StreamClient
+	publisher            *nsqutil.Publisher
+	tradeLastBlockNum    uint64
+	depositLastBlockNum  uint64
+	withdrawLastBlockNum uint64
+	hyperionCfg          config.HyperionConfig
+	nsqCfg               config.NsqConfig
+	cdexCfg              config.CdexConfig
+	exappCfg             config.ExappConfig
+	exsatCfg             config.ExsatConfig
 }
 
 func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, error) {
@@ -38,33 +40,12 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 		return nil, fmt.Errorf("create stream client failed: %w", err)
 	}
 
-	ckhRepo := ckhdb.New()
-	lastBlockNum, err := ckhRepo.GetMaxBlockNumber(context.Background())
-	if err != nil {
-		return nil, fmt.Errorf("get max block number failed: %w", err)
-	}
-
-	repo := db.New()
-	lastOpenOrderBlockNum, err := repo.GetOpenOrderMaxBlockNumber(context.Background())
-	if err != nil {
-		return nil, fmt.Errorf("get max block number failed: %w", err)
-	}
-
-	if lastOpenOrderBlockNum > lastBlockNum {
-		lastBlockNum = lastOpenOrderBlockNum
-	}
-
-	if lastBlockNum == 0 {
-		lastBlockNum = hyperionCfg.StartBlock
-	} else {
-		lastBlockNum = lastBlockNum + 1
-	}
-
 	return &Service{
+		repo:           db.New(),
+		ckhRepo:        ckhdb.New(),
 		hyperionClient: hyperionClient,
 		streamClient:   streamClient,
 		publisher:      nsqutil.NewPublisher(nsqCfg.Nsqds),
-		lastBlockNum:   lastBlockNum,
 		hyperionCfg:    hyperionCfg,
 		nsqCfg:         nsqCfg,
 		cdexCfg:        eosCfg.CdexConfig,
@@ -74,142 +55,59 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 }
 
 func (s *Service) Start(ctx context.Context) error {
-	if err := s.syncHistory(ctx); err != nil {
-		return fmt.Errorf("sync history failed: %w", err)
-	}
-
-	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
-		{
-			Contract:  s.exsatCfg.BridgeContract,
-			Action:    "depositlog",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.cdexCfg.PoolContract,
-			Action:    "create",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.cdexCfg.EventContract,
-			Action:    "emitplaced",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.cdexCfg.EventContract,
-			Action:    "emitcanceled",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.cdexCfg.EventContract,
-			Action:    "emitfilled",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.exappCfg.AssetContract,
-			Action:    "lognewacc",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.exappCfg.AssetContract,
-			Action:    "logwithdraw",
-			Account:   "",
-			StartFrom: int64(s.lastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-	
-	})
-
+	tradeActionsCh, err := s.SyncTrade(ctx)
 	if err != nil {
-		return fmt.Errorf("subscribe actions failed: %w", err)
+		return fmt.Errorf("sync trade failed: %w", err)
 	}
-
+	depositActionsCh, err := s.SyncDeposit(ctx)
+	if err != nil {
+		return fmt.Errorf("sync deposit failed: %w", err)
+	}
+	withdrawActionsCh, err := s.SyncWithdraw(ctx)
+	if err != nil {
+		return fmt.Errorf("sync withdraw failed: %w", err)
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case action, ok := <-actionCh:
+		case action, ok := <-tradeActionsCh:
 			if !ok {
-				return fmt.Errorf("action channel closed")
+				return fmt.Errorf("trade action channel closed")
 			}
-			log.Printf("new action: %v", string(action.TrxID))
+			log.Printf("new trade action: %v", string(action.TrxID))
 			if err := s.publishAction(action); err != nil {
-				log.Printf("Publish action failed: %v", err)
+				log.Printf("Publish trade action failed: %v", err)
 				continue
 			}
-
-			s.lastBlockNum = action.BlockNum
+			s.tradeLastBlockNum = action.BlockNum
+		case action, ok := <-depositActionsCh:
+			if !ok {
+				return fmt.Errorf("deposit action channel closed")
+			}
+			log.Printf("new deposit action: %v", string(action.TrxID))
+			if err := s.publishAction(action); err != nil {
+				log.Printf("Publish deposit action failed: %v", err)
+				continue
+			}
+			s.depositLastBlockNum = action.BlockNum
+		case action, ok := <-withdrawActionsCh:
+			if !ok {
+				return fmt.Errorf("withdraw action channel closed")
+			}
+			log.Printf("new withdraw action: %v", string(action.TrxID))
+			if err := s.publishAction(action); err != nil {
+				log.Printf("Publish withdraw action failed: %v", err)
+				continue
+			}
+			s.withdrawLastBlockNum = action.BlockNum
 		}
 	}
 }
 
 func (s *Service) Stop() error {
-
 	s.publisher.Stop()
 	return s.streamClient.Close()
-}
-
-func (s *Service) syncHistory(ctx context.Context) error {
-	for {
-		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
-			Account: "",
-			Filter: fmt.Sprintf(
-				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled,%s:lognewacc,%s:logwithdraw,%s:depositlog",
-				s.cdexCfg.PoolContract,
-				s.cdexCfg.EventContract,
-				s.cdexCfg.EventContract,
-				s.cdexCfg.EventContract,
-				s.exappCfg.AssetContract,
-				s.exappCfg.AssetContract,
-				s.exsatCfg.BridgeContract,
-			),
-			Limit: s.hyperionCfg.BatchSize,
-			Sort:  "asc",
-			After: strconv.FormatUint(s.lastBlockNum, 10),
-		})
-		if err != nil {
-			return fmt.Errorf("get actions failed: %w", err)
-		}
-
-		if len(resp.Actions) == 0 {
-			break
-		}
-		log.Printf("sync actions history: %d", len(resp.Actions))
-
-		for _, action := range resp.Actions {
-			if err := s.publishAction(action); err != nil {
-				return fmt.Errorf("publish action failed: %w", err)
-			}
-
-			s.lastBlockNum = action.BlockNum
-		}
-
-		if len(resp.Actions) < s.hyperionCfg.BatchSize {
-			break
-		}
-
-		time.Sleep(time.Millisecond * 100)
-	}
-
-	return nil
 }
 
 func (s *Service) publishAction(action hyperion.Action) error {
