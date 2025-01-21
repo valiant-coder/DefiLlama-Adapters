@@ -27,6 +27,7 @@ type Service struct {
 	withdrawLastBlockNum uint64
 	hyperionCfg          config.HyperionConfig
 	nsqCfg               config.NsqConfig
+	eosCfg               config.EosConfig
 	cdexCfg              config.CdexConfig
 	exappCfg             config.ExappConfig
 	exsatCfg             config.ExsatConfig
@@ -48,6 +49,7 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 		publisher:      nsqutil.NewPublisher(nsqCfg.Nsqds),
 		hyperionCfg:    hyperionCfg,
 		nsqCfg:         nsqCfg,
+		eosCfg:         eosCfg,
 		cdexCfg:        eosCfg.CdexConfig,
 		exappCfg:       eosCfg.Exapp,
 		exsatCfg:       eosCfg.Exsat,

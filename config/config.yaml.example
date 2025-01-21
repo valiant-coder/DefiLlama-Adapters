@@ -90,3 +90,13 @@ eos:
     actor_private_key: your_actor_private_key
   exsat:
     bridge_contract: bridgecontract
+  
+  events:
+    log_new_acc: lognewacc
+    deposit_log: depositlog
+    withdraw_log: withdrawlog
+    log_withdraw: logwithdraw
+    emit_placed: emitplaced
+    emit_canceled: emitcanceled
+    emit_filled: emitfilled
+    create: create

@@ -46,11 +46,11 @@ func (s *Service) syncTradeHistory(ctx context.Context) error {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
 			Filter: fmt.Sprintf(
-				"%s:create,%s:emitplaced,%s:emitcanceled,%s:emitfilled",
-				s.cdexCfg.PoolContract,
-				s.cdexCfg.EventContract,
-				s.cdexCfg.EventContract,
-				s.cdexCfg.EventContract,
+				"%s:%s,%s:%s,%s:%s,%s:%s",
+				s.cdexCfg.PoolContract, s.eosCfg.Events.Create,
+				s.cdexCfg.EventContract, s.eosCfg.Events.EmitPlaced,
+				s.cdexCfg.EventContract, s.eosCfg.Events.EmitCanceled,
+				s.cdexCfg.EventContract, s.eosCfg.Events.EmitFilled,
 			),
 			Limit: s.hyperionCfg.BatchSize,
 			Sort:  "asc",
@@ -93,7 +93,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
 			Contract:  s.cdexCfg.PoolContract,
-			Action:    "create",
+			Action:    s.eosCfg.Events.Create,
 			Account:   "",
 			StartFrom: int64(s.tradeLastBlockNum) + 1,
 			ReadUntil: 0,
@@ -101,7 +101,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 		},
 		{
 			Contract:  s.cdexCfg.EventContract,
-			Action:    "emitplaced",
+			Action:    s.eosCfg.Events.EmitPlaced,
 			Account:   "",
 			StartFrom: int64(s.tradeLastBlockNum) + 1,
 			ReadUntil: 0,
@@ -109,7 +109,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 		},
 		{
 			Contract:  s.cdexCfg.EventContract,
-			Action:    "emitcanceled",
+			Action:    s.eosCfg.Events.EmitCanceled,
 			Account:   "",
 			StartFrom: int64(s.tradeLastBlockNum) + 1,
 			ReadUntil: 0,
@@ -117,7 +117,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 		},
 		{
 			Contract:  s.cdexCfg.EventContract,
-			Action:    "emitfilled",
+			Action:    s.eosCfg.Events.EmitFilled,
 			Account:   "",
 			StartFrom: int64(s.tradeLastBlockNum) + 1,
 			ReadUntil: 0,

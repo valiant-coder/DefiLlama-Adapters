@@ -196,14 +196,14 @@ func (s *Service) getInstanceInfo(ctx context.Context) (int, int) {
 
 func (s *Service) registerHandlers() {
 	// Use account:action as key
-	s.handlers[fmt.Sprintf("%s:emitplaced", s.cdexCfg.EventContract)] = s.handleCreateOrder
-	s.handlers[fmt.Sprintf("%s:emitcanceled", s.cdexCfg.EventContract)] = s.handleCancelOrder
-	s.handlers[fmt.Sprintf("%s:emitfilled", s.cdexCfg.EventContract)] = s.handleMatchOrder
-	s.handlers[fmt.Sprintf("%s:create", s.cdexCfg.PoolContract)] = s.handleCreatePool
-	s.handlers[fmt.Sprintf("%s:depositlog", s.exsatCfg.BridgeContract)] = s.handleBridgeDeposit
-	s.handlers[fmt.Sprintf("%s:lognewacc", s.exappCfg.AssetContract)] = s.handleNewAccount
-	s.handlers[fmt.Sprintf("%s:logwithdraw", s.exappCfg.AssetContract)] = s.handleWithdraw
-	s.handlers[fmt.Sprintf("%s:withdrawlog", s.exsatCfg.BridgeContract)] = s.updateWithdraw
+	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.EventContract, s.eosCfg.Events.EmitPlaced)] = s.handleCreateOrder
+	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.EventContract, s.eosCfg.Events.EmitCanceled)] = s.handleCancelOrder
+	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.EventContract, s.eosCfg.Events.EmitFilled)] = s.handleMatchOrder
+	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.PoolContract, s.eosCfg.Events.Create)] = s.handleCreatePool
+	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBridgeDeposit
+	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
+	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {

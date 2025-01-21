@@ -31,10 +31,14 @@ func (s *Service) syncWithdrawHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf("%s:logwithdraw,%s:withdrawlog", s.exappCfg.AssetContract, s.exsatCfg.BridgeContract),
-			Limit:   s.hyperionCfg.BatchSize,
-			Sort:    "asc",
-			After:   strconv.FormatUint(s.withdrawLastBlockNum, 10),
+			Filter: fmt.Sprintf(
+				"%s:%s,%s:%s",
+				s.exappCfg.AssetContract, s.eosCfg.Events.LogWithdraw,
+				s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog,
+			),
+			Limit: s.hyperionCfg.BatchSize,
+			Sort:  "asc",
+			After: strconv.FormatUint(s.withdrawLastBlockNum, 10),
 		})
 		if err != nil {
 			return fmt.Errorf("get actions failed: %w", err)
@@ -69,7 +73,7 @@ func (s *Service) SyncWithdraw(ctx context.Context) (<-chan hyperion.Action, err
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
 			Contract:  s.exappCfg.AssetContract,
-			Action:    "logwithdraw",
+			Action:    s.eosCfg.Events.LogWithdraw,
 			Account:   "",
 			StartFrom: int64(s.withdrawLastBlockNum) + 1,
 			ReadUntil: 0,
@@ -77,7 +81,7 @@ func (s *Service) SyncWithdraw(ctx context.Context) (<-chan hyperion.Action, err
 		},
 		{
 			Contract:  s.exsatCfg.BridgeContract,
-			Action:    "withdrawlog",
+			Action:    s.eosCfg.Events.WithdrawLog,
 			Account:   "",
 			StartFrom: int64(s.withdrawLastBlockNum) + 1,
 			ReadUntil: 0,

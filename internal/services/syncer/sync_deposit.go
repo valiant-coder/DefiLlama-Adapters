@@ -33,9 +33,9 @@ func (s *Service) syncDepositHistory(ctx context.Context) error {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
 			Filter: fmt.Sprintf(
-				"%s:lognewacc,%s:depositlog",
-				s.exappCfg.AssetContract,
-				s.exsatCfg.BridgeContract,
+				"%s:%s,%s:%s",
+				s.exappCfg.AssetContract, s.eosCfg.Events.LogNewAcc,
+				s.exsatCfg.BridgeContract, s.eosCfg.Events.DepositLog,
 			),
 			Limit: s.hyperionCfg.BatchSize,
 			Sort:  "asc",
@@ -76,7 +76,7 @@ func (s *Service) SyncDeposit(ctx context.Context) (<-chan hyperion.Action, erro
 	depositActionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
 			Contract:  s.exsatCfg.BridgeContract,
-			Action:    "depositlog",
+			Action:    s.eosCfg.Events.DepositLog,
 			Account:   "",
 			StartFrom: int64(s.depositLastBlockNum) + 1,
 			ReadUntil: 0,
@@ -84,7 +84,7 @@ func (s *Service) SyncDeposit(ctx context.Context) (<-chan hyperion.Action, erro
 		},
 		{
 			Contract:  s.exappCfg.AssetContract,
-			Action:    "lognewacc",
+			Action:    s.eosCfg.Events.LogNewAcc,
 			Account:   "",
 			StartFrom: int64(s.depositLastBlockNum) + 1,
 			ReadUntil: 0,

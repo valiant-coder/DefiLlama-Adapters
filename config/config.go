@@ -96,7 +96,9 @@ type EosConfig struct {
 	CdexConfig      CdexConfig     `yaml:"cdex"`
 	Exapp           ExappConfig    `yaml:"exapp"`
 	Exsat           ExsatConfig    `yaml:"exsat"`
-	PowerUp         PowerUpConfig  `yaml:"powerup"`
+	Events          EventConfig    `yaml:"events"`
+
+	PowerUp PowerUpConfig `yaml:"powerup"`
 }
 
 type PowerUpConfig struct {
@@ -140,6 +142,9 @@ var (
 )
 
 func Conf() *Config {
+	if config.Eos.Events.LogNewAcc == "" {
+		config.Eos.Events = DefaultEventConfig()
+	}
 	return config
 }
 
@@ -158,4 +163,33 @@ func Load(addr string) error {
 
 	fmt.Printf("load config file success: %+v\n", config)
 	return nil
+}
+
+type EventConfig struct {
+	// Order related events
+	EmitPlaced   string `yaml:"emit_placed"`
+	EmitCanceled string `yaml:"emit_canceled"`
+	EmitFilled   string `yaml:"emit_filled"`
+
+	// Pool related events
+	Create string `yaml:"create"`
+
+	// Deposit and withdrawal related events
+	DepositLog  string `yaml:"deposit_log"`
+	LogNewAcc   string `yaml:"log_new_acc"`
+	LogWithdraw string `yaml:"log_withdraw"`
+	WithdrawLog string `yaml:"withdraw_log"`
+}
+
+func DefaultEventConfig() EventConfig {
+	return EventConfig{
+		EmitPlaced:   "emitplaced",
+		EmitCanceled: "emitcanceled",
+		EmitFilled:   "emitfilled",
+		Create:       "create",
+		DepositLog:   "depositlog",
+		LogNewAcc:    "lognewacc",
+		LogWithdraw:  "logwithdraw",
+		WithdrawLog:  "withdrawlog",
+	}
 }
