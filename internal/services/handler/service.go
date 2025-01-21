@@ -251,7 +251,7 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 // getPartitionKey returns partition key based on action type
 func (s *Service) getPartitionKey(action hyperion.Action) string {
 	switch action.Act.Name {
-	case "emitplaced", "emitcanceled", "emitfilled":
+	case s.eosCfg.Events.EmitPlaced, s.eosCfg.Events.EmitCanceled, s.eosCfg.Events.EmitFilled:
 		// Parse action data to get poolID
 		var data struct {
 			EV struct {
@@ -263,13 +263,13 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 			return ""
 		}
 		return fmt.Sprintf("pool-%s", data.EV.PoolID)
-	case "create":
+	case s.eosCfg.Events.Create:
 		// Use fixed partition key for pool creation
 		return "pool-creation"
-	case "lognewacc", "depositlog":
+	case s.eosCfg.Events.LogNewAcc, s.eosCfg.Events.DepositLog:
 		return fmt.Sprintf("deposit-or-create-account")
 
-	case "withdrawlog", "logwithdraw":
+	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
 
 	default:
