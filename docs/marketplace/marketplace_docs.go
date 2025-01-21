@@ -1315,6 +1315,9 @@ const docTemplatemarketplace = `{
                 "chain_name": {
                     "type": "string"
                 },
+                "completed_at": {
+                    "type": "string"
+                },
                 "fee": {
                     "type": "string"
                 },

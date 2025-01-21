@@ -55,19 +55,21 @@ type RespWithdrawRecord struct {
 	ChainName string `json:"chain_name"`
 	Fee       string `json:"fee"`
 	// 0 pending 1success 2 fail
-	Status     uint8  `json:"status"`
-	SendTxID   string `json:"send_tx_id"`
-	WithdrawAt Time   `json:"withdraw_at"`
+	Status      uint8  `json:"status"`
+	SendTxID    string `json:"send_tx_id"`
+	WithdrawAt  Time   `json:"withdraw_at"`
+	CompletedAt Time   `json:"completed_at"`
 }
 
 func FormatWithdrawRecord(record *db.WithdrawRecord) RespWithdrawRecord {
 	return RespWithdrawRecord{
-		Symbol:     record.Symbol,
-		Amount:     record.Amount.String(),
-		ChainName:  record.ChainName,
-		Fee:        record.Fee.String(),
-		Status:     uint8(record.Status),
-		SendTxID:   record.SendTxID,
-		WithdrawAt: Time(record.Time),
+		Symbol:      record.Symbol,
+		Amount:      record.Amount.String(),
+		ChainName:   record.ChainName,
+		Fee:         record.Fee.String(),
+		Status:      uint8(record.Status),
+		SendTxID:    record.SendTxID,
+		WithdrawAt:  Time(record.WithdrawAt),
+		CompletedAt: Time(record.CompletedAt),
 	}
 }
