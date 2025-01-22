@@ -86,6 +86,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	if _, err := pipe.Exec(ctx); err != nil {
 		return nil, fmt.Errorf("add uniq id error: %w", err)
 	}
+	params = aggregateParams(params)
 
 	script := redis.NewScript(`
 	local hashKey = KEYS[1]
