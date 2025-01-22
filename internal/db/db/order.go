@@ -151,3 +151,11 @@ func (r *Repo) GetOrderBook(ctx context.Context, poolID uint64, limit int) (*Ord
 func (r *Repo) ClearOpenOrders(ctx context.Context, poolID uint64) error {
 	return r.WithContext(ctx).Where("pool_id = ?", poolID).Delete(&OpenOrder{}).Error
 }
+
+func (r *Repo) BatchInsertOpenOrders(ctx context.Context, orders []*OpenOrder) error {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	return r.WithContext(ctx).CreateInBatches(orders, 100).Error
+}

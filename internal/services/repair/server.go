@@ -35,36 +35,54 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 		return err
 	}
 
-	// 1. Get buy orders
-	bids, err := s.client.GetOrders(ctx, poolID, true)
-	if err != nil {
-		log.Printf("get bids error, poolID: %d, err: %v", poolID, err)
-		return err
+	// 1. Get buy/sell orders in parallel
+	type orderResult struct {
+		orders []cdex.Order
+		err    error
+		isBuy  bool
+	}
+	orderChan := make(chan orderResult, 2)
+
+	go func() {
+		bids, err := s.client.GetOrders(ctx, poolID, true)
+		orderChan <- orderResult{orders: bids, err: err, isBuy: true}
+	}()
+
+	go func() {
+		asks, err := s.client.GetOrders(ctx, poolID, false)
+		orderChan <- orderResult{orders: asks, err: err, isBuy: false}
+	}()
+
+	var bids, asks []cdex.Order
+	for i := 0; i < 2; i++ {
+		result := <-orderChan
+		if result.err != nil {
+			log.Printf("get orders error, poolID: %d, isBuy: %v, err: %v", poolID, result.isBuy, result.err)
+			return result.err
+		}
+		if result.isBuy {
+			bids = result.orders
+		} else {
+			asks = result.orders
+		}
 	}
 
-	// 2. Get sell orders
-	asks, err := s.client.GetOrders(ctx, poolID, false)
-	if err != nil {
-		log.Printf("get asks error, poolID: %d, err: %v", poolID, err)
-		return err
-	}
-
-	// 3.1 Clear old open orders
-	err = s.repo.ClearOpenOrders(ctx, poolID)
-	if err != nil {
+	// 2. Clear old data (batch operation)
+	if err := s.repo.ClearOpenOrders(ctx, poolID); err != nil {
 		log.Printf("clear open orders error, poolID: %d, err: %v", poolID, err)
 		return err
 	}
-	// 3. Clear old depth data
-	err = s.repo.ClearDepthsV2(ctx, poolID)
-	if err != nil {
+	if err := s.repo.ClearDepthsV2(ctx, poolID); err != nil {
 		log.Printf("clear depths error, poolID: %d, err: %v", poolID, err)
 		return err
 	}
 
-	// 4. Update buy order data and depth
+	// 3. Prepare data for batch insert
+	openOrders := make([]*db.OpenOrder, 0, len(bids)+len(asks))
+	depthUpdates := make([]db.UpdateDepthParams, 0, len(bids)+len(asks))
+
+	// Process buy orders
 	for _, bid := range bids {
-		// 4.1 Convert to OpenOrder
 		openOrder := &db.OpenOrder{
 			TxID:               "",
 			App:                string(bid.App),
@@ -83,32 +101,19 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 			Status:             db.OrderStatusOpen,
 		}
+		openOrders = append(openOrders, openOrder)
 
-		// 4.2 Insert OpenOrder
-		err = s.repo.InsertOpenOrderIfNotExist(ctx, openOrder)
-		if err != nil {
-			log.Printf("insert open order error, poolID: %d, err: %v", poolID, err)
-			return err
-		}
-
-		// 4.3 Update depth
-		_, err = s.repo.UpdateDepthV2(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				IsBuy:  true,
-				Price:  openOrder.Price,
-				Amount: openOrder.OriginalQuantity.Sub(openOrder.ExecutedQuantity),
-			},
+		remainingQty := openOrder.OriginalQuantity.Sub(openOrder.ExecutedQuantity)
+		depthUpdates = append(depthUpdates, db.UpdateDepthParams{
+			PoolID: poolID,
+			IsBuy:  true,
+			Price:  openOrder.Price,
+			Amount: remainingQty,
 		})
-		if err != nil {
-			log.Printf("update depth error, poolID: %d, err: %v", poolID, err)
-			return err
-		}
 	}
 
-	// 5. Update sell order data and depth
+	// Process sell orders
 	for _, ask := range asks {
-		// 5.1 Convert to OpenOrder
 		openOrder := &db.OpenOrder{
 			TxID:               "",
 			App:                string(ask.App),
@@ -127,24 +132,28 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 			Status:             db.OrderStatusOpen,
 		}
+		openOrders = append(openOrders, openOrder)
 
-		// 5.2 Insert OpenOrder
-		err = s.repo.InsertOpenOrderIfNotExist(ctx, openOrder)
-		if err != nil {
-			log.Printf("insert open order error, poolID: %d, err: %v", poolID, err)
+		remainingQty := openOrder.OriginalQuantity.Sub(openOrder.ExecutedQuantity)
+		depthUpdates = append(depthUpdates, db.UpdateDepthParams{
+			PoolID: poolID,
+			IsBuy:  false,
+			Price:  openOrder.Price,
+			Amount: remainingQty,
+		})
+	}
+
+	// 4. Batch insert orders
+	if len(openOrders) > 0 {
+		if err := s.repo.BatchInsertOpenOrders(ctx, openOrders); err != nil {
+			log.Printf("batch insert open orders error, poolID: %d, err: %v", poolID, err)
 			return err
 		}
+	}
 
-		// 5.3 Update depth
-		_, err = s.repo.UpdateDepthV2(ctx, []db.UpdateDepthParams{
-			{
-				PoolID: poolID,
-				IsBuy:  false,
-				Price:  openOrder.Price,
-				Amount: openOrder.OriginalQuantity.Sub(openOrder.ExecutedQuantity),
-			},
-		})
-		if err != nil {
+	// 5. Batch update depth to Redis
+	if len(depthUpdates) > 0 {
+		if _, err := s.repo.UpdateDepthV2(ctx, depthUpdates); err != nil {
 			log.Printf("update depth error, poolID: %d, err: %v", poolID, err)
 			return err
 		}
