@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"exapp-go/config"
+	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/log"
@@ -13,11 +14,12 @@ import (
 )
 
 type UserService struct {
-	db *db.Repo
+	db      *db.Repo
+	ckhRepo *ckhdb.ClickHouseRepo
 }
 
 func NewUserService() *UserService {
-	return &UserService{db: db.New()}
+	return &UserService{db: db.New(), ckhRepo: ckhdb.New()}
 }
 
 func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (string, error) {

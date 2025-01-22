@@ -1501,6 +1501,9 @@ const docTemplatemarketplace = `{
                     "items": {
                         "$ref": "#/definitions/entity.LockBalance"
                     }
+                },
+                "usdt_price": {
+                    "type": "string"
                 }
             }
         },

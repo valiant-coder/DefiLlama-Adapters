@@ -9,6 +9,7 @@ import (
 	"exapp-go/pkg/hyperion"
 	"fmt"
 	"log"
+	"strings"
 )
 
 func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([]entity.UserBalance, error) {
@@ -39,9 +40,33 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		return nil, err
 	}
 
+	var coins []string
+	for _, ub := range userBalances {
+		coins = append(coins, ub.Coin)
+	}
+
+	poolStatuses, err := s.ckhRepo.GetPoolStatusByBaseCoin(ctx, coins)
+	if err != nil {
+		return nil, err
+	}
+
+	coinUSDTPrice := make(map[string]string)
+	for _, poolStatus := range poolStatuses {
+		if strings.Contains(poolStatus.QuoteCoin, "USDT") {
+			coinUSDTPrice[poolStatus.BaseCoin] = poolStatus.LastPrice.String()
+		}
+	}
+
+
 	var result []entity.UserBalance
 	for _, ub := range userBalances {
 		var userBalance entity.UserBalance
+		if price, ok := coinUSDTPrice[ub.Coin]; ok {
+			userBalance.USDTPrice = price
+		}
+		if strings.Contains(ub.Coin, "USDT") {
+			userBalance.USDTPrice = "1"
+		} 
 		userBalance.Coin = ub.Coin
 		userBalance.Balance = ub.Balance.String()
 		userBalance.Locked = ub.Locked.String()

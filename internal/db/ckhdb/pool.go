@@ -142,3 +142,12 @@ func (r *ClickHouseRepo) ListPoolStats(ctx context.Context) ([]*PoolStats, error
 	err := r.DB.WithContext(ctx).Find(&pools).Error
 	return pools, err
 }
+
+
+func (r *ClickHouseRepo) GetPoolStatusByBaseCoin(ctx context.Context, baseCoin []string) ([]*PoolStats, error) {
+	var stats []*PoolStats
+	err := r.DB.WithContext(ctx).
+		Where("base_coin IN (?)", baseCoin).
+		Find(&stats).Error
+	return stats, err
+}

@@ -12,7 +12,6 @@ type RespUserInfo struct {
 	Passkeys []RespUserCredential `json:"passkeys"`
 }
 
-
 type UserCredential struct {
 	CredentialID string `json:"credential_id"`
 	PublicKey    string `json:"public_key"`
@@ -30,10 +29,11 @@ type RespUserCredential struct {
 }
 
 type UserBalance struct {
-	Coin    string        `json:"coin"`
-	Balance string        `json:"balance"`
-	Locked  string        `json:"locked"`
-	Locks   []LockBalance `json:"locks"`
+	Coin      string        `json:"coin"`
+	Balance   string        `json:"balance"`
+	USDTPrice string        `json:"usdt_price"`
+	Locked    string        `json:"locked"`
+	Locks     []LockBalance `json:"locks"`
 }
 
 type LockBalance struct {
