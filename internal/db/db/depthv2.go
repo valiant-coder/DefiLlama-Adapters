@@ -23,9 +23,6 @@ var SupportedPrecisions = []string{
 	"100",
 }
 
-
-
-
 // Calculate price slots for all precisions
 func calculateAllSlots(price decimal.Decimal) map[string]string {
 	slots := make(map[string]string)
@@ -39,14 +36,38 @@ func calculateAllSlots(price decimal.Decimal) map[string]string {
 }
 
 // Update order (automatically updates all precision levels)
-func (r *Repo) UpdateDepthV2(ctx context.Context, symbol string, side string, price decimal.Decimal, amount decimal.Decimal) error {
+func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([]DepthChange, error) {
+	// Check UniqID
+	for _, param := range params {
+		if param.UniqID != "" {
+			exists, err := r.redis.SIsMember(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID).Result()
+			if err != nil {
+				return nil, fmt.Errorf("check uniq id error: %w", err)
+			}
+			if exists {
+				return nil, nil
+			}
+		}
+	}
+
+	// Add UniqID to processed set
+	pipe := r.redis.Pipeline()
+	for _, param := range params {
+		if param.UniqID != "" {
+			pipe.SAdd(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID)
+		}
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		return nil, fmt.Errorf("add uniq id error: %w", err)
+	}
+
 	script := redis.NewScript(`
 	local hashKey = KEYS[1]
 	local sortedSetKey = KEYS[2]
 	local slot = ARGV[1]
 	local amount = ARGV[2]
 
-	local newTotal = redis.call('HINCRBY', hashKey, slot, amount)
+	local newTotal = redis.call('HINCRBYFLOAT', hashKey, slot, amount)
 	
 	if tonumber(newTotal) > 0 then
 		local score = redis.call('ZSCORE', sortedSetKey, slot)
@@ -58,74 +79,101 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, symbol string, side string, pr
 		redis.call('ZREM', sortedSetKey, slot)
 	end
 
-	return newTotal
+	return tostring(newTotal)
 	`)
-	
-	if side != "buy" && side != "sell" {
-		return fmt.Errorf("invalid side: %s", side)
-	}
 
-	// Calculate slots for all precisions
-	slots := calculateAllSlots(price)
+	var changes []DepthChange
 
-	for precision, slot := range slots {
-		// Generate keys for each precision
-		hashKey := fmt.Sprintf("depth:%s:%s:%s:hash", symbol, side, precision)
-		sortedSetKey := fmt.Sprintf("depth:%s:%s:%s:sorted_set", symbol, side, precision)
+	// Process each update parameter
+	for _, param := range params {
+		side := "sell"
+		if param.IsBuy {
+			side = "buy"
+		}
 
-		// Execute script
-		_, err := script.Run(ctx, r.redis, []string{hashKey, sortedSetKey}, slot, amount.String()).Result()
-		if err != nil {
-			return fmt.Errorf("failed to execute script for precision %s: %v", precision, err)
+		// Calculate slots for all precisions
+		slots := calculateAllSlots(param.Price)
+
+		for precision, slot := range slots {
+			// Generate keys for each precision
+			hashKey := fmt.Sprintf("depth:%d:%s:%s:hash", param.PoolID, side, precision)
+			sortedSetKey := fmt.Sprintf("depth:%d:%s:%s:sorted_set", param.PoolID, side, precision)
+
+			// Execute script
+			newTotal, err := script.Run(ctx, r.redis, []string{hashKey, sortedSetKey}, slot, param.Amount.String()).Result()
+			if err != nil {
+				return nil, fmt.Errorf("failed to execute script for precision %s: %v", precision, err)
+			}
+
+			// Only record changes for default precision
+			if precision == "0.00000001" {
+				totalAmount, _ := decimal.NewFromString(fmt.Sprint(newTotal))
+				changes = append(changes, DepthChange{
+					PoolID: param.PoolID,
+					IsBuy:  param.IsBuy,
+					Price:  param.Price,
+					Amount: totalAmount,
+				})
+			}
 		}
 	}
 
-	return nil
+	return changes, nil
 }
 
 // Get depth data for specified precision
-func (r *Repo) GetDepthV2(ctx context.Context,symbol string, side string, precision string, limit int) (map[decimal.Decimal]decimal.Decimal, error) {
-	if side != "buy" && side != "sell" {
-		return nil, fmt.Errorf("invalid side: %s", side)
+func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, limit int) (Depth, error) {
+	depth := Depth{
+		PoolID: poolId,
+		Bids:   [][]string{},
+		Asks:   [][]string{},
 	}
 
-	// Validate precision is supported
-	if !contains(SupportedPrecisions, precision) {
-		return nil, fmt.Errorf("unsupported precision: %s", precision)
+	// Get depth data using minimum precision
+
+	// Get bids (buy orders)
+	bidsHash := fmt.Sprintf("depth:%d:buy:%s:hash", poolId, precision)
+	bidsSortedSet := fmt.Sprintf("depth:%d:buy:%s:sorted_set", poolId, precision)
+
+	// Get asks (sell orders)
+	asksHash := fmt.Sprintf("depth:%d:sell:%s:hash", poolId, precision)
+	asksSortedSet := fmt.Sprintf("depth:%d:sell:%s:sorted_set", poolId, precision)
+
+	// Get bids (high to low, limit 100)
+	bids, err := r.redis.ZRevRange(ctx, bidsSortedSet, 0, int64(limit-1)).Result()
+	if err != nil && err != redis.Nil {
+		return depth, err
+	}
+	if len(bids) > 0 {
+		quantities, err := r.redis.HMGet(ctx, bidsHash, bids...).Result()
+		if err != nil {
+			return depth, err
+		}
+		for i, price := range bids {
+			if quantities[i] != nil {
+				depth.Bids = append(depth.Bids, []string{price, quantities[i].(string)})
+			}
+		}
 	}
 
-	// Generate Redis keys
-	hashKey := fmt.Sprintf("depth:%s:%s:%s:hash", symbol, side, precision)
-	sortedSetKey := fmt.Sprintf("depth:%s:%s:%s:sorted_set", symbol, side, precision)
-
-	// Get sort direction
-	var pricesCmd *redis.StringSliceCmd
-	if side == "buy" {
-		pricesCmd = r.redis.ZRevRange(ctx, sortedSetKey, 0, int64(limit-1))
-	} else {
-		pricesCmd = r.redis.ZRange(ctx, sortedSetKey, 0, int64(limit-1))
+	// Get asks (low to high, limit 100)
+	asks, err := r.redis.ZRange(ctx, asksSortedSet, 0, int64(limit-1)).Result()
+	if err != nil && err != redis.Nil {
+		return depth, err
+	}
+	if len(asks) > 0 {
+		quantities, err := r.redis.HMGet(ctx, asksHash, asks...).Result()
+		if err != nil {
+			return depth, err
+		}
+		for i, price := range asks {
+			if quantities[i] != nil {
+				depth.Asks = append(depth.Asks, []string{price, quantities[i].(string)})
+			}
+		}
 	}
 
-	prices, err := pricesCmd.Result()
-	if err != nil {
-		return nil, err
-	}
-
-	// Batch get quantities
-	quantities, err := r.redis.HMGet(ctx, hashKey, prices...).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert results
-	result := make(map[decimal.Decimal]decimal.Decimal)
-	for i, p := range prices {
-		price, _ := decimal.NewFromString(p)
-		quantity, _ := decimal.NewFromString(quantities[i].(string))
-		result[price] = quantity
-	}
-
-	return result, nil
+	return depth, nil
 }
 
 // Helper function: check if slice contains element
@@ -136,4 +184,20 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+// ClearDepths clears depth data
+func (s *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
+	keys := []string{
+		fmt.Sprintf("depth:%d:processed_ids", poolID),
+	}
+	for _, precision := range SupportedPrecisions {
+		keys = append(keys, []string{
+			fmt.Sprintf("depth:%d:buy:%s:hash", poolID, precision),
+			fmt.Sprintf("depth:%d:buy:%s:sorted_set", poolID, precision),
+			fmt.Sprintf("depth:%d:sell:%s:hash", poolID, precision),
+			fmt.Sprintf("depth:%d:sell:%s:sorted_set", poolID, precision),
+		}...)
+	}
+	return s.redis.Del(ctx, keys...).Err()
 }
