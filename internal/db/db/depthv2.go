@@ -134,12 +134,12 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 
 			// Only record changes for default precision
 			if precision == "0.00000001" {
-				totalAmount, _ := decimal.NewFromString(fmt.Sprint(newTotal))
+				newTotal := decimal.RequireFromString(fmt.Sprint(newTotal)).Truncate(8)
 				changes = append(changes, DepthChange{
 					PoolID: param.PoolID,
 					IsBuy:  param.IsBuy,
 					Price:  param.Price,
-					Amount: totalAmount,
+					Amount: newTotal,
 				})
 			}
 		}
