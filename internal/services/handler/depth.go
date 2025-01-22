@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Service) updateDepth(ctx context.Context, params db.UpdateDepthParams) error {
-	changes, err := s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{params})
+	changes, err := s.repo.UpdateDepthV2(ctx, []db.UpdateDepthParams{params})
 	if err != nil {
 		log.Printf("update depth failed: %v", err)
 		return err

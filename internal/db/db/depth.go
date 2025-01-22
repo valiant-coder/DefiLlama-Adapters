@@ -11,29 +11,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ActionType string
-
-const (
-	ActionAdd ActionType = "add"
-	ActionSub ActionType = "sub"
-)
-
-// UpdateDepthParams parameters for updating depth
-type UpdateDepthParams struct {
-	PoolID uint64
-	UniqID string
-	IsBuy  bool
-	Price  decimal.Decimal
-	// Positive means add, negative means subtract
-	Amount decimal.Decimal
-}
-
-type Depth struct {
-	PoolID uint64
-	Bids   [][]string
-	Asks   [][]string
-}
-
 // Aggregate parameters
 func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 	var newParams []UpdateDepthParams
@@ -56,13 +33,6 @@ func aggregateParams(params []UpdateDepthParams) []UpdateDepthParams {
 		newParams = append(newParams, *param)
 	}
 	return newParams
-}
-
-type DepthChange struct {
-	PoolID uint64
-	IsBuy  bool
-	Price  decimal.Decimal
-	Amount decimal.Decimal
 }
 
 // UpdateDepth updates depth data

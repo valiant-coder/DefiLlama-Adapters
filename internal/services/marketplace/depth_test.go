@@ -12,7 +12,7 @@ func TestDepthService_GetDepth(t *testing.T) {
 	config.Load("config/config_dev.yaml")
 	depthService := NewDepthService()
 
-	depth, err := depthService.GetDepth(context.Background(), 0)
+	depth, err := depthService.GetDepth(context.Background(), 0, "0.00000001", 10)
 	if err != nil {
 		t.Errorf("DepthService.GetDepth() error = %v", err)
 	}

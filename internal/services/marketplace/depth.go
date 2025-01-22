@@ -15,8 +15,14 @@ type DepthService struct {
 	repo *db.Repo
 }
 
-func (s *DepthService) GetDepth(ctx context.Context, poolID uint64) (entity.Depth, error) {
-	depth, err := s.repo.GetDepth(ctx, poolID)
+func (s *DepthService) GetDepth(ctx context.Context, poolID uint64, precision string, limit int) (entity.Depth, error) {
+	if precision == "" {
+		precision = "0.00000001"
+	}
+	if limit == 0 {
+		limit = 100
+	}
+	depth, err := s.repo.GetDepthV2(ctx, poolID, precision, limit)
 	if err != nil {
 		return entity.Depth{}, err
 	}

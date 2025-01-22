@@ -78,11 +78,15 @@ func getHistoryOrderDetail(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param pool_id query string true "pool_id"
+// @Param precision query string false "0.00000001 ~ 10000"
+// @Param limit query int false "limit"
 // @Success 200 {object} entity.Depth "order depth"
 // @Router /api/v1/depth [get]
 func getDepth(c *gin.Context) {
 	poolID := c.Query("pool_id")
-	depth, err := marketplace.NewDepthService().GetDepth(c.Request.Context(), cast.ToUint64(poolID))
+	precision := c.Query("precision")
+	limit := c.Query("limit")
+	depth, err := marketplace.NewDepthService().GetDepth(c.Request.Context(), cast.ToUint64(poolID), precision, cast.ToInt(limit))
 	if err != nil {
 		api.Error(c, err)
 		return

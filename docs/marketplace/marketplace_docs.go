@@ -69,6 +69,18 @@ const docTemplatemarketplace = `{
                         "name": "pool_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "0.00000001 ~ 10000",
+                        "name": "precision",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {

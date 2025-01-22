@@ -8,6 +8,30 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// UpdateDepthParams parameters for updating depth
+type UpdateDepthParams struct {
+	PoolID uint64
+	UniqID string
+	IsBuy  bool
+	Price  decimal.Decimal
+	// Positive means add, negative means subtract
+	Amount decimal.Decimal
+}
+
+type Depth struct {
+	PoolID uint64
+	Bids   [][]string
+	Asks   [][]string
+}
+
+type DepthChange struct {
+	PoolID uint64
+	IsBuy  bool
+	Price  decimal.Decimal
+	Amount decimal.Decimal
+}
+
+
 // Ordered list of supported precisions (from small to large)
 var SupportedPrecisions = []string{
 	"0.00000001",
@@ -21,6 +45,8 @@ var SupportedPrecisions = []string{
 	"1",
 	"10",
 	"100",
+	"1000",
+	"10000",
 }
 
 // Calculate price slots for all precisions

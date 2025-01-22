@@ -56,7 +56,7 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 		return err
 	}
 	// 3. Clear old depth data
-	err = s.repo.ClearDepths(ctx, poolID)
+	err = s.repo.ClearDepthsV2(ctx, poolID)
 	if err != nil {
 		log.Printf("clear depths error, poolID: %d, err: %v", poolID, err)
 		return err
@@ -92,7 +92,7 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 		}
 
 		// 4.3 Update depth
-		_, err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+		_, err = s.repo.UpdateDepthV2(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
 				IsBuy:  true,
@@ -136,7 +136,7 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 		}
 
 		// 5.3 Update depth
-		_, err = s.repo.UpdateDepth(ctx, []db.UpdateDepthParams{
+		_, err = s.repo.UpdateDepthV2(ctx, []db.UpdateDepthParams{
 			{
 				PoolID: poolID,
 				IsBuy:  false,
