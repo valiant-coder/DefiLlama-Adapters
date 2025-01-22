@@ -178,7 +178,11 @@ func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, 
 		}
 		for i, price := range bids {
 			if quantities[i] != nil {
-				depth.Bids = append(depth.Bids, []string{price, quantities[i].(string)})
+				quantity := decimal.RequireFromString(quantities[i].(string)).Truncate(8)
+				if quantity.IsZero() {
+					continue
+				}
+				depth.Bids = append(depth.Bids, []string{price, quantity.String()})
 			}
 		}
 	}
@@ -195,7 +199,11 @@ func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, 
 		}
 		for i, price := range asks {
 			if quantities[i] != nil {
-				depth.Asks = append(depth.Asks, []string{price, quantities[i].(string)})
+				quantity := decimal.RequireFromString(quantities[i].(string)).Truncate(8)
+				if quantity.IsZero() {
+					continue
+				}
+				depth.Asks = append(depth.Asks, []string{price, quantity.String()})
 			}
 		}
 	}
