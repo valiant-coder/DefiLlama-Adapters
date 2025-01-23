@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
+	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -57,6 +58,14 @@ type OpenOrder struct {
 // TableName overrides the table name
 func (OpenOrder) TableName() string {
 	return "open_orders"
+}
+
+func (o *OpenOrder) OrderTag() string {
+	var side = "1"
+	if !o.IsBid {
+		side = "0"
+	}
+	return fmt.Sprintf("%d-%d-%s", o.PoolID, o.OrderID, side)
 }
 
 func (r *Repo) InsertOpenOrderIfNotExist(ctx context.Context, order *OpenOrder) error {

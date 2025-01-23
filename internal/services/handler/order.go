@@ -346,9 +346,13 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
 	if makerOrder.ExecutedQuantity.GreaterThan(makerOrder.OriginalQuantity) {
-		log.Printf("maker order executed quantity greater than original quantity: %v,%v", makerOrder,data)
+		log.Printf("trade executed quantity greater than original quantity: %v,%v", trade.TxID,makerOrder.TxID)
+		log.Panicf("marker order original quantity: %v, executed quantity: %v", makerOrder.OriginalQuantity,makerOrder.ExecutedQuantity)
+		log.Printf("current trade base quantity: %v",trade.BaseQuantity)
 	}
 
+
+	
 	// update maker order
 	if !data.EV.MakerRemoved {
 		err = s.repo.UpdateOpenOrder(ctx, makerOrder)
