@@ -26,7 +26,9 @@ const (
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
 	RedisKeyHandlerLock      = "cdex:handler:lock"      // Distributed lock key
+	RedisKeyActionProcessed  = "cdex:action:processed:" // Prefix for processed action keys
 	HandlerTTL               = 4 * time.Second          // Handler heartbeat timeout
+	ActionProcessedTTL       = 24 * time.Hour           // How long to keep processed action records
 )
 
 type Service struct {
@@ -214,6 +216,18 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return nil
 	}
 
+	// has handled action
+	actionKey := fmt.Sprintf("%s%d", RedisKeyActionProcessed, action.GlobalSequence)
+	exists, err := s.redisCli.Exists(context.Background(), actionKey).Result()
+	if err != nil {
+		log.Printf("Check action existence failed: %v", err)
+		return nil
+	}
+	if exists > 0 {
+		log.Printf("Action %d already processed, skipping", action.GlobalSequence)
+		return nil
+	}
+
 	// Check if should process this message
 	if action.Act.Account != s.cdexCfg.EventContract &&
 		action.Act.Account != s.cdexCfg.PoolContract &&
@@ -226,8 +240,8 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 	handlerKey := fmt.Sprintf("%s:%s", action.Act.Account, action.Act.Name)
 
 	// Find corresponding handler
-	handler, exists := s.handlers[handlerKey]
-	if !exists {
+	handler, ok := s.handlers[handlerKey]
+	if !ok {
 		log.Printf("Unknown action: %s from account: %s", action.Act.Name, action.Act.Account)
 		return nil
 	}
@@ -245,7 +259,16 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 	}
 
 	// Execute handler
-	return handler(action)
+	if err := handler(action); err != nil {
+		return err
+	}
+
+	// set handled action
+	if err := s.redisCli.Set(context.Background(), actionKey, "1", ActionProcessedTTL).Err(); err != nil {
+		log.Printf("Record processed action failed: %v", err)
+	}
+
+	return nil
 }
 
 // getPartitionKey returns partition key based on action type
