@@ -349,6 +349,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		log.Printf("trade executed quantity greater than original quantity: %v,%v", trade.TxID,makerOrder.TxID)
 		log.Panicf("marker order original quantity: %v, executed quantity: %v", makerOrder.OriginalQuantity,makerOrder.ExecutedQuantity)
 		log.Printf("current trade base quantity: %v",trade.BaseQuantity)
+		makerOrder.ExecutedQuantity = makerOrder.OriginalQuantity
 	}
 
 
