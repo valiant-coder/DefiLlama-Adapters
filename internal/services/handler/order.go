@@ -345,6 +345,9 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 
 	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
+	if makerOrder.ExecutedQuantity.GreaterThan(makerOrder.OriginalQuantity) {
+		log.Printf("maker order executed quantity greater than original quantity: %v,%v", makerOrder,data)
+	}
 
 	// update maker order
 	if !data.EV.MakerRemoved {
