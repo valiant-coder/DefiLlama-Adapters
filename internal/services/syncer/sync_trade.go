@@ -12,7 +12,7 @@ import (
 
 func (s *Service) initTradeLastBlockNum(ctx context.Context) error {
 
-	lastBlockNum, err := s.ckhRepo.GetMaxBlockNumber(ctx)
+	lastBlockNum, err := s.ckhRepo.GetTradeMaxBlockNumber(ctx)
 	if err != nil {
 		return fmt.Errorf("get trade max block number failed: %w", err)
 	}
