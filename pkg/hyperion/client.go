@@ -304,7 +304,7 @@ func (c *Client) GetEvmTxIDByEosTxID(eosTxID string) (string, error) {
 
 			hash := crypto.Keccak256(rlpTxBytes)
 
-			return hex.EncodeToString(hash), nil
+			return "0x" + hex.EncodeToString(hash), nil
 		}
 	}
 	return "", nil
