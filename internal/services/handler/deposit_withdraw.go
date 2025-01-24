@@ -60,14 +60,20 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		log.Printf("parse action time failed: %v", err)
 		return nil
 	}
-	var chianName string
-	var depositAddress string
+	var chianName, depositAddress, sourceTxID string
+
 	if data.AssetType == 1 {
 		chianName = "eos"
 		depositAddress = data.Account
+		sourceTxID = action.TrxID
 	} else if data.AssetType == 4 {
 		chianName = "exsat"
 		depositAddress = s.exappCfg.VaultEVMAddress
+		sourceTxID, err = s.hyperionCli.GetEvmTxIDByEosTxID(action.TrxID)
+		if err != nil {
+			log.Printf("Get evm tx id by eos tx id failed: %v-%v", action.TrxID, err)
+			sourceTxID = action.TrxID
+		}
 	} else {
 		chianName = "btc"
 	}
@@ -79,7 +85,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		Status:         db.DepositStatusSuccess,
 		Time:           depositTime,
 		TxHash:         action.TrxID,
-		SourceTxID:     action.TrxID,
+		SourceTxID:     sourceTxID,
 		DepositAddress: depositAddress,
 		ChainName:      chianName,
 		BlockNumber:    uint64(action.BlockNum),
