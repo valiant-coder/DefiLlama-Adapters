@@ -33,8 +33,10 @@ func (s *Service) syncDepositHistory(ctx context.Context) error {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
 			Filter: fmt.Sprintf(
-				"%s:%s,%s:%s",
+				"%s:%s,%s:%s,%s:%s,%s:%s",
 				s.exappCfg.AssetContract, s.eosCfg.Events.LogNewAcc,
+				s.exappCfg.AssetContract, s.eosCfg.Events.LogDeposit,
+				s.exappCfg.AssetContract, s.eosCfg.Events.LogSend,
 				s.exsatCfg.BridgeContract, s.eosCfg.Events.DepositLog,
 			),
 			Limit: s.hyperionCfg.BatchSize,
@@ -85,6 +87,22 @@ func (s *Service) SyncDeposit(ctx context.Context) (<-chan hyperion.Action, erro
 		{
 			Contract:  s.exappCfg.AssetContract,
 			Action:    s.eosCfg.Events.LogNewAcc,
+			Account:   "",
+			StartFrom: int64(s.depositLastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.exappCfg.AssetContract,
+			Action:    s.eosCfg.Events.LogDeposit,
+			Account:   "",
+			StartFrom: int64(s.depositLastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.exappCfg.AssetContract,
+			Action:    s.eosCfg.Events.LogSend,
 			Account:   "",
 			StartFrom: int64(s.depositLastBlockNum) + 1,
 			ReadUntil: 0,

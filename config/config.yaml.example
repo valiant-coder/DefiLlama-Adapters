@@ -100,3 +100,5 @@ eos:
     emit_canceled: emitcanceled
     emit_filled: emitfilled
     create: create
+    log_deposit: logdeposit
+    log_send: logsend

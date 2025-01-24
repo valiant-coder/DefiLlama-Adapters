@@ -175,10 +175,16 @@ type EventConfig struct {
 	Create string `yaml:"create"`
 
 	// Deposit and withdrawal related events
+	// bridge deposit log
 	DepositLog  string `yaml:"deposit_log"`
+	// exapp deposit log
+	LogDeposit  string `yaml:"log_deposit"`
+	
 	LogNewAcc   string `yaml:"log_new_acc"`
 	LogWithdraw string `yaml:"log_withdraw"`
 	WithdrawLog string `yaml:"withdraw_log"`
+	// exapp eos native withdraw log
+	LogSend     string `yaml:"log_send"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -188,8 +194,10 @@ func DefaultEventConfig() EventConfig {
 		EmitFilled:   "emitfilled",
 		Create:       "create",
 		DepositLog:   "depositlog",
+		LogDeposit:   "logdeposit",
 		LogNewAcc:    "lognewacc",
 		LogWithdraw:  "logwithdraw",
 		WithdrawLog:  "withdrawlog",
+		LogSend:      "logsend",
 	}
 }
