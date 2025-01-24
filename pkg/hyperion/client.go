@@ -225,3 +225,33 @@ func (c *Client) GetTokens(ctx context.Context, account string) ([]Token, error)
 	}
 	return result.Tokens, nil
 }
+
+type Transaction struct {
+	TrxID   string   `json:"trx_id"`
+	Actions []Action `json:"actions"`
+}
+
+func (c *Client) GetTransaction(ctx context.Context, txID string) (*Transaction, error) {
+	url := fmt.Sprintf("%s/v2/history/get_transaction?id=%s", c.endpoint, txID)
+
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request failed: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("do request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var result Transaction
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decode response failed: %w", err)
+	}
+	return &result, nil
+}
