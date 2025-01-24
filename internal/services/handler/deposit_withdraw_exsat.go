@@ -162,6 +162,14 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		}
 	}
 
+	var withdrawStatus db.WithdrawStatus
+	var sendTxID string
+	if targetChain.ChainName == "exsat" {
+		withdrawStatus = db.WithdrawStatusSuccess
+		sendTxID = action.TrxID
+	} else {
+		withdrawStatus = db.WithdrawStatusPending
+	}
 
 	err = s.repo.CreateWithdrawRecord(ctx, &db.WithdrawRecord{
 		UID:         uid,
@@ -170,7 +178,8 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		Amount:      decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
 		Fee:         decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
 		BridgeFee:   targetChain.ExsatWithdrawFee,
-		Status:      db.WithdrawStatusPending,
+		Status:      withdrawStatus,
+		SendTxID:    sendTxID,
 		TxHash:      action.TrxID,
 		WithdrawAt:  withdrawAt,
 		BlockNumber: action.BlockNum,
