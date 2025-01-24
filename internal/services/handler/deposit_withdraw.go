@@ -63,8 +63,10 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 	var chianName string
 	if data.AssetType == 1 {
 		chianName = "eos"
-	} else {
+	} else if data.AssetType == 4 {
 		chianName = "exsat"
+	} else {
+		chianName = "btc"
 	}
 	record := &db.DepositRecord{
 		Symbol:         asset.Symbol.Symbol,

@@ -8,6 +8,7 @@ import (
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"log"
+	"time"
 
 	eosgo "github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
@@ -58,7 +59,7 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	var targetChain db.ChainInfo	
+	var targetChain db.ChainInfo
 	for _, chain := range token.Chains {
 		if chain.ChainName == data.ChainName {
 			targetChain = chain
@@ -164,9 +165,15 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 
 	var withdrawStatus db.WithdrawStatus
 	var sendTxID string
+	var completedAt time.Time
 	if targetChain.ChainName == "exsat" {
 		withdrawStatus = db.WithdrawStatusSuccess
-		sendTxID = action.TrxID
+		sendTxID, err = s.hyperionCli.GetEvmTxIDByEosTxID(action.TrxID)
+		if err != nil {
+			log.Printf("Get evm tx id by eos tx id failed: %v-%v", action.TrxID, err)
+			sendTxID = action.TrxID
+		}
+		completedAt = withdrawAt
 	} else {
 		withdrawStatus = db.WithdrawStatusPending
 	}
@@ -182,6 +189,7 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		SendTxID:    sendTxID,
 		TxHash:      action.TrxID,
 		WithdrawAt:  withdrawAt,
+		CompletedAt: completedAt,
 		BlockNumber: action.BlockNum,
 		Recipient:   data.Recipient,
 	})
@@ -195,15 +203,14 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 	return nil
 }
 
-
 func (s *Service) updateWithdraw(action hyperion.Action) error {
 	var data struct {
-		GlobalStatus     uint8  `json:"global_status"`
+		GlobalStatus uint8 `json:"global_status"`
 		// target send tx id
-		TxID              string `json:"tx_id"`
-		WithdrawAmount    string `json:"withdraw_amount"`
-		WithdrawFee       string `json:"withdraw_fee"`
-		TransactionID     string `json:"transaction_id"`
+		TxID           string `json:"tx_id"`
+		WithdrawAmount string `json:"withdraw_amount"`
+		WithdrawFee    string `json:"withdraw_fee"`
+		TransactionID  string `json:"transaction_id"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal withdraw failed: %v", err)

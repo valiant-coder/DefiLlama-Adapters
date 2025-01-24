@@ -2,13 +2,16 @@ package hyperion
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 )
 
@@ -254,4 +257,55 @@ func (c *Client) GetTransaction(ctx context.Context, txID string) (*Transaction,
 		return nil, fmt.Errorf("decode response failed: %w", err)
 	}
 	return &result, nil
+}
+
+type EvmTxEvent struct {
+	Event []interface{} `json:"event"`
+}
+
+type EvmTxData struct {
+	EosEvmVersion string `json:"eos_evm_version"`
+	RlpTx         string `json:"rlptx"`
+	BaseFeePerGas string `json:"base_fee_per_gas"`
+}
+
+func (c *Client) GetEvmTxIDByEosTxID(eosTxID string) (string, error) {
+	ctx := context.Background()
+	tx, err := c.GetTransaction(ctx, eosTxID)
+	if err != nil {
+		return "", err
+	}
+
+	for _, action := range tx.Actions {
+		if action.Act.Name == "evmtx" {
+			var evmEvent EvmTxEvent
+			if err := json.Unmarshal(action.Act.Data, &evmEvent); err != nil {
+				return "", err
+			}
+
+			if len(evmEvent.Event) != 2 {
+				return "", errors.New("invalid evmtx event format")
+			}
+
+			eventDataJSON, err := json.Marshal(evmEvent.Event[1])
+			if err != nil {
+				return "", err
+			}
+
+			var eventData EvmTxData
+			if err := json.Unmarshal(eventDataJSON, &eventData); err != nil {
+				return "", err
+			}
+
+			rlpTxBytes, err := hex.DecodeString(eventData.RlpTx)
+			if err != nil {
+				return "", err
+			}
+
+			hash := crypto.Keccak256(rlpTxBytes)
+
+			return hex.EncodeToString(hash), nil
+		}
+	}
+	return "", nil
 }

@@ -46,6 +46,7 @@ type Service struct {
 	curInstance int
 	klineCache  map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
 	handlers    map[string]func(hyperion.Action) error
+	hyperionCli *hyperion.Client
 }
 
 func NewService() (*Service, error) {
@@ -63,6 +64,8 @@ func NewService() (*Service, error) {
 	instanceID := uuid.New().String()
 	consumer := nsqutil.NewConsumer(cfg.Nsq.Lookupd, cfg.Nsq.LookupTTl)
 
+	hyperionCli := hyperion.NewClient(cfg.Eos.Hyperion.Endpoint)
+
 	s := &Service{
 		ckhRepo:    ckhRepo,
 		repo:       repo,
@@ -77,6 +80,7 @@ func NewService() (*Service, error) {
 		consumer:   consumer,
 		klineCache: make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
 		handlers:   make(map[string]func(hyperion.Action) error),
+		hyperionCli: hyperionCli,
 	}
 
 	// Register all handlers
