@@ -12,19 +12,30 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+/*
+enum AssetType {
+  NATIVE = 1,
+  BTC = 2,
+  EXSAT = 3,
+  EXSAT_EVM = 4,
+};
+*/
 func (s *Service) handleEOSDeposit(action hyperion.Action) error {
-	if action.CreatorActionOrdinal != 3 {
-		return nil
-	}
 	ctx := context.Background()
 	var data struct {
 		Account  string `json:"account"`
 		Contract string `json:"contract"`
 		Quantity string `json:"quantity"`
+		AssetType uint8  `json:"asset_type"`
 		Fee      string `json:"fee"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal deposit failed: %v", err)
+		return nil
+	}
+
+	if data.AssetType != 1 {
+		log.Printf("Asset type is not 1, skip")
 		return nil
 	}
 
