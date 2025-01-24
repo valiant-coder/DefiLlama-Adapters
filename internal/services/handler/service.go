@@ -206,7 +206,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogDeposit)] = s.handleEOSDeposit
+	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 }
 

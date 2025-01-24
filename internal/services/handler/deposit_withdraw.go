@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
@@ -11,121 +10,34 @@ import (
 
 	eosgo "github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
-func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
+/*
+	enum AssetType {
+	  NATIVE = 1,
+	  BTC = 2,
+	  EXSAT = 3,
+	  EXSAT_EVM = 4,
+	};
+*/
+func (s *Service) handleDeposit(action hyperion.Action) error {
 	ctx := context.Background()
 	var data struct {
-		PermissionID     string `json:"permission_id"`
-		GlobalStatus     uint8  `json:"global_status"`
-		Applicant        string `json:"applicant"`
-		ChainName        string `json:"chain_name"`
-		SourceContract   string `json:"source_contract"`
-		SourceSymbol     string `json:"source_symbol"`
-		DestContract     string `json:"dest_contract"`
-		DestSymbol       string `json:"dest_symbol"`
-		SenderAddress    string `json:"sender_address"`
-		DepositAddress   string `json:"deposit_address"`
-		RecipientAddress string `json:"recipient_address"`
-		BlockHeight      string `json:"block_height"`
-		TxID             string `json:"tx_id"`
-		DepositAmount    string `json:"deposit_amount"`
-		DepositFee       string `json:"deposit_fee"`
-		TransferAmount   string `json:"transfer_amount"`
-		TxTimestamp      string `json:"tx_timestamp"`
-		CreateTimestamp  string `json:"create_timestamp"`
+		Account   string `json:"account"`
+		Contract  string `json:"contract"`
+		Quantity  string `json:"quantity"`
+		AssetType uint8  `json:"asset_type"`
+		Fee       string `json:"fee"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal deposit failed: %v", err)
 		return nil
 	}
 
-	if data.Applicant != s.exappCfg.AssetContract {
-		log.Printf("Applicant is not %s, skip", s.exappCfg.AssetContract)
+	if data.AssetType == 3 {
+		log.Printf("Asset type is exsat, skip")
 		return nil
 	}
-
-	depositAddress, err := s.repo.GetUserDepositAddressByAddress(ctx, data.DepositAddress)
-	if err != nil {
-		log.Printf("not found deposit address: %v-%v", data.DepositAddress, err)
-		return nil
-	}
-
-	token, err := s.repo.GetToken(ctx, data.DestSymbol)
-	if err != nil {
-		log.Printf("not found token: %v-%v", data.DestSymbol, err)
-		return nil
-	}
-
-	var targetChain db.ChainInfo	
-	for _, chain := range token.Chains {
-		if chain.ChainName == data.ChainName {
-			targetChain = chain
-			break
-		}
-	}
-
-	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(targetChain.ExsatTokenDecimals))
-	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(targetChain.ExsatTokenDecimals))
-
-	depositTime, err := utils.ParseTime(action.Timestamp)
-	if err != nil {
-		log.Printf("parse action time failed: %v", err)
-		return nil
-	}
-
-	record, err := s.repo.GetDepositRecordBySourceTxID(ctx, data.TxID)
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Printf("Get deposit record by source tx id failed: %v-%v", data, err)
-			return nil
-		} else {
-			record = &db.DepositRecord{
-				Symbol:         data.DestSymbol,
-				UID:            depositAddress.UID,
-				Amount:         depositAmount,
-				Fee:            depositFee,
-				Status:         db.DepositStatus(data.GlobalStatus),
-				Time:           depositTime,
-				TxHash:         action.TrxID,
-				SourceTxID:     data.TxID,
-				DepositAddress: data.DepositAddress,
-				ChainName:      data.ChainName,
-				BlockNumber:    uint64(action.BlockNum),
-			}
-		}
-	} else {
-		record.Status = db.DepositStatus(data.GlobalStatus)
-		record.TxHash = action.TrxID
-	}
-
-	err = s.repo.UpsertDepositRecord(ctx, record)
-	if err != nil {
-		log.Printf("Create deposit record failed: %v-%v", data, err)
-		return nil
-	}
-
-	return nil
-}
-
-func (s *Service) handleWithdraw(action hyperion.Action) error {
-	var data struct {
-		Account      string `json:"account"`
-		ChainName    string `json:"chain_name"`
-		ChainType    string `json:"chain_type"`
-		Contract     string `json:"contract"`
-		Quantity     string `json:"quantity"`
-		Fee          string `json:"fee"`
-		Recipient    string `json:"recipient"`
-		TokenAddress string `json:"token_address"`
-	}
-	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
-		log.Printf("Unmarshal withdraw failed: %v", err)
-		return nil
-	}
-
-	ctx := context.Background()
 
 	asset, err := eosgo.NewAssetFromString(data.Quantity)
 	if err != nil {
@@ -143,101 +55,94 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		log.Printf("Get uid by eos account failed: %v-%v", data, err)
 		return nil
 	}
-	withdrawAt, err := utils.ParseTime(action.Timestamp)
+	depositTime, err := utils.ParseTime(action.Timestamp)
 	if err != nil {
-		log.Printf("Parse withdraw timestamp failed: %v-%v", data, err)
+		log.Printf("parse action time failed: %v", err)
 		return nil
 	}
-
-	token, err := s.repo.GetToken(ctx, asset.Symbol.Symbol)
+	var chianName string
+	if data.AssetType == 1 {
+		chianName = "eos"
+	} else {
+		chianName = "exsat"
+	}
+	record := &db.DepositRecord{
+		Symbol:         asset.Symbol.Symbol,
+		UID:            uid,
+		Amount:         decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
+		Fee:            decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
+		Status:         db.DepositStatusSuccess,
+		Time:           depositTime,
+		TxHash:         action.TrxID,
+		SourceTxID:     action.TrxID,
+		DepositAddress: "",
+		ChainName:      chianName,
+		BlockNumber:    uint64(action.BlockNum),
+	}
+	err = s.repo.UpsertDepositRecord(ctx, record)
 	if err != nil {
-		log.Printf("Get token failed: %v-%v", data, err)
+		log.Printf("Create deposit record failed: %v-%v", data, err)
 		return nil
 	}
-	var targetChain db.ChainInfo
-	for _, chain := range token.Chains {
-		if chain.ChainName == data.ChainName {
-			targetChain = chain
-			break
-		}
-	}
-
-
-	err = s.repo.CreateWithdrawRecord(ctx, &db.WithdrawRecord{
-		UID:         uid,
-		Symbol:      asset.Symbol.Symbol,
-		ChainName:   data.ChainName,
-		Amount:      decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
-		Fee:         decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
-		BridgeFee:   targetChain.ExsatWithdrawFee,
-		Status:      db.WithdrawStatusPending,
-		TxHash:      action.TrxID,
-		WithdrawAt:  withdrawAt,
-		BlockNumber: action.BlockNum,
-		Recipient:   data.Recipient,
-	})
-	if err != nil {
-		log.Printf("Create withdraw record failed: %v-%v", data, err)
-		return nil
-	}
-
-	go s.updateUserTokenBalance(data.Account)
 
 	return nil
+
 }
 
-
-func (s *Service) updateWithdraw(action hyperion.Action) error {
+func (s *Service) handleEOSSend(action hyperion.Action) error {
+	ctx := context.Background()
 	var data struct {
-		GlobalStatus     uint8  `json:"global_status"`
-		// target send tx id
-		TxID              string `json:"tx_id"`
-		WithdrawAmount    string `json:"withdraw_amount"`
-		WithdrawFee       string `json:"withdraw_fee"`
-		TransactionID     string `json:"transaction_id"`
+		From     string `json:"from"`
+		To       string `json:"to"`
+		Contract string `json:"contract"`
+		Quantity string `json:"quantity"`
+		Fee      string `json:"fee"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal withdraw failed: %v", err)
 		return nil
 	}
-	ctx := context.Background()
 
-	record, err := s.repo.GetWithdrawRecordByTxHash(ctx, data.TransactionID)
+	asset, err := eosgo.NewAssetFromString(data.Quantity)
 	if err != nil {
-		log.Printf("Get withdraw record by tx hash failed: %v-%v", data, err)
+		log.Printf("New asset from string failed: %v-%v", data, err)
+		return nil
+	}
+	feeAsset, err := eosgo.NewAssetFromString(data.Fee)
+	if err != nil {
+		log.Printf("New asset from string failed: %v-%v", data, err)
 		return nil
 	}
 
-	completedAt, err := utils.ParseTime(action.Timestamp)
+	uid, err := s.repo.GetUIDByEOSAccount(ctx, data.From)
 	if err != nil {
-		log.Printf("Parse withdraw timestamp failed: %v-%v", data, err)
+		log.Printf("Get uid by eos account failed: %v-%v", data, err)
 		return nil
 	}
 
-	token, err := s.repo.GetToken(ctx, record.Symbol)
+	withdrawTime, err := utils.ParseTime(action.Timestamp)
 	if err != nil {
-		log.Printf("Get token failed: %v-%v", data, err)
-		return nil
-	}
-	var targetChain db.ChainInfo
-	for _, chain := range token.Chains {
-		if chain.ChainName == record.ChainName {
-			targetChain = chain
-			break
-		}
-	}
-	bridgeFee := decimal.RequireFromString(data.WithdrawFee).Shift(-int32(targetChain.ExsatTokenDecimals))
-
-	record.Status = db.WithdrawStatus(data.GlobalStatus)
-	record.CompletedAt = completedAt
-	record.BridgeFee = bridgeFee
-	record.SendTxID = data.TxID
-	err = s.repo.UpdateWithdrawRecord(ctx, record)
-	if err != nil {
-		log.Printf("Update withdraw record failed: %v-%v", data, err)
+		log.Printf("parse action time failed: %v", err)
 		return nil
 	}
 
+	record := &db.WithdrawRecord{
+		UID:         uid,
+		Symbol:      asset.Symbol.Symbol,
+		ChainName:   "eos",
+		Amount:      decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
+		Fee:         decimal.New(int64(feeAsset.Amount), -int32(feeAsset.Symbol.Precision)),
+		BridgeFee:   decimal.NewFromInt(0),
+		Status:      db.WithdrawStatusSuccess,
+		TxHash:      action.TrxID,
+		WithdrawAt:  withdrawTime,
+		BlockNumber: action.BlockNum,
+		Recipient:   data.To,
+	}
+	err = s.repo.CreateWithdrawRecord(ctx, record)
+	if err != nil {
+		log.Printf("Create withdraw record failed: %v-%v", data, err)
+		return nil
+	}
 	return nil
-
 }
