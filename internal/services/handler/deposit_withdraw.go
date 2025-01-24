@@ -61,10 +61,13 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		return nil
 	}
 	var chianName string
+	var depositAddress string
 	if data.AssetType == 1 {
 		chianName = "eos"
+		depositAddress = data.Account
 	} else if data.AssetType == 4 {
 		chianName = "exsat"
+		depositAddress = s.exappCfg.VaultEVMAddress
 	} else {
 		chianName = "btc"
 	}
@@ -77,7 +80,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		Time:           depositTime,
 		TxHash:         action.TrxID,
 		SourceTxID:     action.TrxID,
-		DepositAddress: "",
+		DepositAddress: depositAddress,
 		ChainName:      chianName,
 		BlockNumber:    uint64(action.BlockNum),
 	}
