@@ -29,25 +29,25 @@ type ChainInfo struct {
 	ChainID      uint8  `json:"chain_id"`
 	PermissionID uint64 `json:"permission_id"`
 
-	WithdrawalFee     decimal.Decimal `json:"withdrawal_fee"`
-	MinWithdrawAmount decimal.Decimal `json:"min_withdraw_amount"`
-	ExsatWithdrawFee  decimal.Decimal `json:"exsat_withdraw_fee"`
-	ExsatDepositLimit decimal.Decimal `json:"exsat_deposit_limit"`
-	ExsatWithdrawMax  decimal.Decimal `json:"exsat_withdraw_max"`
-	ExsatDepositFee   decimal.Decimal `json:"exsat_deposit_fee"`
-	ExsatTokenAddress  string                         `gorm:"column:exsat_token_address;type:varchar(255);not null"`
-	ExsatTokenDecimals uint8                          `gorm:"column:exsat_token_decimals;type:tinyint(3);not null"`
-	ExsatHelperAddress string                         `gorm:"column:exsat_helper_address;type:varchar(255);not null"`
+	WithdrawalFee      decimal.Decimal `json:"withdrawal_fee"`
+	MinWithdrawAmount  decimal.Decimal `json:"min_withdraw_amount"`
+	ExsatWithdrawFee   decimal.Decimal `json:"exsat_withdraw_fee"`
+	ExsatDepositLimit  decimal.Decimal `json:"exsat_deposit_limit"`
+	ExsatWithdrawMax   decimal.Decimal `json:"exsat_withdraw_max"`
+	ExsatDepositFee    decimal.Decimal `json:"exsat_deposit_fee"`
+	ExsatTokenAddress  string          `json:"exsat_token_address"`
+	ExsatTokenDecimals uint8           `json:"exsat_token_decimals"`
+	ExsatHelperAddress string          `json:"exsat_helper_address"`
 }
 type Token struct {
 	gorm.Model
-	TokenType          TokenType                      `gorm:"column:token_type;type:varchar(255);default:exsat_bridge"`
-	Symbol             string                         `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol"`
-	Name               string                         `gorm:"column:name;type:varchar(255);default:null"`
-	EOSContractAddress string                         `gorm:"column:eos_contract_address;type:varchar(255);not null"`
-	Decimals           uint8                          `gorm:"column:decimals;type:tinyint(3);not null"`
-	
-	Chains             datatypes.JSONSlice[ChainInfo] `gorm:"column:chains;type:json;not null"`
+	TokenType          TokenType `gorm:"column:token_type;type:varchar(255);default:exsat_bridge"`
+	Symbol             string    `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol"`
+	Name               string    `gorm:"column:name;type:varchar(255);default:null"`
+	EOSContractAddress string    `gorm:"column:eos_contract_address;type:varchar(255);not null"`
+	Decimals           uint8     `gorm:"column:decimals;type:tinyint(3);not null"`
+
+	Chains datatypes.JSONSlice[ChainInfo] `gorm:"column:chains;type:json;not null"`
 }
 
 func (t *Token) TableName() string {
@@ -65,7 +65,6 @@ func (r *Repo) ListTokens(ctx context.Context) ([]Token, error) {
 	err := r.WithContext(ctx).Find(&tokens).Error
 	return tokens, err
 }
-
 
 func (r *Repo) InsertToken(ctx context.Context, token *Token) error {
 	return r.WithContext(ctx).Create(token).Error
