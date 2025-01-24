@@ -137,6 +137,8 @@ func (s *Service) handleEOSSend(action hyperion.Action) error {
 		BridgeFee:   decimal.NewFromInt(0),
 		Status:      db.WithdrawStatusSuccess,
 		TxHash:      action.TrxID,
+		SendTxID:    action.TrxID,
+		CompletedAt: withdrawTime,
 		WithdrawAt:  withdrawTime,
 		BlockNumber: action.BlockNum,
 		Recipient:   data.To,
