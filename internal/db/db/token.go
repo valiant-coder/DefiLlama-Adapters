@@ -30,11 +30,14 @@ type ChainInfo struct {
 	PermissionID uint64 `json:"permission_id"`
 
 	WithdrawalFee     decimal.Decimal `json:"withdrawal_fee"`
-	ExsatWithdrawFee  decimal.Decimal `json:"exsat_withdraw_fee"`
 	MinWithdrawAmount decimal.Decimal `json:"min_withdraw_amount"`
+	ExsatWithdrawFee  decimal.Decimal `json:"exsat_withdraw_fee"`
 	ExsatDepositLimit decimal.Decimal `json:"exsat_deposit_limit"`
 	ExsatWithdrawMax  decimal.Decimal `json:"exsat_withdraw_max"`
 	ExsatDepositFee   decimal.Decimal `json:"exsat_deposit_fee"`
+	ExsatTokenAddress  string                         `gorm:"column:exsat_token_address;type:varchar(255);not null"`
+	ExsatTokenDecimals uint8                          `gorm:"column:exsat_token_decimals;type:tinyint(3);not null"`
+	ExsatHelperAddress string                         `gorm:"column:exsat_helper_address;type:varchar(255);not null"`
 }
 type Token struct {
 	gorm.Model
@@ -44,9 +47,6 @@ type Token struct {
 	EOSContractAddress string                         `gorm:"column:eos_contract_address;type:varchar(255);not null"`
 	Decimals           uint8                          `gorm:"column:decimals;type:tinyint(3);not null"`
 	
-	ExsatTokenAddress  string                         `gorm:"column:exsat_token_address;type:varchar(255);not null"`
-	ExsatTokenDecimals uint8                          `gorm:"column:exsat_token_decimals;type:tinyint(3);not null"`
-	ExsatHelperAddress string                         `gorm:"column:exsat_helper_address;type:varchar(255);not null"`
 	Chains             datatypes.JSONSlice[ChainInfo] `gorm:"column:chains;type:json;not null"`
 }
 

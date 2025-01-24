@@ -770,6 +770,9 @@ const docTemplatemarketplace = `{
                 "chain_name": {
                     "type": "string"
                 },
+                "exsat_token_address": {
+                    "type": "string"
+                },
                 "exsat_withdraw_fee": {
                     "type": "string"
                 },
@@ -1362,6 +1365,9 @@ const docTemplatemarketplace = `{
             "properties": {
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
+                },
+                "vault_evm_address": {
+                    "type": "string"
                 },
                 "version": {
                     "type": "string"

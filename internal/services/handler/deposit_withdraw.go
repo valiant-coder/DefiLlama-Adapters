@@ -57,8 +57,17 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		log.Printf("not found token: %v-%v", data.DestSymbol, err)
 		return nil
 	}
-	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(token.ExsatTokenDecimals))
-	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(token.ExsatTokenDecimals))
+
+	var targetChain db.ChainInfo	
+	for _, chain := range token.Chains {
+		if chain.ChainName == data.ChainName {
+			targetChain = chain
+			break
+		}
+	}
+
+	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(targetChain.ExsatTokenDecimals))
+	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(targetChain.ExsatTokenDecimals))
 
 	depositTime, err := utils.ParseTime(action.Timestamp)
 	if err != nil {
@@ -210,7 +219,14 @@ func (s *Service) updateWithdraw(action hyperion.Action) error {
 		log.Printf("Get token failed: %v-%v", data, err)
 		return nil
 	}
-	bridgeFee := decimal.RequireFromString(data.WithdrawFee).Shift(-int32(token.ExsatTokenDecimals))
+	var targetChain db.ChainInfo
+	for _, chain := range token.Chains {
+		if chain.ChainName == record.ChainName {
+			targetChain = chain
+			break
+		}
+	}
+	bridgeFee := decimal.RequireFromString(data.WithdrawFee).Shift(-int32(targetChain.ExsatTokenDecimals))
 
 	record.Status = db.WithdrawStatus(data.GlobalStatus)
 	record.CompletedAt = completedAt

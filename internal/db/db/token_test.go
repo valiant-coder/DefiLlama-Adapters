@@ -18,9 +18,6 @@ func TestRepo_InsertToken(t *testing.T) {
 		Name:               "TetherUS",
 		Decimals:           6,
 		EOSContractAddress: "asdftokencnt",
-		ExsatTokenAddress:  "0x591578a39ee3c6f3751873f74172cc0f708a09b6",
-		ExsatTokenDecimals: 6,
-		ExsatHelperAddress: "0xdDCD3c161e452afB52e4EDC7620390c62F4676dC",
 		Chains: []ChainInfo{
 			{
 				ChainID:           1,
@@ -31,6 +28,9 @@ func TestRepo_InsertToken(t *testing.T) {
 				ExsatDepositFee:   decimal.NewFromFloat(0.0),
 				ExsatWithdrawFee:  decimal.NewFromFloat(0.01),
 				MinWithdrawAmount: decimal.NewFromFloat(5.0),
+				ExsatTokenAddress:  "0x591578a39ee3c6f3751873f74172cc0f708a09b6",
+				ExsatTokenDecimals: 6,
+				ExsatHelperAddress: "0xdDCD3c161e452afB52e4EDC7620390c62F4676dC",
 			},
 		},
 	}

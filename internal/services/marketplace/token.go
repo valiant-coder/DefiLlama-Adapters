@@ -35,6 +35,7 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 
 				WithdrawFee:      chain.WithdrawalFee.String(),
 				ExsatWithdrawFee: chain.ExsatWithdrawFee.String(),
+				ExsatTokenAddress: chain.ExsatTokenAddress,
 			})
 		}
 		supportTokens = append(supportTokens, entity.Token{
