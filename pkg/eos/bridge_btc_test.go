@@ -30,12 +30,12 @@ func TestBTCBridgeClient_GetDepositAddress(t *testing.T) {
 	client := NewBTCBridgeClient(
 		"http://44.223.68.11:8888",
 		"brdgmng.xsat",
-		"asdfasdfasdf",
-		"5Jx3SWM25yWYe9EpHtexLSqBb6afAz3VLVbzrGBXhn2H3mF6LUU",
+		"",
+		"",
 	)
 	resp, err := client.GetDepositAddress(context.Background(), RequestBTCDepositAddress{
 		Remark:              "test3test3",
-		RecipientEVMAddress: "0xbbbbbbbbbbbbbbbbbbbbbbbb3612b3612b3612b0",
+		RecipientEVMAddress: "",
 	})
 	if err != nil {
 		t.Fatalf("Failed to get deposit address: %v", err)
