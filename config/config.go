@@ -116,14 +116,16 @@ type HyperionConfig struct {
 }
 
 type ExappConfig struct {
-	VaultEVMAddress string `yaml:"vault_evm_address"`
-	AssetContract   string `yaml:"asset_contract"`
-	Actor           string `yaml:"actor"`
-	ActorPrivateKey string `yaml:"actor_private_key"`
+	VaultEVMAddress         string `yaml:"vault_evm_address"`
+	AssetContract           string `yaml:"asset_contract"`
+	AssetContractEVMAddress string `yaml:"asset_contract_evm_address"`
+	Actor                   string `yaml:"actor"`
+	ActorPrivateKey         string `yaml:"actor_private_key"`
 }
 
 type ExsatConfig struct {
-	BridgeContract string `yaml:"bridge_contract"`
+	BridgeContract    string `yaml:"bridge_contract"`
+	BTCBridgeContract string `yaml:"btc_bridge_contract"`
 }
 
 type CdexConfig struct {
@@ -176,15 +178,15 @@ type EventConfig struct {
 
 	// Deposit and withdrawal related events
 	// bridge deposit log
-	DepositLog  string `yaml:"deposit_log"`
+	DepositLog string `yaml:"deposit_log"`
 	// exapp deposit log
-	LogDeposit  string `yaml:"log_deposit"`
-	
+	LogDeposit string `yaml:"log_deposit"`
+
 	LogNewAcc   string `yaml:"log_new_acc"`
 	LogWithdraw string `yaml:"log_withdraw"`
 	WithdrawLog string `yaml:"withdraw_log"`
 	// exapp eos native withdraw log
-	LogSend     string `yaml:"log_send"`
+	LogSend string `yaml:"log_send"`
 }
 
 func DefaultEventConfig() EventConfig {

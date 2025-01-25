@@ -9,26 +9,24 @@ import (
 	"strings"
 
 	"github.com/eoscanada/eos-go"
-	"github.com/spf13/cast"
 )
 
-type MappingAddrRequest struct {
-	PermissionID         uint64 `json:"permission_id"`
+type BTCMappingAddrRequest struct {
 	Remark               string `json:"remark"`
 	RecipientAddress     string `json:"recipient_address"`
 	AssignDepositAddress string `json:"assign_deposit_address"`
 }
 
-type BridgeClient struct {
+type BTCBridgeClient struct {
 	api    *eos.API
 	bridge string
 	actor  string
 	priv   string
 }
 
-func NewBridgeClient(endpoint string, bridge string, actor string, priv string) *BridgeClient {
+func NewBTCBridgeClient(endpoint string, bridge string, actor string, priv string) *BTCBridgeClient {
 	api := eos.New(endpoint)
-	return &BridgeClient{
+	return &BTCBridgeClient{
 		api:    api,
 		bridge: bridge,
 		actor:  actor,
@@ -36,7 +34,7 @@ func NewBridgeClient(endpoint string, bridge string, actor string, priv string) 
 	}
 }
 
-func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrRequest) (*eos.PushTransactionFullResp, error) {
+func (c *BTCBridgeClient) MappingAddress(ctx context.Context, req BTCMappingAddrRequest) (*eos.PushTransactionFullResp, error) {
 	keyBag := &eos.KeyBag{}
 	err := keyBag.ImportPrivateKey(ctx, c.priv)
 	if err != nil {
@@ -46,7 +44,7 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 
 	action := &eos.Action{
 		Account: eos.AN(c.bridge),
-		Name:    eos.ActN("mappingaddr"),
+		Name:    eos.ActN("appaddrmap"),
 		Authorization: []eos.PermissionLevel{
 			{Actor: eos.AN(c.actor), Permission: eos.PN("active")},
 		},
@@ -58,7 +56,7 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 			AssignDepositAddress string          `eos:"assign_deposit_address"`
 		}{
 			Actor:                eos.AN(c.actor),
-			PermissionID:         req.PermissionID,
+			PermissionID:         0,
 			Remark:               req.Remark,
 			RecipientAddress:     req.RecipientAddress,
 			AssignDepositAddress: req.AssignDepositAddress,
@@ -68,30 +66,30 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 	return c.api.SignPushActions(ctx, action)
 }
 
-type RequestDepositAddress struct {
-	PermissionID uint64 `json:"permission_id"`
-	Remark       string `json:"remark"`
-	Recipient    string `json:"recipient"`
+type RequestBTCDepositAddress struct {
+	Remark              string `json:"remark"`
+	RecipientEVMAddress string `json:"recipient_evm_address"`
 }
 
 
 
-func makeKey256(recipientAddress, remark string) [32]byte {
-	key := recipientAddress + "-" + remark
+func makeBTCKey256(recipientEVMAddress, remark string) [32]byte {
+	recipientEVMAddress = strings.TrimPrefix(recipientEVMAddress, "0x")
+	key := recipientEVMAddress + "-" + remark
 	key = strings.ToLower(key)
 	return sha256.Sum256([]byte(key))
 }
 
-func (c *BridgeClient) GetDepositAddress(ctx context.Context, req RequestDepositAddress) (string, error) {
-	key := makeKey256(req.Recipient, req.Remark)
+func (c *BTCBridgeClient) GetDepositAddress(ctx context.Context, req RequestBTCDepositAddress) (string, error) {
+	key := makeBTCKey256(req.RecipientEVMAddress, req.Remark)
 
 	request := eos.GetTableRowsRequest{
 		Code:       c.bridge,
-		Scope:      cast.ToString(req.PermissionID),
+		Scope:      "0",
 		Table:      "addrmappings",
 		LowerBound: hex.EncodeToString(key[:]),
 		UpperBound: hex.EncodeToString(key[:]),
-		Index:      "4",
+		Index:      "6",
 		KeyType:    "sha256",
 		JSON:       true,
 		Limit:      1,
@@ -103,8 +101,8 @@ func (c *BridgeClient) GetDepositAddress(ctx context.Context, req RequestDeposit
 	}
 
 	var rows []struct {
-		ID             uint64 `json:"id"`
-		DepositAddress string `json:"deposit_address"`
+		ID      uint64 `json:"id"`
+		BTCAddr string `json:"btc_address"`
 	}
 	err = json.Unmarshal(response.Rows, &rows)
 	if err != nil {
@@ -115,5 +113,5 @@ func (c *BridgeClient) GetDepositAddress(ctx context.Context, req RequestDeposit
 		return "", fmt.Errorf("deposit address not found")
 	}
 
-	return rows[0].DepositAddress, nil
+	return rows[0].BTCAddr, nil
 }
