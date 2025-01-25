@@ -29,13 +29,15 @@ type ChainInfo struct {
 	ChainID      uint8  `json:"chain_id"`
 	PermissionID uint64 `json:"permission_id"`
 
-	WithdrawalFee      decimal.Decimal `json:"withdrawal_fee"`
-	MinWithdrawAmount  decimal.Decimal `json:"min_withdraw_amount"`
-	ExsatWithdrawFee   decimal.Decimal `json:"exsat_withdraw_fee"`
-	ExsatDepositLimit  decimal.Decimal `json:"exsat_deposit_limit"`
-	
-	ExsatTokenAddress  string          `json:"exsat_token_address"`
-	ExsatTokenDecimals uint8           `json:"exsat_token_decimals"`
+	WithdrawalFee     decimal.Decimal `json:"withdrawal_fee"`
+	MinWithdrawAmount decimal.Decimal `json:"min_withdraw_amount"`
+	MinDepositAmount  decimal.Decimal `json:"min_deposit_amount"`
+
+	ExsatWithdrawFee  decimal.Decimal `json:"exsat_withdraw_fee"`
+	ExsatDepositLimit decimal.Decimal `json:"exsat_deposit_limit"`
+
+	ExsatTokenAddress  string `json:"exsat_token_address"`
+	ExsatTokenDecimals uint8  `json:"exsat_token_decimals"`
 }
 type Token struct {
 	gorm.Model
