@@ -51,6 +51,18 @@ func (s *DepositWithdrawalService) pollForDepositAddress(ctx context.Context, br
 	return "", errors.New("timeout waiting for deposit address")
 }
 
+func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridgeClient *eos.BTCBridgeClient, req eos.RequestBTCDepositAddress) (string, error) {
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		address, err := bridgeClient.GetDepositAddress(ctx, req)
+		if err == nil && address != "" {
+			return address, nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return "", errors.New("timeout waiting for deposit address")
+}
+
 func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string, req *entity.ReqFirstDeposit) (entity.RespFirstDeposit, error) {
 	passkeys, err := s.repo.GetUserCredentials(ctx, uid)
 	if err != nil {
@@ -105,32 +117,61 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		}
 	}
 
-	bridgeClient := eos.NewBridgeClient(
-		s.eosCfg.NodeURL,
-		s.eosCfg.Exsat.BridgeContract,
-		s.eosCfg.Exapp.Actor,
-		s.eosCfg.Exapp.ActorPrivateKey,
-	)
+	var newDepositAddress string
+	if req.ChainName == "btc" {
+		btcBridgeClient := eos.NewBTCBridgeClient(
+			s.eosCfg.NodeURL,
+			s.eosCfg.Exsat.BTCBridgeContract,
+			s.eosCfg.Exapp.Actor,
+			s.eosCfg.Exapp.ActorPrivateKey,
+		)
 
-	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
-		PermissionID:     targetChain.PermissionID,
-		RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
-		Remark:           remark,
-	})
-	if err != nil {
-		return entity.RespFirstDeposit{}, err
-	}
-	log.Printf("mapping new address txid: %v", resp.TransactionID)
+		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
+			Remark:           remark,
+			RecipientAddress: s.eosCfg.Exapp.AssetContract,
+		})
+		if err != nil {
+			return entity.RespFirstDeposit{}, err
+		}
+		log.Printf("mapping new btc address txid: %v", resp.TransactionID)
 
-	newDepositAddress, err := s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
-		PermissionID: targetChain.PermissionID,
-		Remark:       remark,
-		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
-	})
-	if err != nil {
-		log.Printf("get deposit address from bridge error: %v", err)
-		return entity.RespFirstDeposit{}, err
+		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, eos.RequestBTCDepositAddress{
+			Remark:              remark,
+			RecipientEVMAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
+		})
+		if err != nil {
+			log.Printf("get btc deposit address from bridge error: %v", err)
+			return entity.RespFirstDeposit{}, err
+		}
+	} else {
+		bridgeClient := eos.NewBridgeClient(
+			s.eosCfg.NodeURL,
+			s.eosCfg.Exsat.BridgeContract,
+			s.eosCfg.Exapp.Actor,
+			s.eosCfg.Exapp.ActorPrivateKey,
+		)
+
+		resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
+			PermissionID:     targetChain.PermissionID,
+			RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
+			Remark:           remark,
+		})
+		if err != nil {
+			return entity.RespFirstDeposit{}, err
+		}
+		log.Printf("mapping new address txid: %v", resp.TransactionID)
+
+		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
+			PermissionID: targetChain.PermissionID,
+			Remark:       remark,
+			Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
+		})
+		if err != nil {
+			log.Printf("get deposit address from bridge error: %v", err)
+			return entity.RespFirstDeposit{}, err
+		}
 	}
+
 	log.Printf("get first deposit address: %s", newDepositAddress)
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
@@ -165,7 +206,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		return entity.RespDeposit{}, errors.New("no eos account found")
 	}
 
-	token, err := s.repo.GetToken(ctx, req.Symbol	)
+	token, err := s.repo.GetToken(ctx, req.Symbol)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return entity.RespDeposit{}, errors.New("token not found")
@@ -199,32 +240,61 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 
-	bridgeClient := eos.NewBridgeClient(
-		s.eosCfg.NodeURL,
-		s.eosCfg.Exsat.BridgeContract,
-		s.eosCfg.Exapp.Actor,
-		s.eosCfg.Exapp.ActorPrivateKey,
-	)
+	var newDepositAddress string
+	if req.ChainName == "btc" {
+		btcBridgeClient := eos.NewBTCBridgeClient(
+			s.eosCfg.NodeURL,
+			s.eosCfg.Exsat.BTCBridgeContract,
+			s.eosCfg.Exapp.Actor,
+			s.eosCfg.Exapp.ActorPrivateKey,
+		)
 
-	resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
-		PermissionID:     targetChain.PermissionID,
-		RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
-		Remark:           remark,
-	})
-	if err != nil {
-		return entity.RespDeposit{}, err
-	}
-	log.Printf("mapping new address txid: %v", resp.TransactionID)
+		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
+			Remark:           remark,
+			RecipientAddress: s.eosCfg.Exapp.AssetContract,
+		})
+		if err != nil {
+			return entity.RespDeposit{}, err
+		}
+		log.Printf("mapping new btc address txid: %v", resp.TransactionID)
 
-	newDepositAddress, err := s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
-		PermissionID: targetChain.PermissionID,
-		Remark:       remark,
-		Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
-	})
-	if err != nil {
-		log.Printf("get deposit address from bridge error: %v", err)
-		return entity.RespDeposit{}, err
+		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, eos.RequestBTCDepositAddress{
+			Remark:              remark,
+			RecipientEVMAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
+		})
+		if err != nil {
+			log.Printf("get btc deposit address from bridge error: %v", err)
+			return entity.RespDeposit{}, err
+		}
+	} else {
+		bridgeClient := eos.NewBridgeClient(
+			s.eosCfg.NodeURL,
+			s.eosCfg.Exsat.BridgeContract,
+			s.eosCfg.Exapp.Actor,
+			s.eosCfg.Exapp.ActorPrivateKey,
+		)
+
+		resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
+			PermissionID:     targetChain.PermissionID,
+			RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
+			Remark:           remark,
+		})
+		if err != nil {
+			return entity.RespDeposit{}, err
+		}
+		log.Printf("mapping new address txid: %v", resp.TransactionID)
+
+		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
+			PermissionID: targetChain.PermissionID,
+			Remark:       remark,
+			Recipient:    s.eosCfg.Exapp.VaultEVMAddress,
+		})
+		if err != nil {
+			log.Printf("get deposit address from bridge error: %v", err)
+			return entity.RespDeposit{}, err
+		}
 	}
+
 	log.Printf("new deposit address: %s", newDepositAddress)
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
