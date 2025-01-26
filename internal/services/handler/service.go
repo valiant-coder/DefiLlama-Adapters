@@ -235,13 +235,6 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return nil
 	}
 
-	// Check if should process this message
-	if action.Act.Account != s.cdexCfg.EventContract &&
-		action.Act.Account != s.cdexCfg.PoolContract &&
-		action.Act.Account != s.exappCfg.AssetContract &&
-		action.Act.Account != s.exsatCfg.BridgeContract {
-		return nil
-	}
 
 	// Get handler key
 	handlerKey := fmt.Sprintf("%s:%s", action.Act.Account, action.Act.Name)
