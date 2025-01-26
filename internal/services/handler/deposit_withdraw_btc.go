@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 func (s *Service) handleBTCDeposit(action hyperion.Action) error {
 	ctx := context.Background()
 	var data struct {
@@ -34,12 +33,6 @@ func (s *Service) handleBTCDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	uid, err := s.repo.GetUIDByEOSAccount(ctx, depositAddress.UID)
-	if err != nil {
-		log.Printf("not found uid: %v-%v", depositAddress.UID, err)
-		return nil
-	}
-
 	depositAmount := decimal.RequireFromString(data.Amount).Shift(-8)
 	depositFee := decimal.RequireFromString(data.Fee).Shift(-8)
 
@@ -57,7 +50,7 @@ func (s *Service) handleBTCDeposit(action hyperion.Action) error {
 		}
 		record = &db.DepositRecord{
 			Symbol:         "BTC",
-			UID:            uid,
+			UID:            depositAddress.UID,
 			Amount:         depositAmount,
 			Fee:            depositFee,
 			Status:         db.DepositStatus(data.GlobalStatus),
