@@ -51,9 +51,15 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 	}
 
 	coinUSDTPrice := make(map[string]string)
+
 	for _, poolStatus := range poolStatuses {
 		if strings.Contains(poolStatus.QuoteCoin, "USDT") {
-			coinUSDTPrice[poolStatus.BaseCoin] = poolStatus.LastPrice.String()
+			parts := strings.Split(poolStatus.BaseCoin, "-")
+			if len(parts) != 2 {
+				continue
+			}
+			coin := parts[1]
+			coinUSDTPrice[coin] = poolStatus.LastPrice.String()
 		}
 	}
 
@@ -61,7 +67,12 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 	var result []entity.UserBalance
 	for _, ub := range userBalances {
 		var userBalance entity.UserBalance
-		if price, ok := coinUSDTPrice[ub.Coin]; ok {
+		parts := strings.Split(ub.Coin, "-")
+		if len(parts) != 2 {
+			continue
+		}
+		coin := parts[1]
+		if price, ok := coinUSDTPrice[coin]; ok {
 			userBalance.USDTPrice = price
 		}
 		if strings.Contains(ub.Coin, "USDT") {
