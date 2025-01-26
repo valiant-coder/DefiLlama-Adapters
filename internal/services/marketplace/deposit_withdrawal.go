@@ -117,8 +117,9 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		}
 	}
 
+
 	var newDepositAddress string
-	if req.ChainName == "btc" {
+	if req.Symbol == "BTC" && req.ChainName != "eos" && req.ChainName != "exsat" {
 		btcBridgeClient := eos.NewBTCBridgeClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.Exsat.BTCBridgeContract,
@@ -241,7 +242,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 
 	var newDepositAddress string
-	if req.ChainName == "btc" {
+	if req.Symbol == "BTC" && req.ChainName != "eos" && req.ChainName != "exsat" {
 		btcBridgeClient := eos.NewBTCBridgeClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.Exsat.BTCBridgeContract,
