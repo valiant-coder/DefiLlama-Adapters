@@ -126,6 +126,7 @@ type ExappConfig struct {
 type ExsatConfig struct {
 	BridgeContract    string `yaml:"bridge_contract"`
 	BTCBridgeContract string `yaml:"btc_bridge_contract"`
+	BTCChainName     string `yaml:"btc_chain_name"`
 }
 
 type CdexConfig struct {

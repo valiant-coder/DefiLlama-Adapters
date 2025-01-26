@@ -207,6 +207,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.EventContract, s.eosCfg.Events.EmitFilled)] = s.handleMatchOrder
 	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.PoolContract, s.eosCfg.Events.Create)] = s.handleCreatePool
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBridgeDeposit
+	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBTCDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
