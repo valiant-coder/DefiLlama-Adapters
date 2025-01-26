@@ -34,7 +34,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	if data.AssetType == 3 {
+	if data.AssetType == 2 || data.AssetType == 3 {
 		log.Printf("Asset type is exsat, skip")
 		return nil
 	}
@@ -66,7 +66,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		chianName = "eos"
 		depositAddress = data.Account
 		sourceTxID = action.TrxID
-	} else if data.AssetType == 4 {
+	} else   {
 		chianName = "exsat"
 		depositAddress = s.exappCfg.VaultEVMAddress
 		sourceTxID, err = s.hyperionCli.GetEvmTxIDByEosTxID(action.TrxID)
@@ -74,9 +74,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 			log.Printf("Get evm tx id by eos tx id failed: %v-%v", action.TrxID, err)
 			sourceTxID = action.TrxID
 		}
-	} else {
-		chianName = "btc"
-	}
+	} 
 	record := &db.DepositRecord{
 		Symbol:         asset.Symbol.Symbol,
 		UID:            uid,
