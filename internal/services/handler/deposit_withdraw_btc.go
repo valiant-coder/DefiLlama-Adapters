@@ -75,3 +75,49 @@ func (s *Service) handleBTCDeposit(action hyperion.Action) error {
 	return nil
 
 }
+
+
+
+func (s *Service) updateBTCWithdraw(action hyperion.Action) error {
+	var data struct {
+		GlobalStatus uint8 `json:"global_status"`
+		// target send tx id
+		TxID           string `json:"tx_id"`
+		Amount         string `json:"amount"`
+		Fee            string `json:"fee"`
+		TransactionID  string `json:"transaction_id"`
+	}
+	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+		log.Printf("Unmarshal withdraw failed: %v", err)
+		return nil
+	}
+	ctx := context.Background()
+
+	record, err := s.repo.GetWithdrawRecordByTxHash(ctx, data.TransactionID)
+	if err != nil {
+		log.Printf("Get withdraw record by tx hash failed: %v-%v", data, err)
+		return nil
+	}
+
+	completedAt, err := utils.ParseTime(action.Timestamp)
+	if err != nil {
+		log.Printf("Parse withdraw timestamp failed: %v-%v", data, err)
+		return nil
+	}
+
+
+	bridgeFee := decimal.RequireFromString(data.Fee).Shift(-int32(8))
+
+	record.Status = db.WithdrawStatus(data.GlobalStatus)
+	record.CompletedAt = completedAt
+	record.BridgeFee = bridgeFee
+	record.SendTxID = data.TxID
+	err = s.repo.UpdateWithdrawRecord(ctx, record)
+	if err != nil {
+		log.Printf("Update btc withdraw record failed: %v-%v", data, err)
+		return nil
+	}
+
+	return nil
+
+}
