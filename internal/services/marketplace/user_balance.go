@@ -40,12 +40,7 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		return nil, err
 	}
 
-	var coins []string
-	for _, ub := range userBalances {
-		coins = append(coins, ub.Coin)
-	}
-
-	poolStatuses, err := s.ckhRepo.GetPoolStatusByBaseCoin(ctx, coins)
+	poolStatuses, err := s.ckhRepo.ListPoolStats(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +58,6 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		}
 	}
 
-
 	var result []entity.UserBalance
 	for _, ub := range userBalances {
 		var userBalance entity.UserBalance
@@ -77,7 +71,7 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		}
 		if strings.Contains(ub.Coin, "USDT") {
 			userBalance.USDTPrice = "1"
-		} 
+		}
 		userBalance.Coin = ub.Coin
 		userBalance.Balance = ub.Balance.String()
 		userBalance.Locked = ub.Locked.String()
