@@ -129,7 +129,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 
 		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
 			Remark:           remark,
-			RecipientAddress: s.eosCfg.Exapp.AssetContract,
+			RecipientAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
 		})
 		if err != nil {
 			return entity.RespFirstDeposit{}, err
@@ -252,7 +252,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 
 		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
 			Remark:           remark,
-			RecipientAddress: s.eosCfg.Exapp.AssetContract,
+			RecipientAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
 		})
 		if err != nil {
 			return entity.RespDeposit{}, err
