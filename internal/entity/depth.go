@@ -5,5 +5,5 @@ type Depth struct {
 	Timestamp Time       `json:"timestamp"`
 	Bids      [][]string `json:"bids"`
 	Asks      [][]string `json:"asks"`
+	Precision string     `json:"precision"`
 }
-

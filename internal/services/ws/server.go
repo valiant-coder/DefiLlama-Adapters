@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"exapp-go/config"
+	"exapp-go/internal/db/db"
 	"exapp-go/pkg/nsqutil"
 
 	"github.com/google/uuid"
@@ -29,6 +30,7 @@ type Subscription struct {
 	PoolID   uint64
 	Type     SubscriptionType
 	Interval string
+	Precision string
 }
 
 type Server struct {
@@ -85,12 +87,15 @@ func (s *Server) Handler() http.Handler {
 }
 
 // Generate room name
-func getRoomName(subType, poolID, interval string) string {
+func getRoomName(subType, poolID, interval, precision string) string {
 	if poolID == "" {
 		return ""
 	}
 	if interval != "" {
 		return fmt.Sprintf("%s:%s:%s", subType, poolID, interval)
+	}
+	if precision != "" {
+		return fmt.Sprintf("%s:%s:%s", subType, poolID, precision)
 	}
 	return fmt.Sprintf("%s:%s", subType, poolID)
 }
@@ -189,7 +194,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 			return
 		}
 
-		room := socket.Room(getRoomName(string(SubTypeKline), cast.ToString(poolID), interval))
+		room := socket.Room(getRoomName(string(SubTypeKline), cast.ToString(poolID), interval,""))
 		if room == "" {
 			return
 		}
@@ -220,15 +225,43 @@ func (s *Server) handleConnection(args ...interface{}) {
 		}
 		poolID := uint64(poolIDFloat)
 
-		room := socket.Room(getRoomName(string(SubTypeDepth), cast.ToString(poolID), ""))
+		var precision string
+		if len(args) == 1 {
+			precision = "0.00000001"
+		} else {
+			precision, ok = safeGetString(args[1])
+			if !ok {
+				client.Emit("error", map[string]interface{}{
+					"message": "Invalid precision format",
+				})
+				return
+			}
+		}
+
+		validPrecision := false
+		for _, p := range db.SupportedPrecisions {
+			if p == precision {
+				validPrecision = true
+				break
+			}
+		}
+		if !validPrecision {
+			client.Emit("error", map[string]interface{}{
+				"message": "Unsupported precision value",
+			})
+			return
+		}
+
+		room := socket.Room(getRoomName(string(SubTypeDepth), cast.ToString(poolID),"", precision))
 		if room == "" {
 			return
 		}
 
 		client.Join(room)
 		client.Emit("subscribed", map[string]interface{}{
-			"type":    SubTypeDepth,
-			"pool_id": poolID,
+			"type":      SubTypeDepth,
+			"pool_id":   poolID,
+			"precision": precision,
 		})
 	})
 
@@ -250,7 +283,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		}
 		poolID := uint64(poolIDFloat)
 
-		room := socket.Room(getRoomName(string(SubTypeTrades), cast.ToString(poolID), ""))
+		room := socket.Room(getRoomName(string(SubTypeTrades), cast.ToString(poolID),"", ""))
 		if room == "" {
 			return
 		}
@@ -280,7 +313,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		}
 		poolID := uint64(poolIDFloat)
 
-		room := socket.Room(getRoomName(string(SubTypePoolStats), cast.ToString(poolID), ""))
+		room := socket.Room(getRoomName(string(SubTypePoolStats), cast.ToString(poolID), "", ""))
 		if room == "" {
 			return
 		}
@@ -333,9 +366,29 @@ func (s *Server) handleConnection(args ...interface{}) {
 				})
 				return
 			}
-			room = getRoomName(subType, cast.ToString(poolID), interval)
+			room = getRoomName(subType, cast.ToString(poolID), interval, "")
+		} else if subType == string(SubTypeDepth) {
+			if len(args) < 2 {
+				client.Emit("error", map[string]interface{}{
+					"message": "Missing precision parameter for depth unsubscribe",
+				})
+				return
+			}
+			var precision string
+			if len(args) == 2 {
+				precision = "0.00000001"
+			} else {
+				precision, ok = safeGetString(args[2])
+				if !ok {
+					client.Emit("error", map[string]interface{}{
+						"message": "Invalid precision format",
+					})
+					return
+				}
+			}
+			room = getRoomName(subType, cast.ToString(poolID), "", precision)
 		} else {
-			room = getRoomName(subType, cast.ToString(poolID), "")
+			room = getRoomName(subType, cast.ToString(poolID), "", "")
 		}
 
 		if room == "" {
@@ -365,7 +418,7 @@ func (s *Server) Broadcast(sub Subscription, event string, data interface{}) {
 	if s.io == nil || event == "" {
 		return
 	}
-	room := socket.Room(getRoomName(string(sub.Type), cast.ToString(sub.PoolID), sub.Interval))
+	room := socket.Room(getRoomName(string(sub.Type), cast.ToString(sub.PoolID), sub.Interval, sub.Precision))
 	if room == "" {
 		return
 	}

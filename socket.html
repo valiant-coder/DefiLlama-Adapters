@@ -27,6 +27,7 @@
         <div>
             <h3>Depth Subscription</h3>
             <input type="number" id="depthPoolId" placeholder="Trading Pair ID">
+            <input type="text" id="depthPrecision" placeholder="Precision">
             <button onclick="subscribeDepth()">Subscribe Depth</button>
         </div>
 
@@ -47,6 +48,7 @@
             </select>
             <input type="number" id="unsubPoolId" placeholder="Trading Pair ID">
             <input type="text" id="unsubInterval" placeholder="Time Interval (Kline Only)">
+            <input type="text" id="unsubPrecision" placeholder="Precision (Depth Only)">
             <button onclick="unsubscribe()">Unsubscribe</button>
         </div>
 
@@ -117,7 +119,8 @@
                 alert('Please enter trading pair ID');
                 return;
             }
-            socket.emit('subscribe_depth', poolId);
+            const precision = document.getElementById('depthPrecision').value;
+            socket.emit('subscribe_depth', poolId, precision);
         }
 
         // Trade subscription
@@ -135,7 +138,7 @@
             const type = document.getElementById('unsubType').value;
             const poolId = Number(document.getElementById('unsubPoolId').value);
             const interval = document.getElementById('unsubInterval').value;
-            
+            const precision = document.getElementById('unsubPrecision').value;
             if (!type || !poolId) {
                 alert('Please enter complete unsubscribe information');
                 return;
@@ -149,6 +152,9 @@
             const args = [type, poolId];
             if (type === 'kline') {
                 args.push(interval);
+            }
+            if (type === 'depth') {
+                args.push(precision);
             }
             socket.emit('unsubscribe', ...args);
         }

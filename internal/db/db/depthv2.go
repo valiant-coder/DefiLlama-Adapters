@@ -25,12 +25,12 @@ type Depth struct {
 }
 
 type DepthChange struct {
-	PoolID uint64
-	IsBuy  bool
-	Price  decimal.Decimal
-	Amount decimal.Decimal
+	PoolID    uint64
+	IsBuy     bool
+	Price     decimal.Decimal
+	Amount    decimal.Decimal
+	Precision string
 }
-
 
 // Ordered list of supported precisions (from small to large)
 var SupportedPrecisions = []string{
@@ -133,15 +133,15 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 			}
 
 			// Only record changes for default precision
-			if precision == "0.00000001" {
-				newTotal := decimal.RequireFromString(fmt.Sprint(newTotal)).Truncate(8)
-				changes = append(changes, DepthChange{
-					PoolID: param.PoolID,
-					IsBuy:  param.IsBuy,
-					Price:  param.Price,
-					Amount: newTotal,
-				})
-			}
+			fixedNewTotal := decimal.RequireFromString(fmt.Sprint(newTotal)).Truncate(8)
+			changes = append(changes, DepthChange{
+				PoolID:    param.PoolID,
+				IsBuy:     param.IsBuy,
+				Price:     param.Price,
+				Amount:    fixedNewTotal,
+				Precision: precision,
+			})
+			
 		}
 	}
 

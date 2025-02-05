@@ -55,8 +55,9 @@ func (p *Pusher) PushKline(data entity.Kline) {
 // Push depth data
 func (p *Pusher) PushDepth(data entity.Depth) {
 	sub := Subscription{
-		PoolID: data.PoolID,
-		Type:   SubTypeDepth,
+		PoolID:   data.PoolID,
+		Type:     SubTypeDepth,
+		Precision: data.Precision,
 	}
 	p.server.Broadcast(sub, PushEventDepthUpdate, data)
 }

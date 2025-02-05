@@ -46,9 +46,9 @@ socket.emit('subscribe_kline', 1, '1m');
 
 ### 2. Depth Data Subscription
 ```javascript
-socket.emit('subscribe_depth', poolId);
+socket.emit('subscribe_depth', poolId, precision);
 
-socket.emit('subscribe_depth', 1);
+socket.emit('subscribe_depth', 1, '0.00000001');
 ```
 
 ### 3. Trades Data Subscription
@@ -66,11 +66,11 @@ socket.emit('subscribe_pool_stats', 1);
 
 ### 5. Unsubscribe
 ```javascript
-socket.emit('unsubscribe', subscriptionType, poolId, interval);
+socket.emit('unsubscribe', subscriptionType, poolId, interval, precision);
 
 socket.emit('unsubscribe', 'kline', 1, '1m');
 
-socket.emit('unsubscribe', 'depth', 1);
+socket.emit('unsubscribe', 'depth', 1, '0.00000001');
 
 socket.emit('unsubscribe', 'trades', 1);
 
@@ -93,6 +93,7 @@ socket.on('subscribed', (response) => {
     // {
     //     "type": "depth",
     //     "poolID": 1
+    //     "precision": "0.00000001"
     // }
     
     // {
@@ -143,6 +144,7 @@ socket.on('depth', (data) => {
     //         ["100.6", "5.5"],
     //         ["100.7", "8.2"]
     //     ]
+    //     "precision": "0.00000001"
     // }
 });
 ```
@@ -217,7 +219,7 @@ socket.on('authenticated', (response) => {
     console.log('Authentication response:', response);
     
     socket.emit('subscribe_kline', 1, '1m');
-    socket.emit('subscribe_depth', 1);
+    socket.emit('subscribe_depth', 1, '0.00000001');
     socket.emit('subscribe_trades', 1);
 });
 
