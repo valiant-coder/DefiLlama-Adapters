@@ -14,15 +14,15 @@ graph TB
     end
 
     subgraph Interface Layer
-        WS[WebSocket Push Service]
-        Market[Marketplace Service]
+        WS[WebSocket Push Service **ws**]
+        Market[Marketplace Service **marketplace**]
        
     end
 
     subgraph Application Service Layer
-        Cron[Cron Scheduled Task Service]
-        Syncer[Blockchain Data Sync Service]
-        Handler[Market Message Handler Service]
+        Cron[Cron Scheduled Task Service **cron**]
+        Syncer[Blockchain Data Sync Service **syncer**]
+        Handler[Market Message Handler Service **handler**]
     end
 
 
