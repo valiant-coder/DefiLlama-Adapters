@@ -411,10 +411,46 @@ func (s *Server) handleConnection(args ...interface{}) {
 				client.Leave(room)
 			}
 		}
-		
+
 		client.Emit("unsubscribed_all", map[string]interface{}{
 			"status":  "success",
 			"message": "Unsubscribed from all channels",
+		})
+	})
+
+	client.On("unsubscribe_all_kline", func(args ...interface{}) {
+		rooms := client.Rooms()
+		unsubCount := 0
+
+		for _, room := range rooms.Keys() {
+			roomStr := string(room)
+			if strings.HasPrefix(roomStr, string(SubTypeKline)+":") {
+				client.Leave(room)
+				unsubCount++
+			}
+		}
+
+		client.Emit("unsubscribed_all_kline", map[string]interface{}{
+			"status":  "success",
+			"message": fmt.Sprintf("Unsubscribed from all kline data, total %d", unsubCount),
+		})
+	})
+
+	client.On("unsubscribe_all_depth", func(args ...interface{}) {
+		rooms := client.Rooms()
+		unsubCount := 0
+
+		for _, room := range rooms.Keys() {
+			roomStr := string(room)
+			if strings.HasPrefix(roomStr, string(SubTypeDepth)+":") {
+				client.Leave(room)
+				unsubCount++
+			}
+		}
+
+		client.Emit("unsubscribed_all_depth", map[string]interface{}{
+			"status":  "success",
+			"message": fmt.Sprintf("Unsubscribed from all depth data, total %d", unsubCount),
 		})
 	})
 }
