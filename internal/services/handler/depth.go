@@ -44,6 +44,7 @@ func (s *Service) updateDepth(ctx context.Context, params db.UpdateDepthParams) 
 	}
 
 	for _, depth := range depths {
+		log.Printf("push depth: %v", depth)
 		go s.publisher.PublishDepthUpdate(depth)
 	}
 

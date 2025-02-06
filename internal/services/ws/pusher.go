@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"exapp-go/internal/entity"
+	"log"
 )
 
 const (
@@ -59,6 +60,7 @@ func (p *Pusher) PushDepth(data entity.Depth) {
 		Type:     SubTypeDepth,
 		Precision: data.Precision,
 	}
+	log.Printf("push depth: %v", sub)
 	p.server.Broadcast(sub, PushEventDepthUpdate, data)
 }
 
