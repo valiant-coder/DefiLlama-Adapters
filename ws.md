@@ -77,6 +77,11 @@ socket.emit('unsubscribe', 'trades', 1);
 socket.emit('unsubscribe', 'pool_stats', 1);
 ```
 
+### 6. Unsubscribe All
+```javascript
+socket.emit('unsubscribe_all');
+```
+
 ## Subscription Success Response
 
 When successfully subscribing to a topic, the `subscribed` event is received:
