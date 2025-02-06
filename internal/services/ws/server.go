@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"exapp-go/config"
@@ -27,9 +28,9 @@ const (
 )
 
 type Subscription struct {
-	PoolID   uint64
-	Type     SubscriptionType
-	Interval string
+	PoolID    uint64
+	Type      SubscriptionType
+	Interval  string
 	Precision string
 }
 
@@ -194,7 +195,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 			return
 		}
 
-		room := socket.Room(getRoomName(string(SubTypeKline), cast.ToString(poolID), interval,""))
+		room := socket.Room(getRoomName(string(SubTypeKline), cast.ToString(poolID), interval, ""))
 		if room == "" {
 			return
 		}
@@ -252,7 +253,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 			return
 		}
 
-		room := socket.Room(getRoomName(string(SubTypeDepth), cast.ToString(poolID),"", precision))
+		room := socket.Room(getRoomName(string(SubTypeDepth), cast.ToString(poolID), "", precision))
 		if room == "" {
 			return
 		}
@@ -283,7 +284,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 		}
 		poolID := uint64(poolIDFloat)
 
-		room := socket.Room(getRoomName(string(SubTypeTrades), cast.ToString(poolID),"", ""))
+		room := socket.Room(getRoomName(string(SubTypeTrades), cast.ToString(poolID), "", ""))
 		if room == "" {
 			return
 		}
@@ -399,6 +400,21 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Emit("unsubscribed", map[string]interface{}{
 			"type":    subType,
 			"pool_id": poolID,
+		})
+	})
+
+	client.On("unsubscribe_all", func(args ...interface{}) {
+		rooms := client.Rooms()
+
+		for _, room := range rooms.Keys() {
+			if !strings.HasPrefix(string(room), "account:") {
+				client.Leave(room)
+			}
+		}
+		
+		client.Emit("unsubscribed_all", map[string]interface{}{
+			"status":  "success",
+			"message": "Unsubscribed from all channels",
 		})
 	})
 }
