@@ -8,6 +8,7 @@ import (
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/log"
+	"exapp-go/pkg/nsqutil"
 	"exapp-go/pkg/oauth2"
 	"strings"
 	"time"
@@ -16,10 +17,16 @@ import (
 type UserService struct {
 	db      *db.Repo
 	ckhRepo *ckhdb.ClickHouseRepo
+	nsqPub  *nsqutil.Publisher
 }
 
 func NewUserService() *UserService {
-	return &UserService{db: db.New(), ckhRepo: ckhdb.New()}
+	nsqConf := config.Conf().Nsq
+	return &UserService{
+		db:      db.New(),
+		ckhRepo: ckhdb.New(),
+		nsqPub:  nsqutil.NewPublisher(nsqConf.Nsqds),
+	}
 }
 
 func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (string, error) {
@@ -72,18 +79,12 @@ func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]ent
 	var dst []entity.RespUserCredential
 	for _, v := range credentials {
 		dst = append(dst, entity.RespUserCredential{
-			UserCredential: entity.UserCredential{
-				CredentialID: v.CredentialID,
-				PublicKey:    v.PublicKey,
-				Name:         v.Name,
-				Synced:       v.Synced,
-			},
-			CreatedAt:     entity.Time(v.CreatedAt),
-			LastUsedAt:    entity.Time(v.LastUsedAt),
-			LastUsedIP:    v.LastUsedIP,
-			EOSAccount:    v.EOSAccount,
-			EOSPermission: strings.Split(v.EOSPermissions, ","),
-			DeviceID:      v.DeviceID,
+			UserCredential: entity.ToUserCredential(v),
+			CreatedAt:      entity.Time(v.CreatedAt),
+			LastUsedAt:     entity.Time(v.LastUsedAt),
+			LastUsedIP:     v.LastUsedIP,
+			EOSAccount:     v.EOSAccount,
+			EOSPermission:  strings.Split(v.EOSPermissions, ","),
 		})
 	}
 
@@ -109,14 +110,26 @@ func (s *UserService) GetUserInfo(ctx context.Context, uid string) (entity.RespU
 }
 
 func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserCredential, uid string) error {
-	return s.db.CreateCredentialIfNotExist(ctx, &db.UserCredential{
+	newUserCredential := db.UserCredential{
 		UID:          uid,
 		CredentialID: req.CredentialID,
 		PublicKey:    req.PublicKey,
 		Name:         req.Name,
 		Synced:       req.Synced,
 		DeviceID:     req.DeviceID,
-	})
+	}
+	if err := s.db.CreateCredentialIfNotExist(ctx, &newUserCredential); err != nil {
+		return err
+	}
+
+	msg := struct {
+		Type string      `json:"type"`
+		Data interface{} `json:"data"`
+	}{
+		Type: "new_user_credential",
+		Data: entity.ToUserCredential(newUserCredential),
+	}
+	return s.nsqPub.Publish("cdex_updates", msg)
 }
 
 func (s *UserService) UpdateUserCredentialUsage(ctx context.Context, publicKey string, ip string) error {

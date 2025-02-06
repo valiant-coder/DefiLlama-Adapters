@@ -1,5 +1,7 @@
 package entity
 
+import "exapp-go/internal/db/db"
+
 type ReqUserLogin struct {
 	// google,apple
 	Method  string `json:"method"`
@@ -13,6 +15,7 @@ type RespUserInfo struct {
 }
 
 type UserCredential struct {
+	UID          string `json:"uid"`
 	DeviceID     string `json:"device_id"`
 	CredentialID string `json:"credential_id"`
 	PublicKey    string `json:"public_key"`
@@ -20,6 +23,16 @@ type UserCredential struct {
 	Synced       bool   `json:"synced"`
 }
 
+func ToUserCredential(credential db.UserCredential) UserCredential {
+	return UserCredential{
+		UID:          credential.UID,
+		DeviceID:     credential.DeviceID,
+		CredentialID: credential.CredentialID,
+		PublicKey:    credential.PublicKey,
+		Name:         credential.Name,
+		Synced:       credential.Synced,
+	}
+}
 
 type RespUserCredential struct {
 	UserCredential
@@ -28,7 +41,6 @@ type RespUserCredential struct {
 	LastUsedAt    Time     `json:"last_used_at"`
 	EOSAccount    string   `json:"eos_account"`
 	EOSPermission []string `json:"eos_permission"`
-	DeviceID      string   `json:"device_id"`
 }
 
 type UserBalance struct {

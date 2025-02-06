@@ -12,6 +12,7 @@ const (
 	PushEventDepthUpdate     = "depth"
 	PushEventKlineUpdate     = "kline"
 	PushEventPoolStatsUpdate = "pool_stats"
+	PushEventUserCredential  = "new_user_credential"
 )
 
 // Balance update
@@ -81,6 +82,11 @@ func (p *Pusher) PushBalanceUpdate(account string) {
 func (p *Pusher) PushOrderUpdate(account string, update OrderUpdate) {
 	// Push order update to specific user
 	p.pushToUser(account, PushEventOrderUpdate, update)
+}
+
+// Push user credential
+func (p *Pusher) PushUserCredential(account string, data entity.UserCredential) {
+	p.pushToUser(account, PushEventUserCredential, data)
 }
 
 // Push pool stats data

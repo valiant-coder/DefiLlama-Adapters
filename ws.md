@@ -18,21 +18,21 @@ We use Socket.IO v4 protocol for WebSocket communication.
 Users can authenticate by sending the `authenticate` event:
 
 ```javascript 
-socket.emit('authenticate', 'account_id');
+socket.emit('authenticate', 'account');
 
 socket.on('authenticated', (response) => {
     console.log(response);
     // response:
     // {
     //     "status": "success",
-    //     "account": "account_id"
+    //     "account": "account"
     // }
 });
 ```
 
 ### 2. Unauthenticate
 ```javascript
-socket.emit('unauthenticate', 'account_id');
+socket.emit('unauthenticate', 'account');
 ```
 
 ## Subscription Interface
@@ -56,6 +56,7 @@ socket.emit('subscribe_depth', 1, '0.00000001');
 socket.emit('subscribe_trades', poolId);
 
 socket.emit('subscribe_trades', 1);
+```
 
 ### 4. Pool Stats Data Subscription
 ```javascript
@@ -209,6 +210,31 @@ socket.on('pool_stats', (data) => {
     //     "turnover": "100500.5",
     //     "trades": 100,
     //     "updated_at": 1234567890
+    // }
+});
+```
+
+### 6. User Balance Data Format
+```javascript
+socket.on('balance_update', (data) => {
+    // data:
+    // {
+    //     "account": "xxx",
+    // }
+});
+```
+
+### 7. User Credential Data Format
+```javascript
+socket.on('new_user_credential', (data) => {
+    // data:
+    // {
+    //     "uid": "1",
+    //     "public_key": "public_key",
+    //     "name": "name",
+    //     "synced": true
+    //     "credential_id": "xxx",
+    //     "device_id":"xxx"
     // }
 });
 ```

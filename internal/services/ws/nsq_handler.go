@@ -20,6 +20,7 @@ const (
 	MsgTypeDepthUpdate     = "depth_update"
 	MsgTypeKlineUpdate     = "kline_update"
 	MsgTypePoolStatsUpdate = "pool_stats_update"
+	MsgTypeUserCredential  = "new_user_credential"
 )
 
 // Base NSQ message structure
@@ -87,6 +88,14 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 		}
 		// Broadcast pool stats update
 		s.pusher.PushPoolStats(poolStatsData)
+
+	case MsgTypeUserCredential:
+		var userCredential entity.UserCredential
+		if err := json.Unmarshal(nsqMsg.Data, &userCredential); err != nil {
+			log.Printf("Failed to unmarshal user credential: %v", err)
+			return nil
+		}
+		s.pusher.PushUserCredential(userCredential.UID, userCredential)
 
 	default:
 		log.Printf("Unknown message type: %s", nsqMsg.Type)
