@@ -17,19 +17,7 @@ func (s *Service) updateDepth(ctx context.Context, params db.UpdateDepthParams) 
 
 	bids, asks := [][]string{}, [][]string{}
 	depths := []entity.Depth{}
-	precision := changes[0].Precision
-	for i, change := range changes {
-		if change.Precision != precision || i == len(changes)-1 {
-			depths = append(depths, entity.Depth{
-				PoolID:    params.PoolID,
-				Timestamp: entity.Time(time.Now()),
-				Bids:      bids,
-				Asks:      asks,
-				Precision: precision,
-			})
-			bids, asks = [][]string{}, [][]string{}
-			continue
-		}
+	for _, change := range changes {
 		var bid, ask []string
 		if change.IsBuy {
 			bid = append(bid, change.Price.String())
@@ -40,11 +28,17 @@ func (s *Service) updateDepth(ctx context.Context, params db.UpdateDepthParams) 
 		}
 		bids = append(bids, bid)
 		asks = append(asks, ask)
-		precision = change.Precision
+		depths = append(depths, entity.Depth{
+			PoolID:    params.PoolID,
+			Timestamp: entity.Time(time.Now()),
+			Bids:      bids,
+			Asks:      asks,
+			Precision: change.Precision,
+		})
+		bids, asks = [][]string{}, [][]string{}
 	}
 
 	for _, depth := range depths {
-		log.Printf("push depth: %v", depth)
 		go s.publisher.PublishDepthUpdate(depth)
 	}
 

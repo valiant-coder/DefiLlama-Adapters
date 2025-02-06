@@ -3,7 +3,6 @@ package ws
 import (
 	"context"
 	"exapp-go/internal/entity"
-	"log"
 )
 
 const (
@@ -56,11 +55,10 @@ func (p *Pusher) PushKline(data entity.Kline) {
 // Push depth data
 func (p *Pusher) PushDepth(data entity.Depth) {
 	sub := Subscription{
-		PoolID:   data.PoolID,
-		Type:     SubTypeDepth,
+		PoolID:    data.PoolID,
+		Type:      SubTypeDepth,
 		Precision: data.Precision,
 	}
-	log.Printf("push depth: %v", sub)
 	p.server.Broadcast(sub, PushEventDepthUpdate, data)
 }
 
