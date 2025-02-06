@@ -25,6 +25,7 @@ type Service struct {
 	tradeLastBlockNum    uint64
 	depositLastBlockNum  uint64
 	withdrawLastBlockNum uint64
+	accountLastBlockNum  uint64
 	hyperionCfg          config.HyperionConfig
 	nsqCfg               config.NsqConfig
 	eosCfg               config.EosConfig
@@ -69,6 +70,10 @@ func (s *Service) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("sync withdraw failed: %w", err)
 	}
+	accountActionsCh, err := s.SyncAccount(ctx)
+	if err != nil {
+		return fmt.Errorf("sync account failed: %w", err)
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -103,6 +108,17 @@ func (s *Service) Start(ctx context.Context) error {
 				continue
 			}
 			s.withdrawLastBlockNum = action.BlockNum
+		
+		case action, ok := <-accountActionsCh:
+			if !ok {
+				return fmt.Errorf("account action channel closed")
+			}
+			log.Printf("new updateauth  action: %v", string(action.TrxID))
+			if err := s.publishAction(action); err != nil {
+				log.Printf("Publish account updateauth action failed: %v", err)
+				continue
+			}
+			s.accountLastBlockNum = action.BlockNum
 		}
 	}
 }

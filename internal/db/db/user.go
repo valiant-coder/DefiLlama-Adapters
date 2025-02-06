@@ -94,6 +94,7 @@ type UserCredential struct {
 	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);index:idx_eos_account"`
 	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512)"`
 	DeviceID       string    `gorm:"column:device_id;default:null;type:varchar(255);index:idx_device_id"`
+	BlockNumber    uint64    `gorm:"column:block_number;default:0;type:bigint(20)"`
 }
 
 func (UserCredential) TableName() string {
@@ -121,6 +122,15 @@ func (r *Repo) GetUserCredentialByPubkey(ctx context.Context, pubkey string) (*U
 	return &credential, result.Error
 }
 
+func (r *Repo) GetUserCredentialsByEOSAccount(ctx context.Context, eosAccount string) ([]*UserCredential, error) {
+	var credentials []*UserCredential
+	err := r.DB.WithContext(ctx).Where("eos_account = ?", eosAccount).Find(&credentials).Error
+	if err != nil {
+		return nil, err
+	}
+	return credentials, nil
+}
+
 func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredential) error {
 	return r.DB.WithContext(ctx).Model(&UserCredential{}).Where("id = ?", credential.ID).Updates(credential).Error
 }
@@ -129,4 +139,16 @@ func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (strin
 	var credential UserCredential
 	result := r.DB.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&credential)
 	return credential.UID, result.Error
+}
+
+func (r *Repo) GetUserCredentialMaxBlockNumber(ctx context.Context) (uint64, error) {
+	var blockNumber *uint64
+	err := r.WithContext(ctx).Model(&UserCredential{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
+	if err != nil {
+		return 0, err
+	}
+	if blockNumber == nil {
+		return 0, nil
+	}
+	return *blockNumber, nil
 }

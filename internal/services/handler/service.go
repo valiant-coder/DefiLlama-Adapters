@@ -67,19 +67,19 @@ func NewService() (*Service, error) {
 	hyperionCli := hyperion.NewClient(cfg.Eos.Hyperion.Endpoint)
 
 	s := &Service{
-		ckhRepo:    ckhRepo,
-		repo:       repo,
-		poolCache:  make(map[uint64]*db.Pool),
-		eosCfg:     cfg.Eos,
-		cdexCfg:    cfg.Eos.CdexConfig,
-		exappCfg:   cfg.Eos.Exapp,
-		exsatCfg:   cfg.Eos.Exsat,
-		publisher:  publisher,
-		redisCli:   redisCli,
-		instanceID: instanceID,
-		consumer:   consumer,
-		klineCache: make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
-		handlers:   make(map[string]func(hyperion.Action) error),
+		ckhRepo:     ckhRepo,
+		repo:        repo,
+		poolCache:   make(map[uint64]*db.Pool),
+		eosCfg:      cfg.Eos,
+		cdexCfg:     cfg.Eos.CdexConfig,
+		exappCfg:    cfg.Eos.Exapp,
+		exsatCfg:    cfg.Eos.Exsat,
+		publisher:   publisher,
+		redisCli:    redisCli,
+		instanceID:  instanceID,
+		consumer:    consumer,
+		klineCache:  make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
+		handlers:    make(map[string]func(hyperion.Action) error),
 		hyperionCli: hyperionCli,
 	}
 
@@ -214,6 +214,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.AssetContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
+	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
@@ -235,7 +236,6 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		log.Printf("Action %d already processed, skipping", action.GlobalSequence)
 		return nil
 	}
-
 
 	// Get handler key
 	handlerKey := fmt.Sprintf("%s:%s", action.Act.Account, action.Act.Name)
@@ -293,6 +293,8 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 	case s.eosCfg.Events.LogNewAcc, s.eosCfg.Events.DepositLog, s.eosCfg.Events.LogSend, s.eosCfg.Events.LogDeposit:
 		return fmt.Sprintf("deposit-or-create-account")
 
+	case "updateauth":
+		return "eos-account-update"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
 
