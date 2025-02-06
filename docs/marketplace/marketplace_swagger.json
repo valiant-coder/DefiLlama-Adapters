@@ -808,6 +808,9 @@
                 "pool_id": {
                     "type": "integer"
                 },
+                "precision": {
+                    "type": "string"
+                },
                 "timestamp": {
                     "type": "string"
                 }
@@ -1278,6 +1281,9 @@
                 "credential_id": {
                     "type": "string"
                 },
+                "device_id": {
+                    "type": "string"
+                },
                 "eos_account": {
                     "type": "string"
                 },
@@ -1514,6 +1520,9 @@
             "type": "object",
             "properties": {
                 "credential_id": {
+                    "type": "string"
+                },
+                "device_id": {
                     "type": "string"
                 },
                 "name": {

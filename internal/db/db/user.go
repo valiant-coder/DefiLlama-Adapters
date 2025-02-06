@@ -93,6 +93,7 @@ type UserCredential struct {
 	Synced         bool      `gorm:"column:synced;type:tinyint(1);not null;default:0"`
 	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);index:idx_eos_account"`
 	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512)"`
+	DeviceID       string    `gorm:"column:device_id;default:null;type:varchar(255);index:idx_device_id"`
 }
 
 func (UserCredential) TableName() string {

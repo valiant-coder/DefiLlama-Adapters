@@ -811,6 +811,9 @@ const docTemplatemarketplace = `{
                 "pool_id": {
                     "type": "integer"
                 },
+                "precision": {
+                    "type": "string"
+                },
                 "timestamp": {
                     "type": "string"
                 }
@@ -1281,6 +1284,9 @@ const docTemplatemarketplace = `{
                 "credential_id": {
                     "type": "string"
                 },
+                "device_id": {
+                    "type": "string"
+                },
                 "eos_account": {
                     "type": "string"
                 },
@@ -1517,6 +1523,9 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "credential_id": {
+                    "type": "string"
+                },
+                "device_id": {
                     "type": "string"
                 },
                 "name": {

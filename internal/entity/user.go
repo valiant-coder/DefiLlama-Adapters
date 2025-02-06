@@ -13,11 +13,13 @@ type RespUserInfo struct {
 }
 
 type UserCredential struct {
+	DeviceID     string `json:"device_id"`
 	CredentialID string `json:"credential_id"`
 	PublicKey    string `json:"public_key"`
 	Name         string `json:"name"`
 	Synced       bool   `json:"synced"`
 }
+
 
 type RespUserCredential struct {
 	UserCredential
@@ -26,6 +28,7 @@ type RespUserCredential struct {
 	LastUsedAt    Time     `json:"last_used_at"`
 	EOSAccount    string   `json:"eos_account"`
 	EOSPermission []string `json:"eos_permission"`
+	DeviceID      string   `json:"device_id"`
 }
 
 type UserBalance struct {

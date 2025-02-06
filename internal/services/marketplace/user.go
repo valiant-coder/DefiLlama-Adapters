@@ -83,6 +83,7 @@ func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]ent
 			LastUsedIP:    v.LastUsedIP,
 			EOSAccount:    v.EOSAccount,
 			EOSPermission: strings.Split(v.EOSPermissions, ","),
+			DeviceID:      v.DeviceID,
 		})
 	}
 
@@ -114,6 +115,7 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 		PublicKey:    req.PublicKey,
 		Name:         req.Name,
 		Synced:       req.Synced,
+		DeviceID:     req.DeviceID,
 	})
 }
 
