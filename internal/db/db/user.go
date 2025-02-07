@@ -135,6 +135,10 @@ func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredent
 	return r.DB.WithContext(ctx).Model(&UserCredential{}).Where("id = ?", credential.ID).Updates(credential).Error
 }
 
+func (r *Repo) DeleteUserCredential(ctx context.Context, credential *UserCredential) error {
+	return r.DB.WithContext(ctx).Where("id = ?", credential.ID).Delete(&UserCredential{}).Error
+}
+
 func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (string, error) {
 	var credential UserCredential
 	result := r.DB.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&credential)

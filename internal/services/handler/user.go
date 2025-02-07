@@ -94,6 +94,13 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 				log.Printf("Update user credential failed: %v-%v", data, err)
 				return nil
 			}
+		}else {
+			log.Printf("No key found for credential: %v", credential.PublicKey)
+			err = s.repo.DeleteUserCredential(ctx, credential)
+			if err != nil {
+				log.Printf("Delete user credential failed: %v-%v", data, err)
+				return nil
+			}
 		}
 	}
 
