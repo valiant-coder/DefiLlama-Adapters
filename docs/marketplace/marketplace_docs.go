@@ -1278,6 +1278,9 @@ const docTemplatemarketplace = `{
         "entity.RespUserCredential": {
             "type": "object",
             "properties": {
+                "aaguid": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1525,6 +1528,9 @@ const docTemplatemarketplace = `{
         "entity.UserCredential": {
             "type": "object",
             "properties": {
+                "aaguid": {
+                    "type": "string"
+                },
                 "credential_id": {
                     "type": "string"
                 },

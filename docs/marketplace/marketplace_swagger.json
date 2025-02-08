@@ -1275,6 +1275,9 @@
         "entity.RespUserCredential": {
             "type": "object",
             "properties": {
+                "aaguid": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1522,6 +1525,9 @@
         "entity.UserCredential": {
             "type": "object",
             "properties": {
+                "aaguid": {
+                    "type": "string"
+                },
                 "credential_id": {
                     "type": "string"
                 },

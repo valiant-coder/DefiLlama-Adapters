@@ -95,6 +95,7 @@ type UserCredential struct {
 	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512)"`
 	DeviceID       string    `gorm:"column:device_id;default:null;type:varchar(255);index:idx_device_id"`
 	BlockNumber    uint64    `gorm:"column:block_number;default:0;type:bigint(20)"`
+	AAGuid         string    `gorm:"column:aaguid;type:varchar(255);default:null"`
 }
 
 func (UserCredential) TableName() string {
