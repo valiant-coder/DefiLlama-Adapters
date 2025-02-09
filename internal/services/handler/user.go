@@ -6,6 +6,7 @@ import (
 	"exapp-go/pkg/hyperion"
 	"fmt"
 	"log"
+	"strings"
 )
 
 func (s *Service) handleNewAccount(action hyperion.Action) error {
@@ -44,8 +45,6 @@ func (s *Service) updateUserTokenBalance(account string) error {
 	return nil
 }
 
-
-
 func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 	ctx := context.Background()
 	var data struct {
@@ -65,36 +64,61 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 		return nil
 	}
 
-	credentials, err := s.repo.GetUserCredentialsByEOSAccount(ctx, data.Account)
+
+	keys := make([]string, 0)
+	for _, key := range data.Auth.Keys {
+		keys = append(keys, key.Key)
+	}
+	keysCredentials, err := s.repo.GetUserCredentialsByKeys(ctx, keys)
+	if err != nil {
+		log.Printf("Get user credentials by keys failed: %v", err)
+		return nil
+	}
+	for _, keyCredential := range keysCredentials {
+		if keyCredential.EOSPermissions == "" {
+			keyCredential.EOSPermissions = data.Permission
+		} else {
+			keyCredential.EOSPermissions = fmt.Sprintf("%s,%s", keyCredential.EOSPermissions, data.Permission)
+		}
+		keyCredential.BlockNumber = action.BlockNum
+		keyCredential.EOSAccount = data.Account
+		err = s.repo.UpdateUserCredential(ctx, keyCredential)
+		if err != nil {
+			log.Printf("Update user credential failed: %v-%v", data, err)
+			return nil
+		}
+	}
+
+	userCredentials, err := s.repo.GetUserCredentialsByEOSAccount(ctx, data.Account)
 	if err != nil {
 		log.Printf("Get user credentials by eos account failed: %v", err)
 		return nil
 	}
-	if len(credentials) == 0 {
+	if len(userCredentials) == 0 {
 		log.Printf("No user credentials found for account: %v", data.Account)
 		return nil
 	}
 
-	keys := make(map[string]int)
+
+	keysMap := make(map[string]int)
 	for _, key := range data.Auth.Keys {
-		keys[key.Key] = key.Weight
+		keysMap[key.Key] = key.Weight
 	}
 
-	for _, credential := range credentials {
-		if _, ok := keys[credential.PublicKey]; ok {
+	for _, credential := range userCredentials {
+		if _, ok := keysMap[credential.PublicKey]; ok {
 			if credential.EOSPermissions == "" {
 				credential.EOSPermissions = data.Permission
-			} else {
+			} else if !strings.Contains(credential.EOSPermissions, data.Permission) {
 				credential.EOSPermissions = fmt.Sprintf("%s,%s", credential.EOSPermissions, data.Permission)
 			}
-			credential.EOSAccount = data.Account
 			credential.BlockNumber = action.BlockNum
 			err = s.repo.UpdateUserCredential(ctx, credential)
 			if err != nil {
 				log.Printf("Update user credential failed: %v-%v", data, err)
 				return nil
 			}
-		}else {
+		} else {
 			log.Printf("No key found for credential: %v", credential.PublicKey)
 			err = s.repo.DeleteUserCredential(ctx, credential)
 			if err != nil {

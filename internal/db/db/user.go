@@ -132,6 +132,15 @@ func (r *Repo) GetUserCredentialsByEOSAccount(ctx context.Context, eosAccount st
 	return credentials, nil
 }
 
+func (r *Repo) GetUserCredentialsByKeys(ctx context.Context, keys []string) ([]*UserCredential, error) {
+	var credentials []*UserCredential
+	err := r.DB.WithContext(ctx).Where("public_key IN (?)", keys).Find(&credentials).Error
+	if err != nil {
+		return nil, err
+	}
+	return credentials, nil
+}
+
 func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredential) error {
 	return r.DB.WithContext(ctx).Model(&UserCredential{}).Where("id = ?", credential.ID).Updates(credential).Error
 }
