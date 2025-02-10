@@ -129,7 +129,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 
 		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
 			Remark:           remark,
-			RecipientAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
+			RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		})
 		if err != nil {
 			return entity.RespFirstDeposit{}, err
@@ -138,7 +138,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 
 		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, eos.RequestBTCDepositAddress{
 			Remark:              remark,
-			RecipientEVMAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
+			RecipientEVMAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		})
 		if err != nil {
 			log.Printf("get btc deposit address from bridge error: %v", err)
@@ -252,7 +252,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 
 		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
 			Remark:           remark,
-			RecipientAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
+			RecipientAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		})
 		if err != nil {
 			return entity.RespDeposit{}, err
@@ -261,7 +261,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 
 		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, eos.RequestBTCDepositAddress{
 			Remark:              remark,
-			RecipientEVMAddress: s.eosCfg.Exapp.AssetContractEVMAddress,
+			RecipientEVMAddress: s.eosCfg.Exapp.VaultEVMAddress,
 		})
 		if err != nil {
 			log.Printf("get btc deposit address from bridge error: %v", err)
