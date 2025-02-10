@@ -16,10 +16,18 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		log.Printf("insert trade failed: %v", err)
 		return nil
 	}
+	var buyer, seller string
+	if trade.TakerIsBid {
+		buyer = trade.Taker
+		seller = trade.Maker
+	} else {
+		buyer = trade.Maker
+		seller = trade.Taker
+	}
 	go s.publisher.PublishTradeUpdate(entity.Trade{
 		PoolID:   trade.PoolID,
-		Buyer:    trade.Taker,
-		Seller:   trade.Maker,
+		Buyer:    buyer,
+		Seller:   seller,
 		Quantity: trade.BaseQuantity.String(),
 		Price:    trade.Price.String(),
 		TradedAt: entity.Time(trade.Time),
