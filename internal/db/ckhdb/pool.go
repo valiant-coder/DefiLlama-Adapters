@@ -32,7 +32,7 @@ func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryp
 	queryParams.TableName = "pool_stats"
 	queryParams.Order = "pool_id desc"
 	pools := []*PoolStats{}
-	total, err := r.Query(ctx, &pools, queryParams, "base_coin", "quote_coin")
+	total, err := r.Query(ctx, &pools, queryParams, "base_coin", "quote_coin", "pool_id")
 	if err != nil {
 		return nil, 0, err
 	}

@@ -27,6 +27,15 @@ func NewPoolService() *PoolService {
 }
 
 func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.QueryParams) ([]*entity.PoolStats, int64, error) {
+	visiblePools, err := s.repo.GetVisiblePools(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	visiblePoolIDs := make([]string, len(visiblePools))
+	for i, pool := range visiblePools {
+		visiblePoolIDs[i] = strconv.FormatUint(pool.PoolID, 10)
+	}
+	queryParams.AddCustomQuery("pool_id in (?)", visiblePoolIDs)
 	pools, total, err := s.ckhRepo.QueryPoolStats(ctx, queryParams)
 	if err != nil {
 		return nil, 0, err

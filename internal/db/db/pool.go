@@ -32,6 +32,7 @@ type Pool struct {
 	MakerFeeRate       float64         `gorm:"column:maker_fee_rate;type:decimal(10,4)"`
 	Status             PoolStatus      `gorm:"column:status;type:tinyint(4)"`
 	MinAmount          decimal.Decimal `gorm:"column:min_amount;type:decimal(36,18)"`
+	Visible            bool            `gorm:"column:visible;type:tinyint(1);default:0"`
 }
 
 type PoolStatus uint8
@@ -85,6 +86,14 @@ func (r *Repo) GetPoolSymbolsByIDs(ctx context.Context, poolID []uint64) (map[ui
 func (r *Repo) GetAllPools(ctx context.Context) ([]*Pool, error) {
 	var pools []*Pool
 	if err := r.WithContext(ctx).Find(&pools).Error; err != nil {
+		return nil, err
+	}
+	return pools, nil
+}
+
+func (r *Repo) GetVisiblePools(ctx context.Context) ([]*Pool, error) {
+	var pools []*Pool
+	if err := r.WithContext(ctx).Where("visible = 1").Find(&pools).Error; err != nil {
 		return nil, err
 	}
 	return pools, nil
