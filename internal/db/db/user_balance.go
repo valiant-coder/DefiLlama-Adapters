@@ -134,7 +134,6 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 			continue
 		}
 		if _, exists := allTokens[balance.Coin]; exists {
-			balance.Coin = allTokens[balance.Coin]
 			result = append(result, balance)
 		}
 	}
