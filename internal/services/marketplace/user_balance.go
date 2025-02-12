@@ -35,7 +35,16 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		userAvailableBalances = append(userAvailableBalances, userBalance)
 	}
 
-	userBalances, err := s.db.GetUserBalances(ctx, accountName, userAvailableBalances)
+	allTokens, err := s.repo.GetAllTokens(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	poolTokens, err := s.repo.GetVisiblePoolTokens(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userBalances, err := s.repo.GetUserBalances(ctx, accountName, userAvailableBalances, allTokens, poolTokens)
 	if err != nil {
 		return nil, err
 	}

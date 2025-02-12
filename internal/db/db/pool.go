@@ -98,3 +98,16 @@ func (r *Repo) GetVisiblePools(ctx context.Context) ([]*Pool, error) {
 	}
 	return pools, nil
 }
+
+func (r *Repo) GetVisiblePoolTokens(ctx context.Context) (map[string]string, error) {
+	pools, err := r.GetVisiblePools(ctx)
+	if err != nil {
+		return nil, err
+	}
+	poolTokens := make(map[string]string)
+	for _, pool := range pools {
+		poolTokens[pool.BaseCoin] = pool.BaseSymbol
+		poolTokens[pool.QuoteCoin] = pool.QuoteSymbol
+	}
+	return poolTokens, nil
+}

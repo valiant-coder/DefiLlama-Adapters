@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
@@ -64,6 +65,18 @@ func (r *Repo) ListTokens(ctx context.Context) ([]Token, error) {
 	var tokens []Token
 	err := r.WithContext(ctx).Find(&tokens).Error
 	return tokens, err
+}
+
+func (r *Repo) GetAllTokens(ctx context.Context) (map[string]string, error) {
+	tokens, err := r.ListTokens(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tokenMap := make(map[string]string)
+	for _, token := range tokens {
+		tokenMap[fmt.Sprintf("%s-%s", token.EOSContractAddress, token.Symbol)] = token.Symbol
+	}
+	return tokenMap, nil
 }
 
 func (r *Repo) InsertToken(ctx context.Context, token *Token) error {

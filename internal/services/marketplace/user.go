@@ -15,7 +15,7 @@ import (
 )
 
 type UserService struct {
-	db      *db.Repo
+	repo    *db.Repo
 	ckhRepo *ckhdb.ClickHouseRepo
 	nsqPub  *nsqutil.Publisher
 }
@@ -23,7 +23,7 @@ type UserService struct {
 func NewUserService() *UserService {
 	nsqConf := config.Conf().Nsq
 	return &UserService{
-		db:      db.New(),
+		repo:    db.New(),
 		ckhRepo: ckhdb.New(),
 		nsqPub:  nsqutil.NewPublisher(nsqConf.Nsqds),
 	}
@@ -59,7 +59,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 		return "", errors.New("invalid login method")
 	}
 
-	if err := s.db.CreateUserIfNotExist(ctx, user); err != nil {
+	if err := s.repo.CreateUserIfNotExist(ctx, user); err != nil {
 		return "", err
 	}
 
@@ -67,11 +67,11 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 }
 
 func (s *UserService) IsUserExist(ctx context.Context, uid string) (bool, error) {
-	return s.db.IsUserExist(ctx, uid)
+	return s.repo.IsUserExist(ctx, uid)
 }
 
 func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]entity.RespUserCredential, error) {
-	credentials, err := s.db.GetUserCredentials(ctx, uid)
+	credentials, err := s.repo.GetUserCredentials(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]ent
 }
 
 func (s *UserService) GetUserInfo(ctx context.Context, uid string) (entity.RespUserInfo, error) {
-	user, err := s.db.GetUser(ctx, uid)
+	user, err := s.repo.GetUser(ctx, uid)
 	if err != nil {
 		return entity.RespUserInfo{}, err
 	}
@@ -119,7 +119,7 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 		DeviceID:     req.DeviceID,
 		AAGuid:       req.AAGuid,
 	}
-	if err := s.db.CreateCredentialIfNotExist(ctx, &newUserCredential); err != nil {
+	if err := s.repo.CreateCredentialIfNotExist(ctx, &newUserCredential); err != nil {
 		return err
 	}
 
@@ -134,11 +134,11 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 }
 
 func (s *UserService) UpdateUserCredentialUsage(ctx context.Context, publicKey string, ip string) error {
-	credential, err := s.db.GetUserCredentialByPubkey(ctx, publicKey)
+	credential, err := s.repo.GetUserCredentialByPubkey(ctx, publicKey)
 	if err != nil {
 		return err
 	}
 	credential.LastUsedAt = time.Now()
 	credential.LastUsedIP = ip
-	return s.db.UpdateUserCredential(ctx, credential)
+	return s.repo.UpdateUserCredential(ctx, credential)
 }

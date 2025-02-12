@@ -61,11 +61,11 @@ func (r *Repo) calculateOrderLock(order *OpenOrder) (string, decimal.Decimal) {
 	return order.PoolBaseCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity)
 }
 
-func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userBalances []UserBalance) ([]UserBalanceWithLock, error) {
+func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvailableBalances []UserBalance, allTokens, poolTokens map[string]string) ([]UserBalanceWithLock, error) {
 
 	// Build balance mapping
-	userBalanceMap := make(map[string]decimal.Decimal, len(userBalances))
-	for _, balance := range userBalances {
+	userBalanceMap := make(map[string]decimal.Decimal, len(userAvailableBalances))
+	for _, balance := range userAvailableBalances {
 		userBalanceMap[balance.Coin] = balance.Balance
 	}
 
@@ -82,8 +82,8 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userBala
 		r.updateLockedCoins(lockedCoins, coin, order.PoolID, order.PoolSymbol, lockedAmount)
 	}
 
-	// 4. Build result
-	result := make([]UserBalanceWithLock, 0, len(userBalanceMap)+len(lockedCoins))
+	// 4. Build userBalances
+	userBalances := make([]UserBalanceWithLock, 0, len(userBalanceMap)+len(lockedCoins))
 
 	// Handle coins with existing balances
 	for coin, balance := range userBalanceMap {
@@ -93,7 +93,7 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userBala
 			totalLocked = totalLocked.Add(pb.Balance)
 		}
 
-		result = append(result, UserBalanceWithLock{
+		userBalances = append(userBalances, UserBalanceWithLock{
 			UserBalance: UserBalance{
 				Account: accountName,
 				Coin:    coin,
@@ -115,7 +115,7 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userBala
 			totalLocked = totalLocked.Add(pb.Balance)
 		}
 
-		result = append(result, UserBalanceWithLock{
+		userBalances = append(userBalances, UserBalanceWithLock{
 			UserBalance: UserBalance{
 				Account: accountName,
 				Coin:    coin,
@@ -124,6 +124,19 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userBala
 			Locked:      totalLocked,
 			PoolBalance: poolBalances,
 		})
+	}
+
+	var result []UserBalanceWithLock
+	for _, balance := range userBalances {
+		
+		if _, exists := poolTokens[balance.Coin]; exists {
+			result = append(result, balance)
+			continue
+		}
+		if _, exists := allTokens[balance.Coin]; exists {
+			balance.Coin = allTokens[balance.Coin]
+			result = append(result, balance)
+		}
 	}
 
 	return result, nil
