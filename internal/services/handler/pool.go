@@ -99,6 +99,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		MakerFeeRate:       makerFeeRate,
 		Status:             db.PoolStatus(pool.Status),
 		MinAmount:          decimal.New(int64(pool.MinAmount), -int32(basePrecision)),
+		Visible:            true,
 	}
 	err = s.repo.CreatePoolIfNotExist(ctx, newPool)
 	if err != nil {
