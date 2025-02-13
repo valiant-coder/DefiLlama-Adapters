@@ -1395,6 +1395,9 @@ const docTemplatemarketplace = `{
                 "eos_contract": {
                     "type": "string"
                 },
+                "info": {
+                    "$ref": "#/definitions/entity.TokenInfo"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1405,6 +1408,70 @@ const docTemplatemarketplace = `{
                     }
                 },
                 "symbol": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TokenInfo": {
+            "type": "object",
+            "properties": {
+                "circulating_supply": {
+                    "type": "string"
+                },
+                "fully_diluted_market_cap": {
+                    "type": "string"
+                },
+                "historical_high": {
+                    "type": "string"
+                },
+                "historical_high_date": {
+                    "type": "string"
+                },
+                "historical_low": {
+                    "type": "string"
+                },
+                "historical_low_date": {
+                    "type": "string"
+                },
+                "intro": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TokenLink"
+                    }
+                },
+                "market_capitalization": {
+                    "type": "string"
+                },
+                "market_dominance": {
+                    "type": "string"
+                },
+                "maximum_supply": {
+                    "type": "string"
+                },
+                "total_supply": {
+                    "type": "string"
+                },
+                "volume": {
+                    "type": "string"
+                },
+                "volume_div_market_cap": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TokenLink": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }

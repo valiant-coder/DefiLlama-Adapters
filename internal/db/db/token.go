@@ -17,13 +17,29 @@ func init() {
 	})
 }
 
-type TokenType string
+type TokenInfo struct {
+	Rank                  string      `json:"rank"`
+	MarketCapitalization  string      `json:"market_capitalization"`
+	FullyDilutedMarketCap string      `json:"fully_diluted_market_cap"`
+	MarketDominance       string      `json:"market_dominance"`
+	Volume                string      `json:"volume"`
+	VolumeDivMarketCap    string      `json:"volume_div_market_cap"`
+	CirculatingSupply     string      `json:"circulating_supply"`
+	MaximumSupply         string      `json:"maximum_supply"`
+	TotalSupply           string      `json:"total_supply"`
+	IssueDate             string      `json:"issue_date"`
+	HistoricalHigh        string      `json:"historical_high"`
+	HistoricalLow         string      `json:"historical_low"`
+	HistoricalHighDate    string      `json:"historical_high_date"`
+	HistoricalLowDate     string      `json:"historical_low_date"`
+	Links                 []TokenLink `json:"links"`
+	Intro                 string      `json:"intro"`
+}
 
-const (
-	TokenTypeEOS   TokenType = "eos_native"
-	TokenTypeBTC   TokenType = "btc_native"
-	TokenTypeExsat TokenType = "exsat_bridge"
-)
+type TokenLink struct {
+	Url  string `json:"url"`
+	Name string `json:"name"`
+}
 
 type ChainInfo struct {
 	ChainName    string `json:"chain_name"`
@@ -34,7 +50,7 @@ type ChainInfo struct {
 	MinWithdrawAmount decimal.Decimal `json:"min_withdraw_amount"`
 	MinDepositAmount  decimal.Decimal `json:"min_deposit_amount"`
 
-	ExsatWithdrawFee  decimal.Decimal `json:"exsat_withdraw_fee"`
+	ExsatWithdrawFee      decimal.Decimal `json:"exsat_withdraw_fee"`
 	ExsatMinDepositAmount decimal.Decimal `json:"exsat_min_deposit_amount"`
 
 	ExsatTokenAddress  string `json:"exsat_token_address"`
@@ -42,13 +58,14 @@ type ChainInfo struct {
 }
 type Token struct {
 	gorm.Model
-	TokenType          TokenType `gorm:"column:token_type;type:varchar(255);default:exsat_bridge"`
-	Symbol             string    `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol"`
-	Name               string    `gorm:"column:name;type:varchar(255);default:null"`
-	EOSContractAddress string    `gorm:"column:eos_contract_address;type:varchar(255);not null"`
-	Decimals           uint8     `gorm:"column:decimals;type:tinyint(3);not null"`
+	Symbol             string `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol"`
+	Name               string `gorm:"column:name;type:varchar(255);default:null"`
+	EOSContractAddress string `gorm:"column:eos_contract_address;type:varchar(255);not null"`
+	Decimals           uint8  `gorm:"column:decimals;type:tinyint(3);not null"`
 
 	Chains datatypes.JSONSlice[ChainInfo] `gorm:"column:chains;type:json;not null"`
+
+	TokenInfo datatypes.JSONType[TokenInfo] `gorm:"column:token_info;type:json;default:null"`
 }
 
 func (t *Token) TableName() string {

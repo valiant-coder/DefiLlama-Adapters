@@ -24,31 +24,7 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 	var supportTokens []entity.Token
 
 	for _, token := range tokens {
-		var supportChains []entity.Chain
-
-		for _, chain := range token.Chains {
-			if chain.MinDepositAmount.LessThan(chain.ExsatMinDepositAmount) {
-				chain.MinDepositAmount = chain.ExsatMinDepositAmount
-			}
-			supportChains = append(supportChains, entity.Chain{
-				ChainName: chain.ChainName,
-				ChainID:   chain.ChainID,
-
-				MinDepositAmount:  chain.MinDepositAmount.String(),
-				MinWithdrawAmount: chain.MinWithdrawAmount.String(),
-
-				WithdrawFee:      chain.WithdrawalFee.String(),
-				ExsatWithdrawFee: chain.ExsatWithdrawFee.String(),
-				ExsatTokenAddress: chain.ExsatTokenAddress,
-			})
-		}
-		supportTokens = append(supportTokens, entity.Token{
-			Symbol:       token.Symbol,
-			SupportChain: supportChains,
-			Name:         token.Name,
-			Decimals:     token.Decimals,
-			EOSContract:  token.EOSContractAddress,
-		})
+		supportTokens = append(supportTokens, entity.TokenFromDB(token))
 	}
 	return supportTokens, nil
 }
