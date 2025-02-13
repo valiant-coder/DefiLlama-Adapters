@@ -1378,6 +1378,9 @@ const docTemplatemarketplace = `{
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
                 },
+                "vault_eos_address": {
+                    "type": "string"
+                },
                 "vault_evm_address": {
                     "type": "string"
                 },

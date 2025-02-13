@@ -24,6 +24,7 @@ func getSystemInfo(c *gin.Context) {
 			Account: config.Conf().Eos.PayerAccount,
 		},
 		VaultEVMAddress: config.Conf().Eos.Exapp.VaultEVMAddress,
+		VaultEOSAddress: config.Conf().Eos.Exapp.AssetContract,
 	}
 	api.OK(c, sysInfo)
 }
