@@ -121,6 +121,8 @@ type ExappConfig struct {
 	AssetContractEVMAddress string `yaml:"asset_contract_evm_address"`
 	Actor                   string `yaml:"actor"`
 	ActorPrivateKey         string `yaml:"actor_private_key"`
+	AppTakerFeeRate         float64 `yaml:"app_taker_fee_rate"`
+	AppMakerFeeRate         float64 `yaml:"app_maker_fee_rate"`
 }
 
 type ExsatConfig struct {

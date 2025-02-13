@@ -3,6 +3,7 @@ package marketplace
 import (
 	"context"
 	"errors"
+	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
@@ -85,6 +86,9 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 			return entity.Pool{}, err
 		}
 	}
+	cfg := config.Conf()
+	appTakerFeeRate := cfg.Eos.Exapp.AppTakerFeeRate
+	appMakerFeeRate := cfg.Eos.Exapp.AppMakerFeeRate
 	return entity.Pool{
 		PoolID:             pool.PoolID,
 		Symbol:             pool.Symbol,
@@ -100,8 +104,8 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 		TradingTime:        entity.Time(pool.TradingTime),
 		MaxFluctuation:     pool.MaxFluctuation,
 		PricePrecision:     pool.PricePrecision,
-		TakerFeeRate:       pool.TakerFeeRate,
-		MakerFeeRate:       pool.MakerFeeRate,
+		TakerFeeRate:       pool.TakerFeeRate + appTakerFeeRate,
+		MakerFeeRate:       pool.MakerFeeRate + appMakerFeeRate,
 		MinAmount:          pool.MinAmount.String(),
 		Status:             uint8(pool.Status),
 		PoolStats:          *entity.PoolStatusFromDB(poolStats),
