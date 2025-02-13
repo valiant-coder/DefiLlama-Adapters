@@ -700,6 +700,38 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/token/{symbol}": {
+            "get": {
+                "description": "Get token info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "token"
+                ],
+                "summary": "Get token info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "coin symbol,ps BTC",
+                        "name": "symbol",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "token info",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Token"
+                        }
+                    }
+                }
+            }
+        },
         "/user-info": {
             "get": {
                 "security": [

@@ -28,3 +28,12 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 	}
 	return supportTokens, nil
 }
+
+
+func (s *TokenService) GetToken(ctx context.Context, symbol string) (entity.Token, error) {
+	token, err := s.repo.GetToken(ctx, symbol)
+	if err != nil {
+		return entity.Token{}, err
+	}
+	return entity.TokenFromDB(*token), nil
+}
