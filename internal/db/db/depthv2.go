@@ -50,13 +50,18 @@ var SupportedPrecisions = []string{
 }
 
 // Calculate price slots for all precisions
-func calculateAllSlots(price decimal.Decimal) map[string]string {
+func calculateAllSlots(price decimal.Decimal,isBid bool) map[string]string {
 	slots := make(map[string]string)
 
 	for _, p := range SupportedPrecisions {
 		precision, _ := decimal.NewFromString(p)
-		slot := price.Div(precision).Floor().Mul(precision)
-		slots[p] = slot.String()
+		if isBid {
+			slot := price.Div(precision).Floor().Mul(precision)
+			slots[p] = slot.String()
+		} else {
+			slot := price.Div(precision).Ceil().Mul(precision)
+			slots[p] = slot.String()
+		}
 	}
 	return slots
 }
@@ -119,7 +124,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 		}
 
 		// Calculate slots for all precisions
-		slots := calculateAllSlots(param.Price)
+		slots := calculateAllSlots(param.Price, param.IsBuy)
 
 		for precision, slot := range slots {
 			// Generate keys for each precision
