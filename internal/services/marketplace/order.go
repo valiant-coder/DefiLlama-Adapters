@@ -27,9 +27,9 @@ func NewOrderService() *OrderService {
 func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.OpenOrder, int64, error) {
 	orders, total, err := s.repo.GetOpenOrders(ctx, queryParams)
 	if err != nil {
-		return nil, 0, err
+		return make([]entity.OpenOrder, 0), 0, err
 	}
-	var result []entity.OpenOrder
+	result := make([]entity.OpenOrder, 0, len(orders))
 	for _, order := range orders {
 		result = append(result, entity.OpenOrderFromDB(order))
 	}
@@ -40,9 +40,9 @@ func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *querypara
 func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.HistoryOrder, int64, error) {
 	orders, total, err := s.ckhdbRepo.QueryHistoryOrders(ctx, queryParams)
 	if err != nil {
-		return nil, 0, err
+		return make([]entity.HistoryOrder, 0), 0, err
 	}
-	var result []entity.HistoryOrder
+	result := make([]entity.HistoryOrder, 0, len(orders))
 	for _, order := range orders {
 		result = append(result, entity.HistoryOrderFromDB(order))
 	}

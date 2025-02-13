@@ -89,6 +89,9 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 	for coin, balance := range userBalanceMap {
 		var totalLocked decimal.Decimal
 		poolBalances := lockedCoins[coin]
+		if poolBalances == nil {
+			poolBalances = []*UserPoolBalance{}
+		}
 		for _, pb := range poolBalances {
 			totalLocked = totalLocked.Add(pb.Balance)
 		}

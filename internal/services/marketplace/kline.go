@@ -48,7 +48,7 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	var err error
 
 	if klines, err = s.repo.GetKline(ctx, poolID, interval, start, end); err != nil {
-		return nil, err
+		return make([]entity.Kline, 0), err
 	}
 
 	lastKline, err := s.repo.GetLastKlineBefore(ctx, poolID, interval, start)
@@ -56,7 +56,7 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			lastKline = nil
 		} else {
-			return nil, err
+			return make([]entity.Kline, 0), err
 		}
 	}
 
@@ -70,7 +70,7 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	duration := getIntervalDuration(interval)
 
 	// Generate complete time series
-	var completeKlines []*ckhdb.Kline
+	completeKlines := make([]*ckhdb.Kline, 0)
 	currentTime := start
 	var lastValidKline *ckhdb.Kline
 	if lastKline != nil {
@@ -155,6 +155,7 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	}
 
 	var entityKlines []entity.Kline
+	entityKlines = make([]entity.Kline, 0, len(completeKlines))
 	for _, kline := range completeKlines {
 		entityKlines = append(entityKlines, entity.DbKlineToEntity(kline))
 	}

@@ -14,11 +14,10 @@ type TradeService struct {
 	ckhdb *ckhdb.ClickHouseRepo
 }
 
-
 func (s *TradeService) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]entity.Trade, error) {
 	trades, err := s.ckhdb.GetLatestTrades(ctx, poolID, limit)
 	if err != nil {
-		return nil, err
+		return make([]entity.Trade, 0), err
 	}
 	tradeList := make([]entity.Trade, 0, len(trades))
 	for _, trade := range trades {
