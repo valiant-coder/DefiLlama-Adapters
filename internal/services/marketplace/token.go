@@ -27,8 +27,8 @@ func (s *TokenService) GetSupportTokens(ctx context.Context) ([]entity.Token, er
 		var supportChains []entity.Chain
 
 		for _, chain := range token.Chains {
-			if chain.MinDepositAmount.LessThan(chain.ExsatDepositLimit) {
-				chain.MinDepositAmount = chain.ExsatDepositLimit
+			if chain.MinDepositAmount.LessThan(chain.ExsatMinDepositAmount) {
+				chain.MinDepositAmount = chain.ExsatMinDepositAmount
 			}
 			supportChains = append(supportChains, entity.Chain{
 				ChainName: chain.ChainName,

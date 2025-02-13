@@ -35,7 +35,7 @@ type ChainInfo struct {
 	MinDepositAmount  decimal.Decimal `json:"min_deposit_amount"`
 
 	ExsatWithdrawFee  decimal.Decimal `json:"exsat_withdraw_fee"`
-	ExsatDepositLimit decimal.Decimal `json:"exsat_deposit_limit"`
+	ExsatMinDepositAmount decimal.Decimal `json:"exsat_min_deposit_amount"`
 
 	ExsatTokenAddress  string `json:"exsat_token_address"`
 	ExsatTokenDecimals uint8  `json:"exsat_token_decimals"`
