@@ -48,6 +48,8 @@ func Trace(tracerName string) gin.HandlerFunc {
 
 		c.Next()
 
+		span.SetAttributes(attribute.String("uid", c.GetString("uid")))
+
 		status := c.Writer.Status()
 		attrs := semconv.HTTPAttributesFromHTTPStatusCode(status)
 		spanStatus, spanMessage := semconv.SpanStatusFromHTTPStatusCode(status)
