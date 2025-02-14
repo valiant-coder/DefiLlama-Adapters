@@ -134,10 +134,8 @@ func TradeDetailFromDB(trades []ckhdb.Trade) []TradeDetail {
 			TakerIsBid:    trade.TakerIsBid,
 			BaseQuantity:  trade.BaseQuantity.String(),
 			QuoteQuantity: trade.QuoteQuantity.String(),
-			TakerFee:      trade.TakerFee.String(),
-			TakerAppFee:   trade.TakerAppFee.String(),
-			MakerFee:      trade.MakerFee.String(),
-			MakerAppFee:   trade.MakerAppFee.String(),
+			TakerFee:      trade.TakerFee.Add(trade.TakerAppFee).String(),
+			MakerFee:      trade.MakerFee.Add(trade.MakerAppFee).String(),
 			Timestamp:     Time(trade.Time),
 		})
 	}
