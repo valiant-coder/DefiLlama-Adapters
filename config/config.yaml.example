@@ -90,6 +90,7 @@ eos:
     actor_private_key: your_actor_private_key
     app_taker_fee_rate: 0.001
     app_maker_fee_rate: 0.001
+    token_contract: tokencontract
   exsat:
     bridge_contract: bridgecontract
   

@@ -4,6 +4,7 @@ import (
 	"exapp-go/api"
 
 	"exapp-go/internal/entity"
+	"exapp-go/internal/services/marketplace"
 
 	"exapp-go/config"
 
@@ -27,4 +28,21 @@ func getSystemInfo(c *gin.Context) {
 		VaultEOSAddress: config.Conf().Eos.Exapp.AssetContract,
 	}
 	api.OK(c, sysInfo)
+}
+
+// @Summary Get system trade information
+// @Description Get system trade information
+// @Tags system
+// @Accept json
+// @Produce json
+// @Success 200 {object} entity.SysTradeInfo
+// @Router /sys-trade-info [get]
+func getSysTradeInfo(c *gin.Context) {
+	tradeService := marketplace.NewTradeService()
+	tradeInfo, err := tradeService.GetTradeCountAndVolume(c.Request.Context())
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, tradeInfo)
 }

@@ -80,6 +80,7 @@ func Run(addr string, release bool) error {
 	r.GET("/support-tokens", getSupportTokens)
 	r.GET("/token/:symbol", getToken)
 	r.GET("/repair-pool", repairPool)
+	r.GET("/sys-trade-info", getSysTradeInfo)
 
 	jwtParams := api.InitParams()
 	jwtParams.Authenticator = authenticator

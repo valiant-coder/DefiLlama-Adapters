@@ -123,6 +123,8 @@ type ExappConfig struct {
 	ActorPrivateKey         string `yaml:"actor_private_key"`
 	AppTakerFeeRate         float64 `yaml:"app_taker_fee_rate"`
 	AppMakerFeeRate         float64 `yaml:"app_maker_fee_rate"`
+	TokenContract           string  `yaml:"token_contract"`
+
 }
 
 type ExsatConfig struct {

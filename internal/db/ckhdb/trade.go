@@ -2,6 +2,7 @@ package ckhdb
 
 import (
 	"context"
+	"exapp-go/config"
 	"fmt"
 	"time"
 
@@ -80,4 +81,42 @@ func (r *ClickHouseRepo) GetTradeMaxBlockNumber(ctx context.Context) (uint64, er
 		return 0, nil
 	}
 	return *blockNumber, nil
+}
+
+func (r *ClickHouseRepo) GetTradeCountAndVolume(ctx context.Context) (uint64, float64, error) {
+	var tradeInfo struct {
+		TotalTrades uint64  `gorm:"column:total_trades;"`
+		TotalVolume float64 `gorm:"column:total_volume_usdt;"`
+	}
+
+	tokenContract := config.Conf().Eos.Exapp.TokenContract
+	query := fmt.Sprintf(`
+	WITH 
+		(
+			SELECT CAST(quote_quantity / base_quantity AS Float64) as btc_usdt_price
+			FROM trades 
+			FINAL
+			WHERE base_coin = '%s-BTC' 
+			AND quote_coin = '%s-USDT'
+			ORDER BY time DESC 
+			LIMIT 1
+		) as btc_price
+	SELECT 
+		COUNT() as total_trades,
+		toDecimal64(
+			SUM(
+				CASE 
+					WHEN quote_coin = '%s-BTC' THEN CAST(quote_quantity AS Float64) * btc_price
+					ELSE CAST(quote_quantity AS Float64)
+				END 
+			), 8
+		) as total_volume_usdt
+	FROM trades
+	FINAL;
+	`, tokenContract, tokenContract, tokenContract)
+	err := r.DB.WithContext(ctx).Raw(query).Scan(&tradeInfo).Error
+	if err != nil {
+		return 0, 0, err
+	}
+	return tradeInfo.TotalTrades, tradeInfo.TotalVolume, nil
 }

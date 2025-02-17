@@ -82,6 +82,16 @@ func (r *Repo) GetUser(ctx context.Context, uid string) (User, error) {
 	return user, result.Error
 }
 
+func (r *Repo) GetTotalUserCount(ctx context.Context) (int64, error) {
+	var totalUserCount int64
+	result := r.DB.WithContext(ctx).Model(&User{}).Count(&totalUserCount).Error
+	if result != nil {
+		return 0, result
+	}
+	return totalUserCount, nil
+}
+
+
 type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`

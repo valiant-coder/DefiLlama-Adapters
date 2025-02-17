@@ -3,19 +3,21 @@ package marketplace
 import (
 	"context"
 	"exapp-go/internal/db/ckhdb"
+	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 )
 
 func NewTradeService() *TradeService {
-	return &TradeService{ckhdb: ckhdb.New()}
+	return &TradeService{ckhRepo: ckhdb.New(), repo: db.New()}
 }
 
 type TradeService struct {
-	ckhdb *ckhdb.ClickHouseRepo
+	ckhRepo *ckhdb.ClickHouseRepo
+	repo    *db.Repo
 }
 
 func (s *TradeService) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]entity.Trade, error) {
-	trades, err := s.ckhdb.GetLatestTrades(ctx, poolID, limit)
+	trades, err := s.ckhRepo.GetLatestTrades(ctx, poolID, limit)
 	if err != nil {
 		return make([]entity.Trade, 0), err
 	}
@@ -25,4 +27,20 @@ func (s *TradeService) GetLatestTrades(ctx context.Context, poolID uint64, limit
 	}
 
 	return tradeList, nil
+}
+
+func (s *TradeService) GetTradeCountAndVolume(ctx context.Context) (entity.SysTradeInfo, error) {
+	tradeCount, tradeVolume, err := s.ckhRepo.GetTradeCountAndVolume(ctx)
+	if err != nil {
+		return entity.SysTradeInfo{}, err
+	}
+	totalUserCount, err := s.repo.GetTotalUserCount(ctx)
+	if err != nil {
+		return entity.SysTradeInfo{}, err
+	}
+	return entity.SysTradeInfo{
+		TotalTrades:    tradeCount,
+		TotalVolume:    tradeVolume,
+		TotalUserCount: totalUserCount,
+	}, nil
 }

@@ -677,6 +677,29 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/sys-trade-info": {
+            "get": {
+                "description": "Get system trade information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Get system trade information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.SysTradeInfo"
+                        }
+                    }
+                }
+            }
+        },
         "/system-info": {
             "get": {
                 "description": "Get system information",
@@ -1401,6 +1424,20 @@ const docTemplatemarketplace = `{
                 },
                 "withdraw_at": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.SysTradeInfo": {
+            "type": "object",
+            "properties": {
+                "total_trades": {
+                    "type": "integer"
+                },
+                "total_user_count": {
+                    "type": "integer"
+                },
+                "total_volume": {
+                    "type": "number"
                 }
             }
         },
