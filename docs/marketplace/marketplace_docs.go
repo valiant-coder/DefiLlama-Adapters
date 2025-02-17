@@ -1447,6 +1447,9 @@ const docTemplatemarketplace = `{
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
                 },
+                "token_contract": {
+                    "type": "string"
+                },
                 "vault_eos_address": {
                     "type": "string"
                 },

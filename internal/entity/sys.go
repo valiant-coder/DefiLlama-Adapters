@@ -5,6 +5,7 @@ type SystemInfo struct {
 	PayCPU          PayCPU `json:"pay_cpu"`
 	VaultEVMAddress string `json:"vault_evm_address"`
 	VaultEOSAddress string `json:"vault_eos_address"`
+	TokenContract   string `json:"token_contract"`
 }
 
 type PayCPU struct {
