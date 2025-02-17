@@ -4,6 +4,7 @@ import (
 	"exapp-go/api"
 	"exapp-go/config"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/errno"
 	"exapp-go/internal/services/marketplace"
 
 	pkeos "exapp-go/pkg/eos"
@@ -44,6 +45,7 @@ func payCPU(c *gin.Context) {
 		config.Conf().Eos.PayerPrivateKey,
 	)
 	if err != nil {
+		err = errno.DefaultParamsError("broadcast transaction failed,{0}", err)
 		api.Error(c, err)
 		return
 	}
