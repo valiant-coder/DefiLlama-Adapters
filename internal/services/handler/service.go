@@ -206,6 +206,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.EventContract, s.eosCfg.Events.EmitCanceled)] = s.handleCancelOrder
 	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.EventContract, s.eosCfg.Events.EmitFilled)] = s.handleMatchOrder
 	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.PoolContract, s.eosCfg.Events.Create)] = s.handleCreatePool
+	s.handlers[fmt.Sprintf("%s:%s", s.cdexCfg.PoolContract, s.eosCfg.Events.SetMinAmt)] = s.handleSetMinAmt
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBridgeDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBTCDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
@@ -287,9 +288,9 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 			return ""
 		}
 		return fmt.Sprintf("pool-%s", data.EV.PoolID)
-	case s.eosCfg.Events.Create:
+	case s.eosCfg.Events.Create, s.eosCfg.Events.SetMinAmt:
 		// Use fixed partition key for pool creation
-		return "pool-creation"
+		return "pool-creation,pool-set-min-amt"
 	case s.eosCfg.Events.LogNewAcc, s.eosCfg.Events.DepositLog, s.eosCfg.Events.LogSend, s.eosCfg.Events.LogDeposit:
 		return fmt.Sprintf("deposit-or-create-account")
 
@@ -297,7 +298,6 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return "eos-account-update"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
-
 	default:
 		return ""
 	}

@@ -30,14 +30,16 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 	}
 
 	if err := json.Unmarshal(action.Act.Data, &createPool); err != nil {
-		return err
+		log.Printf("failed to unmarshal create pool data: %v", err)
+		return nil
 	}
 
 	cdexCfg := s.eosCfg.CdexConfig
 	cdexClient := cdex.NewClient(s.eosCfg.NodeURL, cdexCfg.DexContract, cdexCfg.PoolContract)
 	pools, err := cdexClient.GetPools(ctx)
 	if err != nil {
-		return err
+		log.Printf("failed to get pools: %v", err)
+		return nil
 	}
 
 	var pool cdex.Pool
@@ -54,7 +56,8 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 	}
 
 	if !hasPool {
-		return fmt.Errorf("pool not found")
+		log.Printf("pool not found: %+v", createPool)
+		return nil
 	}
 
 	baseSymbol, basePrecision := pool.Base.SymbolAndPrecision()
@@ -62,11 +65,13 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 
 	askingTime, err := utils.ParseTime(pool.AskingTime)
 	if err != nil {
-		return err
+		log.Printf("failed to parse asking time: %v", err)
+		return nil
 	}
 	tradingTime, err := utils.ParseTime(pool.TradingTime)
 	if err != nil {
-		return err
+		log.Printf("failed to parse trading time: %v", err)
+		return nil
 	}
 	var takerFeeRate, makerFeeRate float64
 	if pool.TakerFeeRate == "18446744073709551615" {
@@ -104,7 +109,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 	err = s.repo.CreatePoolIfNotExist(ctx, newPool)
 	if err != nil {
 		log.Printf("failed to create db pool: %v, pool: %+v", err, newPool)
-		return err
+		return nil
 	}
 
 	err = s.ckhRepo.CreatePoolStats(ctx, &ckhdb.PoolStats{
@@ -124,8 +129,42 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 	})
 	if err != nil {
 		log.Printf("failed to create db pool stats: %v, pool: %+v", err, newPool)
-		return err
+		return nil
 	}
 
 	return nil
 }
+
+
+func (s *Service) handleSetMinAmt(action hyperion.Action) error {
+	ctx := context.Background()
+	var setMinAmt struct {
+		PoolID    string `json:"pool_id"`
+		MinAmount string `json:"min_amount"`
+	}
+	if err := json.Unmarshal(action.Act.Data, &setMinAmt); err != nil {
+		log.Printf("failed to unmarshal set min amt data: %v", err)
+		return nil
+	}
+
+	pool, err := s.repo.GetPoolByID(ctx, cast.ToUint64(setMinAmt.PoolID))
+	if err != nil {
+		log.Printf("failed to get pool by id: %v", err)
+		return nil
+	}
+
+
+	minAmount,err := decimal.NewFromString(setMinAmt.MinAmount)
+	if err != nil {
+		log.Printf("failed to convert min amount to decimal: %v", err)
+		return nil
+	}
+	pool.MinAmount = minAmount.Shift(-int32(pool.BaseCoinPrecision))
+	err = s.repo.UpdatePool(ctx, pool)
+	if err != nil {
+		log.Printf("failed to update pool: %v", err)
+		return nil
+	}
+	return nil
+}
+

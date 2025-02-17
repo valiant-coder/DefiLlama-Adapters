@@ -55,6 +55,10 @@ func (r *Repo) CreatePoolIfNotExist(ctx context.Context, pool *Pool) error {
 	return nil
 }
 
+func (r *Repo) UpdatePool(ctx context.Context, pool *Pool) error {
+	return r.WithContext(ctx).Save(pool).Error
+}
+
 func (r *Repo) GetPoolBySymbol(ctx context.Context, symbol string) (*Pool, error) {
 	var pool Pool
 	if err := r.WithContext(ctx).Where("symbol = ?", symbol).First(&pool).Error; err != nil {

@@ -192,6 +192,8 @@ type EventConfig struct {
 	WithdrawLog string `yaml:"withdraw_log"`
 	// exapp eos native withdraw log
 	LogSend string `yaml:"log_send"`
+
+	SetMinAmt string `yaml:"set_min_amt"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -206,5 +208,6 @@ func DefaultEventConfig() EventConfig {
 		LogWithdraw:  "logwithdraw",
 		WithdrawLog:  "withdrawlog",
 		LogSend:      "logsend",
+		SetMinAmt:    "setminamt",
 	}
 }
