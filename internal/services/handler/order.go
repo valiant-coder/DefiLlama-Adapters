@@ -395,7 +395,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	go s.updateUserTokenBalance(data.EV.Maker.Actor)
 	go s.updateUserTokenBalance(data.EV.Taker.Actor)
 	go s.publisher.PublishOrderUpdate(data.EV.Maker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.MakerOrderID), map[bool]string{true: "0", false: "1"}[!data.EV.TakerIsBid]))
-	go s.publisher.PublishOrderUpdate(data.EV.Taker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.TakerOrderID), map[bool]string{true: "0", false: "1"}[!data.EV.TakerIsBid]))
+	go s.publisher.PublishOrderUpdate(data.EV.Taker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.TakerOrderID), map[bool]string{true: "0", false: "1"}[data.EV.TakerIsBid]))
 
 	return nil
 }
