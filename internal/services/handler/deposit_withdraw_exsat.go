@@ -174,7 +174,10 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 			sendTxID = action.TrxID
 		}
 		completedAt = withdrawAt
-	} else {
+	} else if targetChain.ChainName == "eos" {
+		withdrawStatus = db.WithdrawStatusSuccess
+		sendTxID = action.TrxID
+	}else {
 		withdrawStatus = db.WithdrawStatusPending
 	}
 
