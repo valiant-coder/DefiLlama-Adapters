@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cast"
+	"gorm.io/gorm"
 )
 
 type OrderService struct {
@@ -37,26 +38,49 @@ func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *querypara
 	return result, total, nil
 }
 
-func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.HistoryOrder, int64, error) {
+func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.Order, int64, error) {
 	orders, total, err := s.ckhdbRepo.QueryHistoryOrders(ctx, queryParams)
 	if err != nil {
-		return make([]entity.HistoryOrder, 0), 0, err
+		return make([]entity.Order, 0), 0, err
 	}
-	result := make([]entity.HistoryOrder, 0, len(orders))
+	result := make([]entity.Order, 0, len(orders))
 	for _, order := range orders {
-		result = append(result, entity.HistoryOrderFromDB(order))
+		result = append(result, entity.OrderFromHistoryDB(order))
 	}
 	return result, total, nil
 }
 
-func (s *OrderService) GetHistoryOrderDetail(ctx context.Context, id string) (entity.HistoryOrderDetail, error) {
+func (s *OrderService) GetHistoryOrderDetail(ctx context.Context, id string) (entity.OrderDetail, error) {
 	params := strings.Split(id, "-")
 	if len(params) != 3 {
-		return entity.HistoryOrderDetail{}, errors.New("invalid id")
+		return entity.OrderDetail{}, errors.New("invalid id")
 	}
-	order, err := s.ckhdbRepo.GetOrder(ctx, cast.ToUint64(params[0]), cast.ToUint64(params[1]), params[2] == "0")
+	poolID := cast.ToUint64(params[0])
+	orderID := cast.ToUint64(params[1])
+	isBid := params[2] == "0"
+
+	orderDetail := entity.OrderDetail{}
+	order, err := s.ckhdbRepo.GetOrder(ctx, poolID, orderID, isBid)
 	if err != nil {
-		return entity.HistoryOrderDetail{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			openOrder, err := s.repo.GetOpenOrder(ctx, poolID, orderID, isBid)
+			if err != nil {
+				return entity.OrderDetail{}, err
+			}
+			orderDetail.Order = entity.OrderFormOpenDB(*openOrder)
+		}
+		return entity.OrderDetail{}, err
 	}
-	return entity.HistoryOrderDetailFromDB(order), nil
+	orderDetail.Order = entity.OrderFromHistoryDB(*order)
+	if orderDetail.Status == 3 {
+		orderDetail.Trades = []entity.TradeDetail{}
+		return orderDetail, nil
+	}
+
+	trades, err := s.ckhdbRepo.GetTrades(ctx, id)
+	if err != nil {
+		return entity.OrderDetail{}, err
+	}
+	orderDetail.Trades = entity.TradeDetailFromDB(trades)
+	return orderDetail, nil
 }

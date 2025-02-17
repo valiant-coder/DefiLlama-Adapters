@@ -144,7 +144,7 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.HistoryOrder"
+                                "$ref": "#/definitions/entity.Order"
                             }
                         }
                     }
@@ -334,7 +334,7 @@ const docTemplatemarketplace = `{
                     "200": {
                         "description": "history order detail",
                         "schema": {
-                            "$ref": "#/definitions/entity.HistoryOrderDetail"
+                            "$ref": "#/definitions/entity.OrderDetail"
                         }
                     }
                 }
@@ -874,130 +874,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "entity.HistoryOrder": {
-            "type": "object",
-            "properties": {
-                "avg_price": {
-                    "type": "string"
-                },
-                "executed_amount": {
-                    "type": "string"
-                },
-                "filled_total": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "order_amount": {
-                    "type": "string"
-                },
-                "order_cid": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "type": "integer"
-                },
-                "order_price": {
-                    "type": "string"
-                },
-                "order_time": {
-                    "type": "string"
-                },
-                "pool_base_coin": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_quote_coin": {
-                    "type": "string"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                },
-                "side": {
-                    "description": "0 buy 1 sell",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "1partially_filled 2full_filled 3.canceled",
-                    "type": "integer"
-                },
-                "trader": {
-                    "type": "string"
-                },
-                "type": {
-                    "description": "0 market 1 limit",
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.HistoryOrderDetail": {
-            "type": "object",
-            "properties": {
-                "avg_price": {
-                    "type": "string"
-                },
-                "executed_amount": {
-                    "type": "string"
-                },
-                "filled_total": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "order_amount": {
-                    "type": "string"
-                },
-                "order_cid": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "type": "integer"
-                },
-                "order_price": {
-                    "type": "string"
-                },
-                "order_time": {
-                    "type": "string"
-                },
-                "pool_base_coin": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_quote_coin": {
-                    "type": "string"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                },
-                "side": {
-                    "description": "0 buy 1 sell",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "1partially_filled 2full_filled 3.canceled",
-                    "type": "integer"
-                },
-                "trader": {
-                    "type": "string"
-                },
-                "trades": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TradeDetail"
-                    }
-                },
-                "type": {
-                    "description": "0 market 1 limit",
-                    "type": "integer"
-                }
-            }
-        },
         "entity.Kline": {
             "type": "object",
             "properties": {
@@ -1095,6 +971,130 @@ const docTemplatemarketplace = `{
                 },
                 "trader": {
                     "type": "string"
+                },
+                "type": {
+                    "description": "0 market 1 limit",
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.Order": {
+            "type": "object",
+            "properties": {
+                "avg_price": {
+                    "type": "string"
+                },
+                "executed_amount": {
+                    "type": "string"
+                },
+                "filled_total": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_amount": {
+                    "type": "string"
+                },
+                "order_cid": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "order_price": {
+                    "type": "string"
+                },
+                "order_time": {
+                    "type": "string"
+                },
+                "pool_base_coin": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "pool_quote_coin": {
+                    "type": "string"
+                },
+                "pool_symbol": {
+                    "type": "string"
+                },
+                "side": {
+                    "description": "0 buy 1 sell",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "1partially_filled 2full_filled 3.canceled",
+                    "type": "integer"
+                },
+                "trader": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "0 market 1 limit",
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.OrderDetail": {
+            "type": "object",
+            "properties": {
+                "avg_price": {
+                    "type": "string"
+                },
+                "executed_amount": {
+                    "type": "string"
+                },
+                "filled_total": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_amount": {
+                    "type": "string"
+                },
+                "order_cid": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "order_price": {
+                    "type": "string"
+                },
+                "order_time": {
+                    "type": "string"
+                },
+                "pool_base_coin": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "pool_quote_coin": {
+                    "type": "string"
+                },
+                "pool_symbol": {
+                    "type": "string"
+                },
+                "side": {
+                    "description": "0 buy 1 sell",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "1partially_filled 2full_filled 3.canceled",
+                    "type": "integer"
+                },
+                "trader": {
+                    "type": "string"
+                },
+                "trades": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TradeDetail"
+                    }
                 },
                 "type": {
                     "description": "0 market 1 limit",

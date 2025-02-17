@@ -3,7 +3,6 @@ package ckhdb
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
-	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -92,36 +91,11 @@ func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *qu
 	return orders, total, nil
 }
 
-type OrderWithTrades struct {
-	HistoryOrder
-	Trades []Trade `json:"trades"`
-}
-
-func (r *ClickHouseRepo) GetOrder(ctx context.Context, poolID uint64, orderID uint64, isBid bool) (*OrderWithTrades, error) {
+func (r *ClickHouseRepo) GetOrder(ctx context.Context, poolID uint64, orderID uint64, isBid bool) (*HistoryOrder, error) {
 	order := HistoryOrder{}
 	err := r.DB.WithContext(ctx).Where("pool_id = ? and order_id = ? and is_bid = ?", poolID, orderID, isBid).First(&order).Error
 	if err != nil {
 		return nil, err
 	}
-	var side uint8
-	if isBid {
-		side = 0
-	} else {
-		side = 1
-	}
-	orderTag := fmt.Sprintf("%d-%d-%d", poolID, orderID, side)
-	if order.Status == OrderStatusCancelled {
-		return &OrderWithTrades{
-			HistoryOrder: order,
-			Trades:       []Trade{},
-		}, nil
-	}
-	trades, err := r.GetTrades(ctx, orderTag)
-	if err != nil {
-		return nil, err
-	}
-	return &OrderWithTrades{
-		HistoryOrder: order,
-		Trades:       trades,
-	}, nil
+	return &order, nil
 }

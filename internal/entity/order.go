@@ -52,7 +52,7 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 	}
 }
 
-type HistoryOrder struct {
+type Order struct {
 	OrderTime     Time   `json:"order_time"`
 	ID            string `json:"id"`
 	OrderID       uint64 `json:"order_id"`
@@ -75,7 +75,7 @@ type HistoryOrder struct {
 	Status uint8 `json:"status"`
 }
 
-func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
+func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
 	side := uint8(1)
 	if order.IsBid {
 		side = 0
@@ -85,7 +85,7 @@ func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
 		orderType = 0
 	}
 
-	return HistoryOrder{
+	return Order{
 		OrderTime:      Time(order.CreatedAt),
 		ID:             fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
 		OrderID:        order.OrderID,
@@ -106,16 +106,35 @@ func HistoryOrderFromDB(order ckhdb.HistoryOrder) HistoryOrder {
 	}
 }
 
-type HistoryOrderDetail struct {
-	HistoryOrder
-	Trades []TradeDetail `json:"trades"`
+func OrderFormOpenDB(order db.OpenOrder) Order {
+	side := uint8(1)
+	if order.IsBid {
+		side = 0
+	}
+	return Order{
+		OrderTime:      Time(order.CreatedAt),
+		ID:             fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
+		OrderID:        order.OrderID,
+		PoolID:         order.PoolID,
+		PoolSymbol:     order.PoolSymbol,
+		PoolBaseCoin:   order.PoolBaseCoin,
+		PoolQuoteCoin:  order.PoolQuoteCoin,
+		ClientOrderID:  order.ClientOrderID,
+		Trader:         order.Trader,
+		Side:           side,
+		Type:           1,
+		OrderPrice:     order.Price.String(),
+		AvgPrice:       order.Price.String(),
+		OrderAmount:    order.OriginalQuantity.String(),
+		ExecutedAmount: order.ExecutedQuantity.String(),
+		FilledTotal:    order.ExecutedQuantity.Mul(order.Price).String(),
+		Status:         uint8(order.Status),
+	}
 }
 
-func HistoryOrderDetailFromDB(order *ckhdb.OrderWithTrades) HistoryOrderDetail {
-	return HistoryOrderDetail{
-		HistoryOrder: HistoryOrderFromDB(order.HistoryOrder),
-		Trades:       TradeDetailFromDB(order.Trades),
-	}
+type OrderDetail struct {
+	Order
+	Trades []TradeDetail `json:"trades"`
 }
 
 func TradeDetailFromDB(trades []ckhdb.Trade) []TradeDetail {
