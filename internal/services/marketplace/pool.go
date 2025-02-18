@@ -61,6 +61,9 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 		pool, err = s.repo.GetPoolByID(ctx, poolID)
 	}
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.Pool{}, nil
+		}
 		return entity.Pool{}, err
 	}
 	poolStats, err := s.ckhRepo.GetPoolStats(ctx, pool.PoolID)
