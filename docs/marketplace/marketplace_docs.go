@@ -1529,6 +1529,9 @@ const docTemplatemarketplace = `{
                 "maximum_supply": {
                     "type": "string"
                 },
+                "rank": {
+                    "type": "string"
+                },
                 "total_supply": {
                     "type": "string"
                 },

@@ -25,8 +25,8 @@ func TokenFromDB(token db.Token) Token {
 			MinDepositAmount:  chain.MinDepositAmount.String(),
 			MinWithdrawAmount: chain.MinWithdrawAmount.String(),
 
-			WithdrawFee:      chain.WithdrawalFee.String(),
-			ExsatWithdrawFee: chain.ExsatWithdrawFee.String(),
+			WithdrawFee:       chain.WithdrawalFee.String(),
+			ExsatWithdrawFee:  chain.ExsatWithdrawFee.String(),
 			ExsatTokenAddress: chain.ExsatTokenAddress,
 		})
 	}
@@ -40,6 +40,7 @@ func TokenFromDB(token db.Token) Token {
 		})
 	}
 	info := TokenInfo{
+		Rank:                  tokenData.Rank,
 		MarketCapitalization:  tokenData.MarketCapitalization,
 		FullyDilutedMarketCap: tokenData.FullyDilutedMarketCap,
 		MarketDominance:       tokenData.MarketDominance,
@@ -57,10 +58,10 @@ func TokenFromDB(token db.Token) Token {
 		Intro:                 tokenData.Intro,
 	}
 	return Token{
-		Symbol:       token.Symbol,
-		Name:         token.Name,
-		Decimals:     token.Decimals,
-		EOSContract:  token.EOSContractAddress,
+		Symbol:      token.Symbol,
+		Name:        token.Name,
+		Decimals:    token.Decimals,
+		EOSContract: token.EOSContractAddress,
 
 		SupportChain: chains,
 		Info:         info,
@@ -79,6 +80,7 @@ type Chain struct {
 }
 
 type TokenInfo struct {
+	Rank                  string      `json:"rank"`
 	MarketCapitalization  string      `json:"market_capitalization"`
 	FullyDilutedMarketCap string      `json:"fully_diluted_market_cap"`
 	MarketDominance       string      `json:"market_dominance"`
