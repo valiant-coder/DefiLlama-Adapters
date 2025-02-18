@@ -194,6 +194,8 @@ type EventConfig struct {
 	LogSend string `yaml:"log_send"`
 
 	SetMinAmt string `yaml:"set_min_amt"`
+
+	SetPoolFeeRate string `yaml:"set_pool_fee_rate"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -209,5 +211,6 @@ func DefaultEventConfig() EventConfig {
 		WithdrawLog:  "withdrawlog",
 		LogSend:      "logsend",
 		SetMinAmt:    "setminamt",
+		SetPoolFeeRate: "setpfeerate",
 	}
 }

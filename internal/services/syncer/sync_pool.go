@@ -33,9 +33,10 @@ func (s *Service) syncPoolHistory(ctx context.Context) error {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
 			Filter:  fmt.Sprintf(
-				"%s:%s,%s:%s", 
+				"%s:%s,%s:%s,%s:%s", 
 				s.cdexCfg.PoolContract, s.eosCfg.Events.Create, 
 				s.cdexCfg.PoolContract, s.eosCfg.Events.SetMinAmt,
+				s.cdexCfg.PoolContract, s.eosCfg.Events.SetPoolFeeRate,
 			),
 			Limit:   s.hyperionCfg.BatchSize,
 			Sort:    "asc",
@@ -83,6 +84,14 @@ func (s *Service) SyncPool(ctx context.Context) (<-chan hyperion.Action, error) 
 		{
 			Contract:  s.cdexCfg.PoolContract,
 			Action:    s.eosCfg.Events.SetMinAmt,
+			Account:   "",
+			StartFrom: int64(s.poolLastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.cdexCfg.PoolContract,
+			Action:    s.eosCfg.Events.SetPoolFeeRate,
 			Account:   "",
 			StartFrom: int64(s.poolLastBlockNum) + 1,
 			ReadUntil: 0,

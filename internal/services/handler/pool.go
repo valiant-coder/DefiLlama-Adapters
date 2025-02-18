@@ -170,3 +170,43 @@ func (s *Service) handleSetMinAmt(action hyperion.Action) error {
 	return nil
 }
 
+
+
+func (s *Service) handleSetPoolFeeRate(action hyperion.Action) error {
+	ctx := context.Background()
+	var setPoolFeeRate struct {
+		PoolID    string `json:"pool_id"`
+		TakerFeeRate string `json:"taker_fee_rate"`
+		MakerFeeRate string `json:"maker_fee_rate"`
+	}
+	if err := json.Unmarshal(action.Act.Data, &setPoolFeeRate); err != nil {
+		log.Printf("failed to unmarshal set pool fee rate data: %v", err)
+		return nil
+	}
+
+	pool, err := s.repo.GetPoolByID(ctx, cast.ToUint64(setPoolFeeRate.PoolID))
+	if err != nil {
+		log.Printf("failed to get pool by id: %v", err)
+		return nil
+	}
+
+
+	if setPoolFeeRate.TakerFeeRate == "18446744073709551615" {
+		pool.TakerFeeRate = s.cdexCfg.DefaultPoolTakerFeeRate
+	} else {
+		pool.TakerFeeRate = cast.ToFloat64(setPoolFeeRate.TakerFeeRate) / 10000.0
+	}
+	
+	if setPoolFeeRate.MakerFeeRate == "18446744073709551615" {
+		pool.MakerFeeRate = s.cdexCfg.DefaultPoolMakerFeeRate
+	} else {
+		pool.MakerFeeRate = cast.ToFloat64(setPoolFeeRate.MakerFeeRate) / 10000.0
+	}
+	pool.UpdateBlockNum = action.BlockNum
+	err = s.repo.UpdatePool(ctx, pool)
+	if err != nil {
+		log.Printf("failed to update pool: %v", err)
+		return nil
+	}
+	return nil
+}	

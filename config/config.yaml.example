@@ -105,3 +105,4 @@ eos:
     create: create
     log_deposit: logdeposit
     log_send: logsend
+    set_pool_fee_rate: setpfeerate
