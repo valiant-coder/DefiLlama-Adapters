@@ -42,8 +42,8 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	if data.Applicant != s.exappCfg.AssetContract {
-		log.Printf("Applicant is not %s, skip", s.exappCfg.AssetContract)
+	if data.Applicant != s.exappCfg.BridgeContract {
+		log.Printf("Applicant is not %s, skip", s.exappCfg.BridgeContract)
 		return nil
 	}
 
@@ -177,7 +177,7 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 	} else if targetChain.ChainName == "eos" {
 		withdrawStatus = db.WithdrawStatusSuccess
 		sendTxID = action.TrxID
-	}else {
+	} else {
 		withdrawStatus = db.WithdrawStatusPending
 	}
 

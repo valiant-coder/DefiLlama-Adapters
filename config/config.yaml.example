@@ -85,7 +85,8 @@ eos:
     default_pool_maker_fee_rate: 0.001
   exapp:
     vault_evm_address: "0x1234567890abcdef"
-    asset_contract: assetcontract
+    bridge_contract: bridgecontract
+    bridge_contract_evm_address: bridgecontractevmaddress
     actor: exappactor
     actor_private_key: your_actor_private_key
     app_taker_fee_rate: 0.001

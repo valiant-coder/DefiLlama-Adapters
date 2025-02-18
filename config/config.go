@@ -116,21 +116,20 @@ type HyperionConfig struct {
 }
 
 type ExappConfig struct {
-	VaultEVMAddress         string `yaml:"vault_evm_address"`
-	AssetContract           string `yaml:"asset_contract"`
-	AssetContractEVMAddress string `yaml:"asset_contract_evm_address"`
-	Actor                   string `yaml:"actor"`
-	ActorPrivateKey         string `yaml:"actor_private_key"`
-	AppTakerFeeRate         float64 `yaml:"app_taker_fee_rate"`
-	AppMakerFeeRate         float64 `yaml:"app_maker_fee_rate"`
-	TokenContract           string  `yaml:"token_contract"`
-
+	VaultEVMAddress          string  `yaml:"vault_evm_address"`
+	BridgeContract           string  `yaml:"bridge_contract"`
+	BridgeContractEVMAddress string  `yaml:"bridge_contract_evm_address"`
+	Actor                    string  `yaml:"actor"`
+	ActorPrivateKey          string  `yaml:"actor_private_key"`
+	AppTakerFeeRate          float64 `yaml:"app_taker_fee_rate"`
+	AppMakerFeeRate          float64 `yaml:"app_maker_fee_rate"`
+	TokenContract            string  `yaml:"token_contract"`
 }
 
 type ExsatConfig struct {
 	BridgeContract    string `yaml:"bridge_contract"`
 	BTCBridgeContract string `yaml:"btc_bridge_contract"`
-	BTCChainName     string `yaml:"btc_chain_name"`
+	BTCChainName      string `yaml:"btc_chain_name"`
 }
 
 type CdexConfig struct {
@@ -200,17 +199,17 @@ type EventConfig struct {
 
 func DefaultEventConfig() EventConfig {
 	return EventConfig{
-		EmitPlaced:   "emitplaced",
-		EmitCanceled: "emitcanceled",
-		EmitFilled:   "emitfilled",
-		Create:       "create",
-		DepositLog:   "depositlog",
-		LogDeposit:   "logdeposit",
-		LogNewAcc:    "lognewacc",
-		LogWithdraw:  "logwithdraw",
-		WithdrawLog:  "withdrawlog",
-		LogSend:      "logsend",
-		SetMinAmt:    "setminamt",
+		EmitPlaced:     "emitplaced",
+		EmitCanceled:   "emitcanceled",
+		EmitFilled:     "emitfilled",
+		Create:         "create",
+		DepositLog:     "depositlog",
+		LogDeposit:     "logdeposit",
+		LogNewAcc:      "lognewacc",
+		LogWithdraw:    "logwithdraw",
+		WithdrawLog:    "withdrawlog",
+		LogSend:        "logsend",
+		SetMinAmt:      "setminamt",
 		SetPoolFeeRate: "setpfeerate",
 	}
 }
