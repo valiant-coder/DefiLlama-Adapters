@@ -94,7 +94,8 @@ eos:
     token_contract: tokencontract
   exsat:
     bridge_contract: bridgecontract
-  
+    btc_bridge_contract: btcbridgecontract
+    btc_chain_name: btcchainname
   events:
     log_new_acc: lognewacc
     deposit_log: depositlog
@@ -106,4 +107,5 @@ eos:
     create: create
     log_deposit: logdeposit
     log_send: logsend
+    set_min_amt: setminamt
     set_pool_fee_rate: setpfeerate
