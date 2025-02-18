@@ -33,6 +33,7 @@ type Pool struct {
 	Status             PoolStatus      `gorm:"column:status;type:tinyint(4)"`
 	MinAmount          decimal.Decimal `gorm:"column:min_amount;type:decimal(36,18)"`
 	Visible            bool            `gorm:"column:visible;type:tinyint(1);default:0"`
+	UpdateBlockNum     uint64          `gorm:"column:update_block_num;type:bigint(20);default:0"`
 }
 
 type PoolStatus uint8
@@ -114,4 +115,13 @@ func (r *Repo) GetVisiblePoolTokens(ctx context.Context) (map[string]string, err
 		poolTokens[pool.QuoteCoin] = pool.QuoteSymbol
 	}
 	return poolTokens, nil
+}
+
+func (r *Repo) GetPoolMaxUpdateBlockNum(ctx context.Context) (uint64, error) {
+	var blockNum *uint64
+	err := r.WithContext(ctx).Model(&Pool{}).Select("COALESCE(MAX(update_block_num), 0)").Scan(&blockNum).Error
+	if err != nil {
+		return 0, err
+	}
+	return *blockNum, nil
 }

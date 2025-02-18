@@ -105,6 +105,7 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		Status:             db.PoolStatus(pool.Status),
 		MinAmount:          decimal.New(int64(pool.MinAmount), -int32(basePrecision)),
 		Visible:            true,
+		UpdateBlockNum:     action.BlockNum,
 	}
 	err = s.repo.CreatePoolIfNotExist(ctx, newPool)
 	if err != nil {
@@ -160,6 +161,7 @@ func (s *Service) handleSetMinAmt(action hyperion.Action) error {
 		return nil
 	}
 	pool.MinAmount = minAmount.Shift(-int32(pool.BaseCoinPrecision))
+	pool.UpdateBlockNum = action.BlockNum
 	err = s.repo.UpdatePool(ctx, pool)
 	if err != nil {
 		log.Printf("failed to update pool: %v", err)
