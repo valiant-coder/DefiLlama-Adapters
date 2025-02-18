@@ -77,7 +77,7 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 	for _, keyCredential := range keysCredentials {
 		if keyCredential.EOSPermissions == "" {
 			keyCredential.EOSPermissions = data.Permission
-		} else {
+		} else if !strings.Contains(keyCredential.EOSPermissions, data.Permission) {
 			keyCredential.EOSPermissions = fmt.Sprintf("%s,%s", keyCredential.EOSPermissions, data.Permission)
 		}
 		keyCredential.BlockNumber = action.BlockNum
