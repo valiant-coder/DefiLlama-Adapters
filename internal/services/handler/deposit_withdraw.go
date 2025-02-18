@@ -67,15 +67,15 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		chianName = "eos"
 		depositAddress = data.Account
 		sourceTxID = action.TrxID
-	} else   {
+	} else {
 		chianName = "exsat"
-		depositAddress = s.exappCfg.VaultEVMAddress
+		depositAddress = s.oneDexCfg.VaultEVMAddress
 		sourceTxID, err = s.hyperionCli.GetEvmTxIDByEosTxID(action.TrxID)
 		if err != nil {
 			log.Printf("Get evm tx id by eos tx id failed: %v-%v", action.TrxID, err)
 			sourceTxID = action.TrxID
 		}
-	} 
+	}
 	record := &db.DepositRecord{
 		Symbol:         asset.Symbol.Symbol,
 		UID:            uid,

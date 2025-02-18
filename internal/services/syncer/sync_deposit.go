@@ -34,8 +34,8 @@ func (s *Service) syncDepositHistory(ctx context.Context) error {
 			Account: "",
 			Filter: fmt.Sprintf(
 				"%s:%s,%s:%s,%s:%s,%s:%s",
-				s.exappCfg.BridgeContract, s.eosCfg.Events.LogNewAcc,
-				s.exappCfg.BridgeContract, s.eosCfg.Events.LogDeposit,
+				s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogNewAcc,
+				s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogDeposit,
 				s.exsatCfg.BridgeContract, s.eosCfg.Events.DepositLog,
 				s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog,
 			),
@@ -85,7 +85,7 @@ func (s *Service) SyncDeposit(ctx context.Context) (<-chan hyperion.Action, erro
 			Filters:   []hyperion.RequestFilter{},
 		},
 		{
-			Contract:  s.exappCfg.BridgeContract,
+			Contract:  s.oneDexCfg.BridgeContract,
 			Action:    s.eosCfg.Events.LogNewAcc,
 			Account:   "",
 			StartFrom: int64(s.depositLastBlockNum) + 1,
@@ -93,7 +93,7 @@ func (s *Service) SyncDeposit(ctx context.Context) (<-chan hyperion.Action, erro
 			Filters:   []hyperion.RequestFilter{},
 		},
 		{
-			Contract:  s.exappCfg.BridgeContract,
+			Contract:  s.oneDexCfg.BridgeContract,
 			Action:    s.eosCfg.Events.LogDeposit,
 			Account:   "",
 			StartFrom: int64(s.depositLastBlockNum) + 1,

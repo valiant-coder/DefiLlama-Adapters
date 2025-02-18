@@ -75,8 +75,8 @@ func (s *Service) PowerUp() {
 	err = eos.PowerUp(
 		ctx,
 		conf.NodeURL,
-		conf.Exapp.Actor,
-		conf.Exapp.ActorPrivateKey,
+		conf.OneDex.Actor,
+		conf.OneDex.ActorPrivateKey,
 		conf.PowerUp.NetEOS,
 		conf.PowerUp.CPUEOS,
 		conf.PowerUp.MaxPayment,

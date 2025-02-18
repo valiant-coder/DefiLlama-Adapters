@@ -38,7 +38,7 @@ type Service struct {
 	poolCache   map[uint64]*db.Pool
 	eosCfg      config.EosConfig
 	cdexCfg     config.CdexConfig
-	exappCfg    config.ExappConfig
+	oneDexCfg   config.OneDexConfig
 	exsatCfg    config.ExsatConfig
 	publisher   *NSQPublisher
 	redisCli    redis.Cmdable
@@ -72,7 +72,7 @@ func NewService() (*Service, error) {
 		poolCache:   make(map[uint64]*db.Pool),
 		eosCfg:      cfg.Eos,
 		cdexCfg:     cfg.Eos.CdexConfig,
-		exappCfg:    cfg.Eos.Exapp,
+		oneDexCfg:   cfg.Eos.OneDex,
 		exsatCfg:    cfg.Eos.Exsat,
 		publisher:   publisher,
 		redisCli:    redisCli,
@@ -212,10 +212,10 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBTCDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateBTCWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.BridgeContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
-	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.BridgeContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.BridgeContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
-	s.handlers[fmt.Sprintf("%s:%s", s.exappCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
 }
 

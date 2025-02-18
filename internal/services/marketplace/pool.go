@@ -90,8 +90,8 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 		}
 	}
 	cfg := config.Conf()
-	appTakerFeeRate := cfg.Eos.Exapp.AppTakerFeeRate
-	appMakerFeeRate := cfg.Eos.Exapp.AppMakerFeeRate
+	appTakerFeeRate := cfg.Eos.OneDex.AppTakerFeeRate
+	appMakerFeeRate := cfg.Eos.OneDex.AppMakerFeeRate
 	return entity.Pool{
 		PoolID:             pool.PoolID,
 		Symbol:             pool.Symbol,

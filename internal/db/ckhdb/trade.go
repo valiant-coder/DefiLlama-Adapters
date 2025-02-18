@@ -89,7 +89,7 @@ func (r *ClickHouseRepo) GetTradeCountAndVolume(ctx context.Context) (uint64, fl
 		TotalVolume float64 `gorm:"column:total_volume_usdt;"`
 	}
 
-	tokenContract := config.Conf().Eos.Exapp.TokenContract
+	tokenContract := config.Conf().Eos.OneDex.TokenContract
 	query := fmt.Sprintf(`
 	WITH 
 		(

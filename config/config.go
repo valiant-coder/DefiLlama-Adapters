@@ -94,7 +94,7 @@ type EosConfig struct {
 	PayerPrivateKey string         `yaml:"payer_private_key"`
 	Hyperion        HyperionConfig `yaml:"hyperion"`
 	CdexConfig      CdexConfig     `yaml:"cdex"`
-	Exapp           ExappConfig    `yaml:"exapp"`
+	OneDex          OneDexConfig   `yaml:"onedex"`
 	Exsat           ExsatConfig    `yaml:"exsat"`
 	Events          EventConfig    `yaml:"events"`
 
@@ -115,7 +115,7 @@ type HyperionConfig struct {
 	StreamEndpoint string `yaml:"stream_endpoint"`
 }
 
-type ExappConfig struct {
+type OneDexConfig struct {
 	VaultEVMAddress          string  `yaml:"vault_evm_address"`
 	BridgeContract           string  `yaml:"bridge_contract"`
 	BridgeContractEVMAddress string  `yaml:"bridge_contract_evm_address"`
@@ -135,7 +135,7 @@ type ExsatConfig struct {
 type CdexConfig struct {
 	DexContract     string `yaml:"dex_contract"`
 	PoolContract    string `yaml:"pool_contract"`
-	EXAppContract   string `yaml:"exapp_contract"`
+	OneDexContract   string `yaml:"onedex_contract"`
 	HistoryContract string `yaml:"history_contract"`
 	EventContract   string `yaml:"event_contract"`
 

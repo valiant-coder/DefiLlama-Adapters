@@ -78,12 +78,12 @@ eos:
   cdex:
     dex_contract: dexcontract
     pool_contract: poolcontract
-    exapp_contract: exappcontract
+    onedex_contract: onedexcontract
     history_contract: historycontract
     event_contract: eventcontract
     default_pool_taker_fee_rate: 0.003
     default_pool_maker_fee_rate: 0.001
-  exapp:
+  onedex:
     vault_evm_address: "0x1234567890abcdef"
     bridge_contract: bridgecontract
     bridge_contract_evm_address: bridgecontractevmaddress

@@ -31,7 +31,7 @@ type Service struct {
 	nsqCfg               config.NsqConfig
 	eosCfg               config.EosConfig
 	cdexCfg              config.CdexConfig
-	exappCfg             config.ExappConfig
+	oneDexCfg            config.OneDexConfig
 	exsatCfg             config.ExsatConfig
 }
 
@@ -53,7 +53,7 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 		nsqCfg:         nsqCfg,
 		eosCfg:         eosCfg,
 		cdexCfg:        eosCfg.CdexConfig,
-		exappCfg:       eosCfg.Exapp,
+		oneDexCfg:      eosCfg.OneDex,
 		exsatCfg:       eosCfg.Exsat,
 	}, nil
 }
@@ -113,7 +113,7 @@ func (s *Service) Start(ctx context.Context) error {
 				continue
 			}
 			s.withdrawLastBlockNum = action.BlockNum
-		
+
 		case action, ok := <-accountActionsCh:
 			if !ok {
 				return fmt.Errorf("account action channel closed")
