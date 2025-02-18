@@ -22,7 +22,6 @@ type UserCredential struct {
 	PublicKey    string `json:"public_key"`
 	Name         string `json:"name"`
 	Synced       bool   `json:"synced"`
-
 }
 
 func ToUserCredential(credential db.UserCredential) UserCredential {
@@ -47,11 +46,13 @@ type RespUserCredential struct {
 }
 
 type UserBalance struct {
-	Coin      string        `json:"coin"`
-	Balance   string        `json:"balance"`
-	USDTPrice string        `json:"usdt_price"`
-	Locked    string        `json:"locked"`
-	Locks     []LockBalance `json:"locks"`
+	Coin        string        `json:"coin"`
+	Balance     string        `json:"balance"`
+	USDTPrice   string        `json:"usdt_price"`
+	Locked      string        `json:"locked"`
+	Withdrawing string        `json:"withdrawing"`
+	Depositing  string        `json:"depositing"`
+	Locks       []LockBalance `json:"locks"`
 }
 
 type LockBalance struct {

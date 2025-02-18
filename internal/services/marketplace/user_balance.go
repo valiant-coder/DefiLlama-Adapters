@@ -84,6 +84,8 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		userBalance.Coin = ub.Coin
 		userBalance.Balance = ub.Balance.String()
 		userBalance.Locked = ub.Locked.String()
+		userBalance.Depositing = ub.Depositing.String()
+		userBalance.Withdrawing = ub.Withdrawing.String()
 		userBalance.Locks = make([]entity.LockBalance, 0)
 		for _, poolBalance := range ub.PoolBalance {
 			userBalance.Locks = append(userBalance.Locks, entity.LockBalance{

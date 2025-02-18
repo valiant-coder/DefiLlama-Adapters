@@ -67,6 +67,12 @@ func (r *Repo) GetDepositRecordBySourceTxID(ctx context.Context, sourceTxID stri
 	return &record, err
 }
 
+func (r *Repo) GetPendingDepositRecords(ctx context.Context, uid string) ([]*DepositRecord, error) {
+	var records []*DepositRecord
+	err := r.WithContext(ctx).Where("uid = ? and status = ?", uid, DepositStatusPending).Find(&records).Error
+	return records, err
+}
+
 type UserDepositAddress struct {
 	gorm.Model
 	UID          string `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
@@ -168,3 +174,10 @@ func (r *Repo) GetWithdrawMaxBlockNumber(ctx context.Context) (uint64, error) {
 	}
 	return *blockNumber, nil
 }
+
+func (r *Repo) GetPendingWithdrawRecords(ctx context.Context, uid string) ([]*WithdrawRecord, error) {
+	var records []*WithdrawRecord
+	err := r.WithContext(ctx).Where("uid = ? and status = ?", uid, WithdrawStatusPending).Find(&records).Error
+	return records, err
+}
+

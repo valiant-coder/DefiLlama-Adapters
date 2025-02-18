@@ -1656,6 +1656,9 @@ const docTemplatemarketplace = `{
                 "coin": {
                     "type": "string"
                 },
+                "depositing": {
+                    "type": "string"
+                },
                 "locked": {
                     "type": "string"
                 },
@@ -1666,6 +1669,9 @@ const docTemplatemarketplace = `{
                     }
                 },
                 "usdt_price": {
+                    "type": "string"
+                },
+                "withdrawing": {
                     "type": "string"
                 }
             }
