@@ -99,6 +99,7 @@ func Run(addr string, release bool) error {
 
 	auth.POST("/credentials", createUserCredentials)
 	auth.GET("/credentials", getUserCredentials)
+	auth.DELETE("/credentials/:credential_id", deleteUserCredential)
 
 	auth.GET("/user-info", getUserInfo)
 

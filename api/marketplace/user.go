@@ -1,6 +1,7 @@
 package marketplace
 
 import (
+	"errors"
 	"exapp-go/api"
 	"exapp-go/internal/entity"
 	"exapp-go/internal/services/marketplace"
@@ -119,4 +120,28 @@ func getUserBalances(c *gin.Context) {
 		return
 	}
 	api.OK(c, balances)
+}
+
+// @Summary Delete user credential
+// @Description Delete user credential by credential_id
+// @Security ApiKeyAuth
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param credential_id path string true "credential id"
+// @Success 200
+// @Router /credentials/{credential_id} [delete]
+func deleteUserCredential(c *gin.Context) {
+	credentialID := c.Param("credential_id")
+	if credentialID == "" {
+		api.Error(c, errors.New("credential_id is required"))
+		return
+	}
+
+	userService := marketplace.NewUserService()
+	if err := userService.DeleteUserCredential(c.Request.Context(), c.GetString("uid"), credentialID); err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, nil)
 }

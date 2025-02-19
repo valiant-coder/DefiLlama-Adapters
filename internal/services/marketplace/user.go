@@ -142,3 +142,24 @@ func (s *UserService) UpdateUserCredentialUsage(ctx context.Context, publicKey s
 	credential.LastUsedIP = ip
 	return s.repo.UpdateUserCredential(ctx, credential)
 }
+
+func (s *UserService) DeleteUserCredential(ctx context.Context, uid string, credentialID string) error {
+	credentials, err := s.repo.GetUserCredentials(ctx, uid)
+	if err != nil {
+		return err
+	}
+
+	var targetCredential *db.UserCredential
+	for _, c := range credentials {
+		if c.CredentialID == credentialID {
+			targetCredential = &c
+			break
+		}
+	}
+
+	if targetCredential == nil {
+		return errors.New("credential not found or not belong to user")
+	}
+
+	return s.repo.DeleteUserCredential(ctx, targetCredential)
+}

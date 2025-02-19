@@ -477,6 +477,40 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/credentials/{credential_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete user credential by credential_id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete user credential",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "credential id",
+                        "name": "credential_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/deposit": {
             "post": {
                 "security": [
