@@ -9,7 +9,7 @@ import (
 )
 
 type getKlineReq struct {
-	PoolID   uint64 `form:"pool_id" binding:"required"`
+	PoolID   uint64 `form:"pool_id"`
 	Interval string `form:"interval" binding:"required"`
 	Start    int64  `form:"start" binding:"required"`
 	End      int64  `form:"end" binding:"required"`
