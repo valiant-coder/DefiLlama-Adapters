@@ -908,6 +908,26 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.ExsatNetwork": {
+            "type": "object",
+            "properties": {
+                "block_explorer_url": {
+                    "type": "string"
+                },
+                "chain_id": {
+                    "type": "integer"
+                },
+                "currency_symbol": {
+                    "type": "string"
+                },
+                "network_name": {
+                    "type": "string"
+                },
+                "network_url": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Kline": {
             "type": "object",
             "properties": {
@@ -1478,6 +1498,9 @@ const docTemplatemarketplace = `{
         "entity.SystemInfo": {
             "type": "object",
             "properties": {
+                "exsat_network": {
+                    "$ref": "#/definitions/entity.ExsatNetwork"
+                },
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
                 },

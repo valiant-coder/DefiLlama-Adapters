@@ -73,6 +73,16 @@ type Config struct {
 	} `yaml:"oauth2"`
 
 	Eos EosConfig `yaml:"eos"`
+
+	ExsatNetwork ExsatNetworkConfig `yaml:"exsat_network"`
+}
+
+type ExsatNetworkConfig struct {
+	CurrencySymbol   string `yaml:"currency_symbol"`
+	NetworkUrl       string `yaml:"network_url"`
+	ChainId          int    `yaml:"chain_id"`
+	NetworkName      string `yaml:"network_name"`
+	BlockExplorerUrl string `yaml:"block_explorer_url"`
 }
 
 type NsqConfig struct {
@@ -135,7 +145,7 @@ type ExsatConfig struct {
 type CdexConfig struct {
 	DexContract     string `yaml:"dex_contract"`
 	PoolContract    string `yaml:"pool_contract"`
-	OneDexContract   string `yaml:"onedex_contract"`
+	OneDexContract  string `yaml:"onedex_contract"`
 	HistoryContract string `yaml:"history_contract"`
 	EventContract   string `yaml:"event_contract"`
 
