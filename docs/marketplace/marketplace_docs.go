@@ -1527,6 +1527,9 @@ const docTemplatemarketplace = `{
                 "eos_contract": {
                     "type": "string"
                 },
+                "icon_url": {
+                    "type": "string"
+                },
                 "info": {
                     "$ref": "#/definitions/entity.TokenInfo"
                 },
