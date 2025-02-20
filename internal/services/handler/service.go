@@ -263,7 +263,8 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 
 	// Execute handler
 	if err := handler(action); err != nil {
-		return err
+		log.Printf("Handle action failed: %v", err)
+		return nil
 	}
 
 	// set handled action
