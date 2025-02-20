@@ -1498,6 +1498,9 @@ const docTemplatemarketplace = `{
         "entity.SystemInfo": {
             "type": "object",
             "properties": {
+                "dex_contract": {
+                    "type": "string"
+                },
                 "exsat_network": {
                     "$ref": "#/definitions/entity.ExsatNetwork"
                 },

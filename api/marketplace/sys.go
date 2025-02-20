@@ -27,6 +27,7 @@ func getSystemInfo(c *gin.Context) {
 		VaultEVMAddress: config.Conf().Eos.OneDex.VaultEVMAddress,
 		VaultEOSAddress: config.Conf().Eos.OneDex.BridgeContract,
 		TokenContract:   config.Conf().Eos.OneDex.TokenContract,
+		DexContract:     config.Conf().Eos.CdexConfig.DexContract,
 		ExsatNetwork: entity.ExsatNetwork{
 			CurrencySymbol:   config.Conf().ExsatNetwork.CurrencySymbol,
 			NetworkUrl:       config.Conf().ExsatNetwork.NetworkUrl,
