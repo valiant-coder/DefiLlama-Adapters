@@ -64,7 +64,7 @@ func getHistoryOrders(c *gin.Context) {
 // @Router /api/v1/orders/{id} [get]
 func getOrderDetail(c *gin.Context) {
 	id := c.Param("id")
-	order, err := marketplace.NewOrderService().GetHistoryOrderDetail(c.Request.Context(), id)
+	order, err := marketplace.NewOrderService().GetOrderDetail(c.Request.Context(), id)
 	if err != nil {
 		api.Error(c, err)
 		return

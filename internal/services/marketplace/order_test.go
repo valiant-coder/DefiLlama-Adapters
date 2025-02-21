@@ -43,7 +43,7 @@ func TestOrderService_GetHistoryOrderDetail(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config_dev.yaml")
 	orderService := NewOrderService()
-	order, err := orderService.GetHistoryOrderDetail(context.Background(), "0-1-1")
+	order, err := orderService.GetOrderDetail(context.Background(), "0-1-1")
 	if err != nil {
 		t.Errorf("OrderService.GetHistoryOrderDetail() error = %v", err)
 	}

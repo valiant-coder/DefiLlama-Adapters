@@ -50,7 +50,7 @@ func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryp
 	return result, total, nil
 }
 
-func (s *OrderService) GetHistoryOrderDetail(ctx context.Context, id string) (entity.OrderDetail, error) {
+func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.OrderDetail, error) {
 	params := strings.Split(id, "-")
 	if len(params) != 3 {
 		return entity.OrderDetail{}, errors.New("invalid id")
@@ -68,8 +68,9 @@ func (s *OrderService) GetHistoryOrderDetail(ctx context.Context, id string) (en
 				return entity.OrderDetail{}, err
 			}
 			orderDetail.Order = entity.OrderFormOpenDB(*openOrder)
+		} else {
+			return entity.OrderDetail{}, err
 		}
-		return entity.OrderDetail{}, err
 	}
 	orderDetail.Order = entity.OrderFromHistoryDB(*order)
 	if orderDetail.Status == 3 {
