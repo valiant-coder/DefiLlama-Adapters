@@ -71,7 +71,7 @@ type Order struct {
 	OrderAmount    string `json:"order_amount"`
 	ExecutedAmount string `json:"executed_amount"`
 	FilledTotal    string `json:"filled_total"`
-	// 1partially_filled 2full_filled 3.canceled
+	// 0 open 1partially_filled 2full_filled 3.canceled
 	Status uint8 `json:"status"`
 }
 

@@ -73,7 +73,7 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 		}
 	}
 	orderDetail.Order = entity.OrderFromHistoryDB(*order)
-	if orderDetail.Status == 3 {
+	if orderDetail.Status == 3 || orderDetail.Status == 0 {
 		orderDetail.Trades = []entity.TradeDetail{}
 		return orderDetail, nil
 	}
