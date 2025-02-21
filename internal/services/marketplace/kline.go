@@ -100,11 +100,9 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	for currentTime.Before(end) {
 		if k, exists := klineMap[currentTime.Unix()]; exists {
 			// If data exists for this timestamp, use actual data
-			if lastValidKline == nil {
-				k.Open = k.Close
-			} else {
+			if lastValidKline != nil {
 				k.Open = lastValidKline.Close
-			}
+			} 
 			lastValidKline = k
 			completeKlines = append(completeKlines, k)
 		} else {
