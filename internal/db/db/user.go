@@ -91,7 +91,6 @@ func (r *Repo) GetTotalUserCount(ctx context.Context) (int64, error) {
 	return totalUserCount, nil
 }
 
-
 type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
@@ -140,6 +139,15 @@ func (r *Repo) GetUserCredentialsByEOSAccount(ctx context.Context, eosAccount st
 		return nil, err
 	}
 	return credentials, nil
+}
+
+func (r *Repo) GetEosAccountByUID(ctx context.Context, uid string) (string, error) {
+	var credential UserCredential
+	err := r.DB.WithContext(ctx).Where("uid = ? and eos_account != ''", uid).First(&credential).Error
+	if err != nil {
+		return "", err
+	}
+	return credential.EOSAccount, nil
 }
 
 func (r *Repo) GetUserCredentialsByKeys(ctx context.Context, keys []string) ([]*UserCredential, error) {

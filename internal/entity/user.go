@@ -15,24 +15,24 @@ type RespUserInfo struct {
 }
 
 type UserCredential struct {
-	UID          string `json:"uid"`
 	DeviceID     string `json:"device_id"`
 	AAGuid       string `json:"aaguid"`
 	CredentialID string `json:"credential_id"`
 	PublicKey    string `json:"public_key"`
 	Name         string `json:"name"`
 	Synced       bool   `json:"synced"`
+	EOSAccount   string `json:"eos_account,omitempty"`
 }
 
 func ToUserCredential(credential db.UserCredential) UserCredential {
 	return UserCredential{
-		UID:          credential.UID,
 		DeviceID:     credential.DeviceID,
 		CredentialID: credential.CredentialID,
 		PublicKey:    credential.PublicKey,
 		Name:         credential.Name,
 		Synced:       credential.Synced,
 		AAGuid:       credential.AAGuid,
+		EOSAccount:   credential.EOSAccount,
 	}
 }
 

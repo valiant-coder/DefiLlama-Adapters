@@ -1079,7 +1079,7 @@ const docTemplatemarketplace = `{
                     "type": "integer"
                 },
                 "status": {
-                    "description": "1partially_filled 2full_filled 3.canceled",
+                    "description": "0 open 1partially_filled 2full_filled 3.canceled",
                     "type": "integer"
                 },
                 "trader": {
@@ -1138,7 +1138,7 @@ const docTemplatemarketplace = `{
                     "type": "integer"
                 },
                 "status": {
-                    "description": "1partially_filled 2full_filled 3.canceled",
+                    "description": "0 open 1partially_filled 2full_filled 3.canceled",
                     "type": "integer"
                 },
                 "trader": {
@@ -1422,9 +1422,6 @@ const docTemplatemarketplace = `{
                 },
                 "synced": {
                     "type": "boolean"
-                },
-                "uid": {
-                    "type": "string"
                 }
             }
         },
@@ -1751,6 +1748,9 @@ const docTemplatemarketplace = `{
                 "device_id": {
                     "type": "string"
                 },
+                "eos_account": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1759,9 +1759,6 @@ const docTemplatemarketplace = `{
                 },
                 "synced": {
                     "type": "boolean"
-                },
-                "uid": {
-                    "type": "string"
                 }
             }
         }
