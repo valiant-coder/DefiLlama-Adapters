@@ -111,6 +111,12 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 		redis.call('ZREM', sortedSetKey, slot)
 	end
 
+	-- Check if newTotal is less than 0.00000001 and delete if true
+	if tonumber(newTotal) < 0.00000001 then
+		redis.call('HDEL', hashKey, slot)
+		redis.call('ZREM', sortedSetKey, slot)
+	end
+
 	return tostring(newTotal)
 	`)
 
@@ -139,10 +145,6 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 
 			// Only record changes for default precision
 			fixedNewTotal := decimal.RequireFromString(fmt.Sprint(newTotal)).Truncate(8)
-			if fixedNewTotal.Equal(decimal.Zero) {
-				r.redis.HDel(ctx, hashKey, slot)
-				r.redis.ZRem(ctx, sortedSetKey, slot)
-			}
 			changes = append(changes, DepthChange{
 				PoolID:    param.PoolID,
 				IsBuy:     param.IsBuy,
