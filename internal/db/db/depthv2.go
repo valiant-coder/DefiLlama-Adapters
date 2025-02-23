@@ -50,7 +50,7 @@ var SupportedPrecisions = []string{
 }
 
 // Calculate price slots for all precisions
-func calculateAllSlots(price decimal.Decimal,isBid bool) map[string]string {
+func calculateAllSlots(price decimal.Decimal, isBid bool) map[string]string {
 	slots := make(map[string]string)
 
 	for _, p := range SupportedPrecisions {
@@ -139,6 +139,10 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 
 			// Only record changes for default precision
 			fixedNewTotal := decimal.RequireFromString(fmt.Sprint(newTotal)).Truncate(8)
+			if fixedNewTotal.Equal(decimal.Zero) {
+				r.redis.HDel(ctx, hashKey, slot)
+				r.redis.ZRem(ctx, sortedSetKey, slot)
+			}
 			changes = append(changes, DepthChange{
 				PoolID:    param.PoolID,
 				IsBuy:     param.IsBuy,
@@ -146,7 +150,6 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 				Amount:    fixedNewTotal,
 				Precision: precision,
 			})
-			
 		}
 	}
 

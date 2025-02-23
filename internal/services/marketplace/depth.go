@@ -42,5 +42,6 @@ func (s *DepthService) GetDepth(ctx context.Context, poolID uint64, precision st
 		Timestamp: entity.Time(time.Now()),
 		Bids:      depth.Bids,
 		Asks:      depth.Asks,
+		Precision: precision,
 	}, nil
 }
