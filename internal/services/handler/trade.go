@@ -119,24 +119,24 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				latestKline.UpdateTime = trade.Time
 			} else {
 				// Create new kline period
-				var high, low decimal.Decimal
-				if latestKline.High.GreaterThan(trade.Price) {
-					high = latestKline.High
-				} else {
-					high = trade.Price
-				}
-				if latestKline.Low.LessThan(trade.Price) {
-					low = latestKline.Low
-				} else {
-					low = trade.Price
-				}
+				// var high, low decimal.Decimal
+				// if latestKline.High.GreaterThan(trade.Price) {
+				// 	high = latestKline.High
+				// } else {
+				// 	high = trade.Price
+				// }
+				// if latestKline.Low.LessThan(trade.Price) {
+				// 	low = latestKline.Low
+				// } else {
+				// 	low = trade.Price
+				// }
 				newKline := &ckhdb.Kline{
 					PoolID:        trade.PoolID,
 					IntervalStart: s.getIntervalStart(trade.Time, interval),
 					Interval:      interval,
 					Open:          latestKline.Close, // Use previous kline's close price as open price
-					High:          high,
-					Low:           low,
+					High:          trade.Price,
+					Low:           trade.Price,
 					Close:         trade.Price,
 					Volume:        trade.BaseQuantity,
 					QuoteVolume:   trade.QuoteQuantity,
