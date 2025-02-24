@@ -1422,6 +1422,9 @@ const docTemplatemarketplace = `{
                 },
                 "synced": {
                     "type": "boolean"
+                },
+                "uid": {
+                    "type": "string"
                 }
             }
         },
@@ -1759,6 +1762,9 @@ const docTemplatemarketplace = `{
                 },
                 "synced": {
                     "type": "boolean"
+                },
+                "uid": {
+                    "type": "string"
                 }
             }
         }

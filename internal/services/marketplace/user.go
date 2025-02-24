@@ -122,20 +122,21 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 	if err := s.repo.CreateCredentialIfNotExist(ctx, &newUserCredential); err != nil {
 		return err
 	}
-	eosAccount, err := s.repo.GetEosAccountByUID(ctx, uid)
-	if err != nil {
-		return err
-	}
-	newUserCredential.EOSAccount = eosAccount
 
-	msg := struct {
-		Type string      `json:"type"`
-		Data interface{} `json:"data"`
-	}{
-		Type: "new_user_credential",
-		Data: entity.ToUserCredential(newUserCredential),
-	}
-	return s.nsqPub.Publish("cdex_updates", msg)
+	go func() {
+		msg := struct {
+			Type string      `json:"type"`
+			Data interface{} `json:"data"`
+		}{
+			Type: "new_user_credential",
+			Data: entity.ToUserCredential(newUserCredential),
+		}
+		err := s.nsqPub.Publish("cdex_updates", msg)
+		if err != nil {
+			log.Logger().Errorf("publish new user credential error: %v", err)
+		}
+	}()
+	return nil
 }
 
 func (s *UserService) UpdateUserCredentialUsage(ctx context.Context, publicKey string, ip string) error {

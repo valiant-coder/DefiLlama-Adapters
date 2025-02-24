@@ -95,7 +95,7 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 			log.Printf("Failed to unmarshal user credential: %v", err)
 			return nil
 		}
-		s.pusher.PushUserCredential(userCredential.EOSAccount, userCredential)
+		s.pusher.PushUserCredential(userCredential.UID, userCredential)
 
 	default:
 		log.Printf("Unknown message type: %s", nsqMsg.Type)

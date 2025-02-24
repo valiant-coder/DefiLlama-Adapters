@@ -22,6 +22,7 @@ type UserCredential struct {
 	Name         string `json:"name"`
 	Synced       bool   `json:"synced"`
 	EOSAccount   string `json:"eos_account,omitempty"`
+	UID          string `json:"uid"`
 }
 
 func ToUserCredential(credential db.UserCredential) UserCredential {
@@ -33,6 +34,7 @@ func ToUserCredential(credential db.UserCredential) UserCredential {
 		Synced:       credential.Synced,
 		AAGuid:       credential.AAGuid,
 		EOSAccount:   credential.EOSAccount,
+		UID:          credential.UID,
 	}
 }
 

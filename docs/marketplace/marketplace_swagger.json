@@ -1419,6 +1419,9 @@
                 },
                 "synced": {
                     "type": "boolean"
+                },
+                "uid": {
+                    "type": "string"
                 }
             }
         },
@@ -1756,6 +1759,9 @@
                 },
                 "synced": {
                     "type": "boolean"
+                },
+                "uid": {
+                    "type": "string"
                 }
             }
         }
