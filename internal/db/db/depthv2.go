@@ -148,7 +148,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 			changes = append(changes, DepthChange{
 				PoolID:    param.PoolID,
 				IsBuy:     param.IsBuy,
-				Price:     param.Price,
+				Price:     decimal.RequireFromString(slot),
 				Amount:    fixedNewTotal,
 				Precision: precision,
 			})
