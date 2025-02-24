@@ -35,22 +35,22 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 		side = 0
 	}
 	return OpenOrder{
-		ID:             fmt.Sprintf("%d-%d-%d", openOrder.PoolID, openOrder.OrderID, side),
-		OrderID:        openOrder.OrderID,
-		PoolID:         openOrder.PoolID,
-		PoolSymbol:     openOrder.PoolSymbol,
-		PoolBaseCoin:   openOrder.PoolBaseCoin,
-		PoolQuoteCoin:  openOrder.PoolQuoteCoin,
-		ClientOrderID:  openOrder.ClientOrderID,
-		Trader:         openOrder.Trader,
-		OrderPrice:     openOrder.Price.String(),
-		AvgPrice:       openOrder.Price.String(),
-		OrderAmount:    openOrder.OriginalQuantity.String(),
-		ExecutedAmount: openOrder.ExecutedQuantity.String(),
-		OrderTotal:     openOrder.OriginalQuantity.Mul(openOrder.Price).Round(int32(openOrder.QuoteCoinPrecision)).String(),
-		OrderTime:      Time(openOrder.CreatedAt),
-		Side:           side,
-		Type:           1,
+		ID:                 fmt.Sprintf("%d-%d-%d", openOrder.PoolID, openOrder.OrderID, side),
+		OrderID:            openOrder.OrderID,
+		PoolID:             openOrder.PoolID,
+		PoolSymbol:         openOrder.PoolSymbol,
+		PoolBaseCoin:       openOrder.PoolBaseCoin,
+		PoolQuoteCoin:      openOrder.PoolQuoteCoin,
+		ClientOrderID:      openOrder.ClientOrderID,
+		Trader:             openOrder.Trader,
+		OrderPrice:         openOrder.Price.String(),
+		AvgPrice:           openOrder.Price.String(),
+		OrderAmount:        openOrder.OriginalQuantity.String(),
+		ExecutedAmount:     openOrder.ExecutedQuantity.String(),
+		OrderTotal:         openOrder.OriginalQuantity.Mul(openOrder.Price).Round(int32(openOrder.QuoteCoinPrecision)).String(),
+		OrderTime:          Time(openOrder.CreatedAt),
+		Side:               side,
+		Type:               1,
 		BaseCoinPrecision:  openOrder.BaseCoinPrecision,
 		QuoteCoinPrecision: openOrder.QuoteCoinPrecision,
 	}
@@ -76,7 +76,9 @@ type Order struct {
 	ExecutedAmount string `json:"executed_amount"`
 	FilledTotal    string `json:"filled_total"`
 	// 0 open 1partially_filled 2full_filled 3.canceled
-	Status uint8 `json:"status"`
+	Status             uint8 `json:"status"`
+	BaseCoinPrecision  uint8 `json:"base_coin_precision"`
+	QuoteCoinPrecision uint8 `json:"quote_coin_precision"`
 }
 
 func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
@@ -90,23 +92,25 @@ func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
 	}
 
 	return Order{
-		OrderTime:      Time(order.CreatedAt),
-		ID:             fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
-		OrderID:        order.OrderID,
-		PoolID:         order.PoolID,
-		PoolSymbol:     order.PoolSymbol,
-		PoolBaseCoin:   order.PoolBaseCoin,
-		PoolQuoteCoin:  order.PoolQuoteCoin,
-		ClientOrderID:  order.ClientOrderID,
-		Trader:         order.Trader,
-		Side:           side,
-		Type:           orderType,
-		OrderPrice:     order.Price.String(),
-		AvgPrice:       order.AvgPrice.String(),
-		OrderAmount:    order.OriginalQuantity.String(),
-		ExecutedAmount: order.ExecutedQuantity.String(),
-		FilledTotal:    order.ExecutedQuantity.Mul(order.AvgPrice).String(),
-		Status:         uint8(order.Status),
+		OrderTime:          Time(order.CreatedAt),
+		ID:                 fmt.Sprintf("%d-%d-%d", order.PoolID, order.OrderID, side),
+		OrderID:            order.OrderID,
+		PoolID:             order.PoolID,
+		PoolSymbol:         order.PoolSymbol,
+		PoolBaseCoin:       order.PoolBaseCoin,
+		PoolQuoteCoin:      order.PoolQuoteCoin,
+		ClientOrderID:      order.ClientOrderID,
+		Trader:             order.Trader,
+		Side:               side,
+		Type:               orderType,
+		OrderPrice:         order.Price.String(),
+		AvgPrice:           order.AvgPrice.String(),
+		OrderAmount:        order.OriginalQuantity.String(),
+		ExecutedAmount:     order.ExecutedQuantity.String(),
+		FilledTotal:        order.ExecutedQuantity.Mul(order.AvgPrice).String(),
+		Status:             uint8(order.Status),
+		BaseCoinPrecision:  order.BaseCoinPrecision,
+		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
 }
 

@@ -980,6 +980,9 @@
                 "avg_price": {
                     "type": "string"
                 },
+                "base_coin_precision": {
+                    "type": "integer"
+                },
                 "executed_amount": {
                     "type": "string"
                 },
@@ -1016,6 +1019,9 @@
                 "pool_symbol": {
                     "type": "string"
                 },
+                "quote_coin_precision": {
+                    "type": "integer"
+                },
                 "side": {
                     "description": "0 buy 1 sell",
                     "type": "integer"
@@ -1034,6 +1040,9 @@
             "properties": {
                 "avg_price": {
                     "type": "string"
+                },
+                "base_coin_precision": {
+                    "type": "integer"
                 },
                 "executed_amount": {
                     "type": "string"
@@ -1070,6 +1079,9 @@
                 },
                 "pool_symbol": {
                     "type": "string"
+                },
+                "quote_coin_precision": {
+                    "type": "integer"
                 },
                 "side": {
                     "description": "0 buy 1 sell",
@@ -1094,6 +1106,9 @@
                 "avg_price": {
                     "type": "string"
                 },
+                "base_coin_precision": {
+                    "type": "integer"
+                },
                 "executed_amount": {
                     "type": "string"
                 },
@@ -1129,6 +1144,9 @@
                 },
                 "pool_symbol": {
                     "type": "string"
+                },
+                "quote_coin_precision": {
+                    "type": "integer"
                 },
                 "side": {
                     "description": "0 buy 1 sell",

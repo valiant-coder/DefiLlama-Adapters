@@ -983,6 +983,9 @@ const docTemplatemarketplace = `{
                 "avg_price": {
                     "type": "string"
                 },
+                "base_coin_precision": {
+                    "type": "integer"
+                },
                 "executed_amount": {
                     "type": "string"
                 },
@@ -1019,6 +1022,9 @@ const docTemplatemarketplace = `{
                 "pool_symbol": {
                     "type": "string"
                 },
+                "quote_coin_precision": {
+                    "type": "integer"
+                },
                 "side": {
                     "description": "0 buy 1 sell",
                     "type": "integer"
@@ -1037,6 +1043,9 @@ const docTemplatemarketplace = `{
             "properties": {
                 "avg_price": {
                     "type": "string"
+                },
+                "base_coin_precision": {
+                    "type": "integer"
                 },
                 "executed_amount": {
                     "type": "string"
@@ -1073,6 +1082,9 @@ const docTemplatemarketplace = `{
                 },
                 "pool_symbol": {
                     "type": "string"
+                },
+                "quote_coin_precision": {
+                    "type": "integer"
                 },
                 "side": {
                     "description": "0 buy 1 sell",
@@ -1097,6 +1109,9 @@ const docTemplatemarketplace = `{
                 "avg_price": {
                     "type": "string"
                 },
+                "base_coin_precision": {
+                    "type": "integer"
+                },
                 "executed_amount": {
                     "type": "string"
                 },
@@ -1132,6 +1147,9 @@ const docTemplatemarketplace = `{
                 },
                 "pool_symbol": {
                     "type": "string"
+                },
+                "quote_coin_precision": {
+                    "type": "integer"
                 },
                 "side": {
                     "description": "0 buy 1 sell",

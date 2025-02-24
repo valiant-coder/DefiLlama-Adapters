@@ -157,24 +157,26 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			price = avgPrice
 		}
 		order := ckhdb.HistoryOrder{
-			App:              newOrder.EV.App,
-			CreateTxID:       action.TrxID,
-			CreateBlockNum:   action.BlockNum,
-			PoolID:           poolID,
-			PoolSymbol:       pool.Symbol,
-			PoolBaseCoin:     pool.BaseCoin,
-			PoolQuoteCoin:    pool.QuoteCoin,
-			OrderID:          orderID,
-			ClientOrderID:    newOrder.EV.OrderCID,
-			Trader:           newOrder.EV.Trader.Actor,
-			Price:            price,
-			AvgPrice:         avgPrice,
-			IsBid:            newOrder.EV.IsBid,
-			OriginalQuantity: originalQuantity,
-			ExecutedQuantity: executedQuantity,
-			Status:           ckhdb.OrderStatus(newOrder.EV.Status),
-			IsMarket:         newOrder.EV.IsMarket,
-			CreatedAt:        createTime,
+			App:                newOrder.EV.App,
+			CreateTxID:         action.TrxID,
+			CreateBlockNum:     action.BlockNum,
+			PoolID:             poolID,
+			PoolSymbol:         pool.Symbol,
+			PoolBaseCoin:       pool.BaseCoin,
+			PoolQuoteCoin:      pool.QuoteCoin,
+			OrderID:            orderID,
+			ClientOrderID:      newOrder.EV.OrderCID,
+			Trader:             newOrder.EV.Trader.Actor,
+			Price:              price,
+			AvgPrice:           avgPrice,
+			IsBid:              newOrder.EV.IsBid,
+			OriginalQuantity:   originalQuantity,
+			ExecutedQuantity:   executedQuantity,
+			Status:             ckhdb.OrderStatus(newOrder.EV.Status),
+			IsMarket:           newOrder.EV.IsMarket,
+			CreatedAt:          createTime,
+			BaseCoinPrecision:  pool.BaseCoinPrecision,
+			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
 		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &order)
 		if err != nil {
@@ -347,14 +349,12 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
 	if makerOrder.ExecutedQuantity.GreaterThan(makerOrder.OriginalQuantity) {
-		log.Printf("trade executed quantity greater than original quantity: %v,%v", trade.TxID,makerOrder.TxID)
-		log.Panicf("marker order original quantity: %v, executed quantity: %v", makerOrder.OriginalQuantity,makerOrder.ExecutedQuantity)
-		log.Printf("current trade base quantity: %v",trade.BaseQuantity)
+		log.Printf("trade executed quantity greater than original quantity: %v,%v", trade.TxID, makerOrder.TxID)
+		log.Panicf("marker order original quantity: %v, executed quantity: %v", makerOrder.OriginalQuantity, makerOrder.ExecutedQuantity)
+		log.Printf("current trade base quantity: %v", trade.BaseQuantity)
 		makerOrder.ExecutedQuantity = makerOrder.OriginalQuantity
 	}
 
-
-	
 	// update maker order
 	if !data.EV.MakerRemoved {
 		err = s.repo.UpdateOpenOrder(ctx, makerOrder)
@@ -368,24 +368,26 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		}
 
 		historyOrder := ckhdb.HistoryOrder{
-			App:              makerOrder.App,
-			PoolID:           makerOrder.PoolID,
-			PoolSymbol:       pool.Symbol,
-			PoolBaseCoin:     pool.BaseCoin,
-			PoolQuoteCoin:    pool.QuoteCoin,
-			OrderID:          makerOrder.OrderID,
-			ClientOrderID:    makerOrder.ClientOrderID,
-			Trader:           makerOrder.Trader,
-			Price:            makerOrder.Price,
-			AvgPrice:         makerOrder.Price,
-			IsBid:            makerOrder.IsBid,
-			OriginalQuantity: makerOrder.OriginalQuantity,
-			ExecutedQuantity: makerOrder.ExecutedQuantity,
-			Status:           ckhdb.OrderStatus(makerOrder.Status),
-			IsMarket:         false,
-			CreateTxID:       makerOrder.TxID,
-			CreateBlockNum:   makerOrder.BlockNumber,
-			CreatedAt:        makerOrder.CreatedAt,
+			App:                makerOrder.App,
+			PoolID:             makerOrder.PoolID,
+			PoolSymbol:         pool.Symbol,
+			PoolBaseCoin:       pool.BaseCoin,
+			PoolQuoteCoin:      pool.QuoteCoin,
+			OrderID:            makerOrder.OrderID,
+			ClientOrderID:      makerOrder.ClientOrderID,
+			Trader:             makerOrder.Trader,
+			Price:              makerOrder.Price,
+			AvgPrice:           makerOrder.Price,
+			IsBid:              makerOrder.IsBid,
+			OriginalQuantity:   makerOrder.OriginalQuantity,
+			ExecutedQuantity:   makerOrder.ExecutedQuantity,
+			Status:             ckhdb.OrderStatus(makerOrder.Status),
+			IsMarket:           false,
+			CreateTxID:         makerOrder.TxID,
+			CreateBlockNum:     makerOrder.BlockNumber,
+			CreatedAt:          makerOrder.CreatedAt,
+			BaseCoinPrecision:  pool.BaseCoinPrecision,
+			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
 		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
 		if err != nil {
@@ -484,28 +486,30 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 	// insert history order
 	historyOrder := ckhdb.HistoryOrder{
-		App:              order.App,
-		PoolID:           order.PoolID,
-		PoolSymbol:       order.PoolSymbol,
-		PoolBaseCoin:     order.PoolBaseCoin,
-		PoolQuoteCoin:    order.PoolQuoteCoin,
-		OrderID:          order.OrderID,
-		ClientOrderID:    order.ClientOrderID,
-		Trader:           order.Trader,
-		Price:            order.Price,
-		AvgPrice:         order.Price,
-		IsBid:            order.IsBid,
-		OriginalQuantity: order.OriginalQuantity,
-		ExecutedQuantity: order.ExecutedQuantity,
-		Status:           status,
-		IsMarket:         false,
-		CreateTxID:       order.TxID,
-		CreatedAt:        order.CreatedAt,
-		CreateBlockNum:   order.BlockNumber,
-		CancelTxID:       action.TrxID,
-		CancelBlockNum:   action.BlockNum,
-		CanceledAt:       canceledTime,
-		Type:             ckhdb.OrderType(order.Type),
+		App:                order.App,
+		PoolID:             order.PoolID,
+		PoolSymbol:         order.PoolSymbol,
+		PoolBaseCoin:       order.PoolBaseCoin,
+		PoolQuoteCoin:      order.PoolQuoteCoin,
+		OrderID:            order.OrderID,
+		ClientOrderID:      order.ClientOrderID,
+		Trader:             order.Trader,
+		Price:              order.Price,
+		AvgPrice:           order.Price,
+		IsBid:              order.IsBid,
+		OriginalQuantity:   order.OriginalQuantity,
+		ExecutedQuantity:   order.ExecutedQuantity,
+		Status:             status,
+		IsMarket:           false,
+		CreateTxID:         order.TxID,
+		CreatedAt:          order.CreatedAt,
+		CreateBlockNum:     order.BlockNumber,
+		CancelTxID:         action.TrxID,
+		CancelBlockNum:     action.BlockNum,
+		CanceledAt:         canceledTime,
+		Type:               ckhdb.OrderType(order.Type),
+		BaseCoinPrecision:  order.BaseCoinPrecision,
+		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
 	err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
 	if err != nil {
