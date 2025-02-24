@@ -19,12 +19,14 @@ type OpenOrder struct {
 	// 0 buy 1 sell
 	Side uint8 `json:"side"`
 	// 0 market 1 limit
-	Type           uint8  `json:"type"`
-	OrderPrice     string `json:"order_price"`
-	AvgPrice       string `json:"avg_price"`
-	OrderAmount    string `json:"order_amount"`
-	ExecutedAmount string `json:"executed_amount"`
-	OrderTotal     string `json:"order_total"`
+	Type               uint8  `json:"type"`
+	OrderPrice         string `json:"order_price"`
+	AvgPrice           string `json:"avg_price"`
+	OrderAmount        string `json:"order_amount"`
+	ExecutedAmount     string `json:"executed_amount"`
+	OrderTotal         string `json:"order_total"`
+	BaseCoinPrecision  uint8  `json:"base_coin_precision"`
+	QuoteCoinPrecision uint8  `json:"quote_coin_precision"`
 }
 
 func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
@@ -49,6 +51,8 @@ func OpenOrderFromDB(openOrder db.OpenOrder) OpenOrder {
 		OrderTime:      Time(openOrder.CreatedAt),
 		Side:           side,
 		Type:           1,
+		BaseCoinPrecision:  openOrder.BaseCoinPrecision,
+		QuoteCoinPrecision: openOrder.QuoteCoinPrecision,
 	}
 }
 

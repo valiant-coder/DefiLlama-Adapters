@@ -52,6 +52,7 @@ type OpenOrder struct {
 	OriginalQuantity   decimal.Decimal `gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity   decimal.Decimal `gorm:"type:Decimal(36,18)"`
 	QuoteCoinPrecision uint8           `gorm:"column:quote_coin_precision;type:tinyint(4)"`
+	BaseCoinPrecision  uint8           `gorm:"column:base_coin_precision;type:tinyint(4);default:0"`
 	Status             OrderStatus     `gorm:"column:status;type:tinyint(4)"`
 }
 

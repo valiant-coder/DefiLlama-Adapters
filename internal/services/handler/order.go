@@ -104,6 +104,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			OriginalQuantity:   originalQuantity,
 			ExecutedQuantity:   executedQuantity,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
+			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			Status:             db.OrderStatus(newOrder.EV.Status),
 		}
 		err := s.repo.InsertOpenOrderIfNotExist(ctx, &order)
