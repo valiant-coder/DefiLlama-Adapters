@@ -99,6 +99,7 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			OriginalQuantity:   decimal.New(int64(bid.Quantity.Amount), -int32(pool.BaseCoinPrecision)),
 			ExecutedQuantity:   decimal.New(int64(bid.Filled.Amount), -int32(pool.BaseCoinPrecision)),
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
+			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			Status:             db.OrderStatusOpen,
 		}
 		openOrders = append(openOrders, openOrder)
@@ -130,6 +131,7 @@ func (s *Server) RepairPool(ctx context.Context, poolID uint64) error {
 			OriginalQuantity:   decimal.New(int64(ask.Quantity.Amount), -int32(pool.BaseCoinPrecision)),
 			ExecutedQuantity:   decimal.New(int64(ask.Filled.Amount), -int32(pool.BaseCoinPrecision)),
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
+			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			Status:             db.OrderStatusOpen,
 		}
 		openOrders = append(openOrders, openOrder)
