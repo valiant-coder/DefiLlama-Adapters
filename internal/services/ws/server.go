@@ -146,11 +146,26 @@ func (s *Server) handleConnection(args ...interface{}) {
 			})
 			return
 		}
-
+		uidAccount := strings.Split(account, "-")
+		if len(uidAccount) > 2 || len(uidAccount) == 0 {
+			client.Emit("error", map[string]interface{}{
+				"message": "Invalid account format",
+			})
+			return
+		}
+		if len(uidAccount) == 2 {
+			uid := uidAccount[0]
+			eosAccount := uidAccount[1]
+			uidRoom := socket.Room(fmt.Sprintf("account:%s", uid))
+			client.Join(uidRoom)
+			eosRoom := socket.Room(fmt.Sprintf("account:%s", eosAccount))
+			client.Join(eosRoom)
+		} else {
+			accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
+			client.Join(accountRoom)
+		}
+		
 		// Add user to dedicated room
-		accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
-		client.Join(accountRoom)
-
 		client.Emit("authenticated", map[string]interface{}{
 			"status":  "success",
 			"account": account,
@@ -165,8 +180,21 @@ func (s *Server) handleConnection(args ...interface{}) {
 		if !ok || account == "" {
 			return
 		}
-		accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
-		client.Leave(accountRoom)
+		uidAccount := strings.Split(account, "-")
+		if len(uidAccount) > 2 || len(uidAccount) == 0 {
+			return
+		}
+		if len(uidAccount) == 2 {
+			uid := uidAccount[0]
+			eosAccount := uidAccount[1]
+			uidRoom := socket.Room(fmt.Sprintf("account:%s", uid))
+			client.Leave(uidRoom)
+			eosRoom := socket.Room(fmt.Sprintf("account:%s", eosAccount))
+			client.Leave(eosRoom)
+		} else {
+			accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
+			client.Leave(accountRoom)
+		}
 	})
 
 	// Subscribe to kline data
