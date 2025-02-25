@@ -36,6 +36,9 @@ func (s *FaucetService) ClaimFaucet(ctx context.Context, req *entity.ReqClaimFau
 		}
 		return nil, err
 	}
+	if uid == "" {
+		return nil, errno.DefaultParamsError("only for registered users")
+	}
 	isClaimed, err := s.repo.IsUserClaimFaucet(ctx, uid)
 	if err != nil {
 		return nil, err
