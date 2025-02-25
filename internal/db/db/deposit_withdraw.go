@@ -95,6 +95,12 @@ func (r *Repo) GetUserDepositAddress(ctx context.Context, uid string, permission
 	return addresses, err
 }
 
+func (r *Repo) GetUIDByDepositAddress(ctx context.Context, address string) (string, error) {
+	var uid string
+	err := r.DB.WithContext(ctx).Model(&UserDepositAddress{}).Where("address = ?", address).Select("uid").Scan(&uid).Error
+	return uid, err
+}
+
 func (r *Repo) GetUserDepositAddressByAddress(ctx context.Context, address string) (*UserDepositAddress, error) {
 	var userDepositAddress UserDepositAddress
 	err := r.DB.WithContext(ctx).Where("address = ?", address).First(&userDepositAddress).Error
@@ -180,4 +186,3 @@ func (r *Repo) GetPendingWithdrawRecords(ctx context.Context, uid string) ([]*Wi
 	err := r.WithContext(ctx).Where("uid = ? and status = ?", uid, WithdrawStatusPending).Find(&records).Error
 	return records, err
 }
-

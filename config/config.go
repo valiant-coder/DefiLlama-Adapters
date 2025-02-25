@@ -75,6 +75,15 @@ type Config struct {
 	Eos EosConfig `yaml:"eos"`
 
 	ExsatNetwork ExsatNetworkConfig `yaml:"exsat_network"`
+
+	Faucet struct {
+		Enabled bool `yaml:"enabled"`
+		EVMRpcUrl            string  `yaml:"evm_rpc_url"`
+		USDTTokenAddress     string  `yaml:"usdt_token_address"`
+		TokenOwner           string  `yaml:"token_owner"`
+		TokenOwnerPrivateKey string  `yaml:"token_owner_private_key"`
+		Amount               float64 `yaml:"amount"`
+	} `yaml:"faucet"`
 }
 
 type ExsatNetworkConfig struct {

@@ -615,6 +615,40 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/faucet": {
+            "post": {
+                "description": "Claim faucet",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "faucet"
+                ],
+                "summary": "Claim faucet",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqClaimFaucet"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "txid",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespClaimFaucet"
+                        }
+                    }
+                }
+            }
+        },
         "/first-deposit": {
             "post": {
                 "security": [
@@ -1288,6 +1322,14 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.ReqClaimFaucet": {
+            "type": "object",
+            "properties": {
+                "deposit_address": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.ReqDeposit": {
             "type": "object",
             "required": [
@@ -1344,6 +1386,14 @@ const docTemplatemarketplace = `{
                 },
                 "method": {
                     "description": "google,apple",
+                    "type": "string"
+                }
+            }
+        },
+        "entity.RespClaimFaucet": {
+            "type": "object",
+            "properties": {
+                "tx_hash": {
                     "type": "string"
                 }
             }
