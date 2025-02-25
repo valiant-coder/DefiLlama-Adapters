@@ -8,6 +8,7 @@ import (
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"log"
+	"strings"
 	"time"
 
 	eosgo "github.com/eoscanada/eos-go"
@@ -52,6 +53,9 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		log.Printf("not found deposit address: %v-%v", data.DepositAddress, err)
 		return nil
 	}
+
+	// 去除.t
+	symbol := strings.TrimSuffix(data.DestSymbol, ".t")
 
 	token, err := s.repo.GetToken(ctx, data.DestSymbol)
 	if err != nil {
