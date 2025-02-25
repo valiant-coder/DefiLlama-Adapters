@@ -54,12 +54,11 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	// 去除.t
 	symbol := strings.TrimSuffix(data.DestSymbol, ".t")
 
-	token, err := s.repo.GetToken(ctx, data.DestSymbol)
+	token, err := s.repo.GetToken(ctx, symbol)
 	if err != nil {
-		log.Printf("not found token: %v-%v", data.DestSymbol, err)
+		log.Printf("not found token: %v-%v", symbol, err)
 		return nil
 	}
 
@@ -87,7 +86,7 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 			return nil
 		} else {
 			record = &db.DepositRecord{
-				Symbol:         data.DestSymbol,
+				Symbol:         symbol,
 				UID:            depositAddress.UID,
 				Amount:         depositAmount,
 				Fee:            depositFee,
