@@ -46,15 +46,16 @@ type ChainInfo struct {
 	ChainID      uint8  `json:"chain_id"`
 	PermissionID uint64 `json:"permission_id"`
 
+	DepositByBTCBridge bool `json:"deposit_by_btc_bridge"`
+
 	WithdrawalFee     decimal.Decimal `json:"withdrawal_fee"`
 	MinWithdrawAmount decimal.Decimal `json:"min_withdraw_amount"`
 	MinDepositAmount  decimal.Decimal `json:"min_deposit_amount"`
 
 	ExsatWithdrawFee      decimal.Decimal `json:"exsat_withdraw_fee"`
 	ExsatMinDepositAmount decimal.Decimal `json:"exsat_min_deposit_amount"`
-
-	ExsatTokenAddress  string `json:"exsat_token_address"`
-	ExsatTokenDecimals uint8  `json:"exsat_token_decimals"`
+	ExsatTokenAddress     string          `json:"exsat_token_address"`
+	ExsatTokenDecimals    uint8           `json:"exsat_token_decimals"`
 }
 type Token struct {
 	gorm.Model
