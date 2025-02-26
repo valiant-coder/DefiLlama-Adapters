@@ -15,17 +15,20 @@ import (
 )
 
 type UserService struct {
-	repo    *db.Repo
-	ckhRepo *ckhdb.ClickHouseRepo
-	nsqPub  *nsqutil.Publisher
+	repo           *db.Repo
+	ckhRepo        *ckhdb.ClickHouseRepo
+	nsqPub         *nsqutil.Publisher
+	priceCache     map[string]string
+	priceCacheTime time.Time
 }
 
 func NewUserService() *UserService {
 	nsqConf := config.Conf().Nsq
 	return &UserService{
-		repo:    db.New(),
-		ckhRepo: ckhdb.New(),
-		nsqPub:  nsqutil.NewPublisher(nsqConf.Nsqds),
+		repo:       db.New(),
+		ckhRepo:    ckhdb.New(),
+		nsqPub:     nsqutil.NewPublisher(nsqConf.Nsqds),
+		priceCache: make(map[string]string),
 	}
 }
 

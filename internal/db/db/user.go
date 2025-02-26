@@ -184,3 +184,18 @@ func (r *Repo) GetUserCredentialMaxBlockNumber(ctx context.Context) (uint64, err
 	}
 	return *blockNumber, nil
 }
+
+type EOSAccountInfo struct {
+	UID        string `gorm:"column:uid;"`
+	EOSAccount string `gorm:"column:eos_account;"`
+}
+
+func (r *Repo) GetAllEOSAccounts(ctx context.Context) ([]EOSAccountInfo, error) {
+	var accounts []EOSAccountInfo
+	err := r.DB.WithContext(ctx).
+		Model(&UserCredential{}).
+		Select("DISTINCT uid, eos_account").
+		Where("eos_account != ''").
+		Find(&accounts).Error
+	return accounts, err
+}

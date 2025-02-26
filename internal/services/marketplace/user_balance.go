@@ -10,7 +10,39 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
+
+	"github.com/shopspring/decimal"
 )
+
+func (s *UserService) getCoinUSDTPrice(ctx context.Context) (map[string]string, error) {
+	if !s.priceCacheTime.IsZero() && time.Since(s.priceCacheTime) < 5*time.Second {
+		return s.priceCache, nil
+	}
+
+	poolStatuses, err := s.ckhRepo.ListPoolStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	coinUSDTPrice := make(map[string]string)
+
+	for _, poolStatus := range poolStatuses {
+		if strings.Contains(poolStatus.QuoteCoin, "USDT") {
+			parts := strings.Split(poolStatus.BaseCoin, "-")
+			if len(parts) != 2 {
+				continue
+			}
+			coin := parts[1]
+			coinUSDTPrice[coin] = poolStatus.LastPrice.String()
+		}
+	}
+
+	s.priceCache = coinUSDTPrice
+	s.priceCacheTime = time.Now()
+
+	return coinUSDTPrice, nil
+}
 
 func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([]entity.UserBalance, error) {
 	if accountName == "" {
@@ -49,22 +81,9 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		return nil, err
 	}
 
-	poolStatuses, err := s.ckhRepo.ListPoolStats(ctx)
+	coinUSDTPrice, err := s.getCoinUSDTPrice(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	coinUSDTPrice := make(map[string]string)
-
-	for _, poolStatus := range poolStatuses {
-		if strings.Contains(poolStatus.QuoteCoin, "USDT") {
-			parts := strings.Split(poolStatus.BaseCoin, "-")
-			if len(parts) != 2 {
-				continue
-			}
-			coin := parts[1]
-			coinUSDTPrice[coin] = poolStatus.LastPrice.String()
-		}
 	}
 
 	result := make([]entity.UserBalance, 0)
@@ -97,4 +116,32 @@ func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([
 		result = append(result, userBalance)
 	}
 	return result, nil
+}
+
+func (s *UserService) CalculateUserUSDTBalance(ctx context.Context, accountName string) (decimal.Decimal, error) {
+	balances, err := s.GetUserBalance(ctx, accountName)
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	total := decimal.Zero
+	for _, balance := range balances {
+		if balance.USDTPrice == "" || balance.Balance == "" {
+			continue
+		}
+		price, err := decimal.NewFromString(balance.USDTPrice)
+		if err != nil {
+			continue
+		}
+		amount, err := decimal.NewFromString(balance.Balance)
+		if err != nil {
+			continue
+		}
+		locked, err := decimal.NewFromString(balance.Locked)
+		if err != nil {
+			continue
+		}
+		total = total.Add(price.Mul(amount.Add(locked)))
+	}
+	return total, nil
 }

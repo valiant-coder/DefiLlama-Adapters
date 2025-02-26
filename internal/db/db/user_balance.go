@@ -5,10 +5,19 @@ import (
 	"errors"
 	"exapp-go/config"
 	"fmt"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
+
+func init() {
+	addMigrateFunc(func(repo *Repo) error {
+		return repo.AutoMigrate(
+			&UserBalanceRecord{},
+		)
+	})
+}
 
 type UserPoolBalance struct {
 	PoolID     uint64          `json:"pool_id"`
@@ -135,7 +144,6 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 			totalLocked = totalLocked.Add(pb.Balance)
 		}
 
-
 		userBalances = append(userBalances, UserBalanceWithLock{
 			UserBalance: UserBalance{
 				Account: accountName,
@@ -159,8 +167,6 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 		for _, pb := range poolBalances {
 			totalLocked = totalLocked.Add(pb.Balance)
 		}
-
-		
 
 		userBalances = append(userBalances, UserBalanceWithLock{
 			UserBalance: UserBalance{
@@ -189,4 +195,20 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 	}
 
 	return result, nil
+}
+
+type UserBalanceRecord struct {
+	gorm.Model
+	Time       time.Time       `gorm:"column:time;type:timestamp;not null;index:idx_time"`
+	Account    string          `gorm:"column:account;type:varchar(255);not null;"`
+	UID        string          `gorm:"column:uid;type:varchar(255);not null;"`
+	USDTAmount decimal.Decimal `gorm:"column:usdt_amount;type:decimal(36,18);not null;"`
+}
+
+func (t *UserBalanceRecord) TableName() string {
+	return "user_balance_records"
+}
+
+func (r *Repo) CreateUserBalanceRecord(ctx context.Context, record *UserBalanceRecord) error {
+	return r.DB.WithContext(ctx).Create(record).Error
 }
