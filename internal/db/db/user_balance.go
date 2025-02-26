@@ -9,12 +9,14 @@ import (
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func init() {
 	addMigrateFunc(func(repo *Repo) error {
 		return repo.AutoMigrate(
 			&UserBalanceRecord{},
+			&UserDayProfitRecord{},
 		)
 	})
 }
@@ -201,8 +203,8 @@ type UserBalanceRecord struct {
 	gorm.Model
 	Time       time.Time       `gorm:"column:time;type:timestamp;not null;index:idx_time"`
 	Account    string          `gorm:"column:account;type:varchar(255);not null;"`
-	UID        string          `gorm:"column:uid;type:varchar(255);not null;"`
-	USDTAmount decimal.Decimal `gorm:"column:usdt_amount;type:decimal(36,18);not null;"`
+	UID        string          `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
+	USDTAmount decimal.Decimal `gorm:"column:usdt_amount;type:decimal(20,6);not null;"`
 }
 
 func (t *UserBalanceRecord) TableName() string {
@@ -211,4 +213,52 @@ func (t *UserBalanceRecord) TableName() string {
 
 func (r *Repo) CreateUserBalanceRecord(ctx context.Context, record *UserBalanceRecord) error {
 	return r.DB.WithContext(ctx).Create(record).Error
+}
+
+type UserDayProfitRecord struct {
+	gorm.Model
+	Time    time.Time       `gorm:"column:time;type:timestamp;not null;uniqueIndex:idx_uid_time"`
+	Account string          `gorm:"column:account;type:varchar(255);not null;"`
+	UID     string          `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_time"`
+	Profit  decimal.Decimal `gorm:"column:profit;type:decimal(20,6);not null;"`
+}
+
+func (t *UserDayProfitRecord) TableName() string {
+	return "user_day_profit_records"
+}
+
+func (r *Repo) CreateUserDayProfitRecord(ctx context.Context, record *UserDayProfitRecord) error {
+	return r.DB.WithContext(ctx).Create(record).Error
+}
+
+func (r *Repo) GetUserBalanceRecordsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]UserBalanceRecord, error) {
+	var records []UserBalanceRecord
+	err := r.DB.WithContext(ctx).
+		Where("time >= ? AND time < ?", startTime, endTime).
+		Order("time ASC").
+		Find(&records).Error
+	return records, err
+}
+
+func (r *Repo) GetUserDayProfitRecord(ctx context.Context, uid string, day time.Time) (*UserDayProfitRecord, error) {
+	var record UserDayProfitRecord
+	err := r.DB.WithContext(ctx).
+		Where("uid = ? AND time = ?", uid, day).
+		First(&record).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &record, nil
+}
+
+func (r *Repo) UpsertUserDayProfitRecord(ctx context.Context, record *UserDayProfitRecord) error {
+	return r.DB.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "uid"}, {Name: "time"}},
+			DoUpdates: clause.AssignmentColumns([]string{"profit", "updated_at"}),
+		}).
+		Create(record).Error
 }
