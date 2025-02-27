@@ -147,7 +147,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				totalBaseQuantity = totalBaseQuantity.Add(trade.BaseQuantity)
 			}
 			avgPrice = totalQuoteQuantity.Div(totalBaseQuantity).Round(int32(pool.PricePrecision))
-			price = avgPrice
+			price = decimal.New(cast.ToInt64(newOrder.EV.Price), -int32(pool.PricePrecision))
 			if newOrder.EV.IsMarket {
 				originalQuantity = totalBaseQuantity
 				executedQuantity = totalBaseQuantity
