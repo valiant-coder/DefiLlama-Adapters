@@ -47,25 +47,77 @@ func (s *Service) recordUserBalances() error {
 		log.Printf("Failed to get EOS account list: %v", err)
 		return err
 	}
-	userService := marketplace.NewUserService()
 
+	// Create user service instance
+	userService := marketplace.NewUserService()
 	now := getRoundedHour(time.Now())
-	for _, eosAccount := range eosAccounts {
-		usdtAmount, err := userService.CalculateUserUSDTBalance(ctx, eosAccount.EOSAccount)
-		if err != nil {
-			log.Printf("Failed to calculate USDT balance for user %s: %v", eosAccount.EOSAccount, err)
+
+	// Use channel to collect results
+	type result struct {
+		record *db.UserBalanceRecord
+		err    error
+	}
+	resultChan := make(chan result, len(eosAccounts))
+
+	// Use worker pool to control concurrency
+	workerCount := 10
+	if len(eosAccounts) < workerCount {
+		workerCount = len(eosAccounts)
+	}
+
+	// Create task channel
+	taskChan := make(chan db.EOSAccountInfo, len(eosAccounts))
+	for _, account := range eosAccounts {
+		taskChan <- account
+	}
+	close(taskChan)
+
+	// Start worker goroutines
+	for i := 0; i < workerCount; i++ {
+		go func() {
+			for account := range taskChan {
+				usdtAmount, err := userService.CalculateUserUSDTBalance(ctx, account.EOSAccount)
+				if err != nil {
+					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.EOSAccount, err)}
+					continue
+				}
+
+				record := &db.UserBalanceRecord{
+					Time:       now,
+					Account:    account.EOSAccount,
+					UID:        account.UID,
+					USDTAmount: usdtAmount,
+				}
+				resultChan <- result{record: record}
+			}
+		}()
+	}
+
+	// Collect results
+	var records []*db.UserBalanceRecord
+	var errors []error
+	for i := 0; i < len(eosAccounts); i++ {
+		res := <-resultChan
+		if res.err != nil {
+			errors = append(errors, res.err)
 			continue
 		}
+		records = append(records, res.record)
+	}
 
-		record := &db.UserBalanceRecord{
-			Time:       now,
-			Account:    eosAccount.EOSAccount,
-			UID:        eosAccount.UID,
-			USDTAmount: usdtAmount,
+	// Batch save records
+	if len(records) > 0 {
+		if err := s.repo.BatchCreateUserBalanceRecords(ctx, records); err != nil {
+			log.Printf("Failed to batch save balance records: %v", err)
+			return err
 		}
+	}
 
-		if err := s.repo.CreateUserBalanceRecord(ctx, record); err != nil {
-			log.Printf("Failed to save balance record for user %s: %v", eosAccount.EOSAccount, err)
+	// Handle error logs together
+	if len(errors) > 0 {
+		log.Printf("Encountered %d errors while processing user balances:", len(errors))
+		for _, err := range errors {
+			log.Printf("Error: %v", err)
 		}
 	}
 
