@@ -7,6 +7,7 @@ import (
 	"exapp-go/internal/services/marketplace"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -170,46 +171,12 @@ func (s *Service) calculateUserDayProfit() error {
 		})
 	}
 
-	workerCount := 10
-	if len(profitRecords) < workerCount {
-		workerCount = len(profitRecords)
-	}
-
-	taskChan := make(chan *db.UserDayProfitRecord, len(profitRecords))
-	for _, record := range profitRecords {
-		taskChan <- record
-	}
-	close(taskChan)
-
-	errChan := make(chan error, len(profitRecords))
-
-	for i := 0; i < workerCount; i++ {
-		go func() {
-			for record := range taskChan {
-				if err := s.repo.UpsertUserDayProfitRecord(ctx, record); err != nil {
-					errChan <- fmt.Errorf("failed to upsert user day profit record for %s: %w", record.Account, err)
-				} else {
-					errChan <- nil
-				}
-			}
-		}()
-	}
-
-	var errors []error
-	for i := 0; i < len(profitRecords); i++ {
-		if err := <-errChan; err != nil {
-			errors = append(errors, err)
+	if len(profitRecords) > 0 {
+		if err := s.repo.BatchUpsertUserDayProfitRecords(ctx, profitRecords); err != nil {
+			log.Printf("Failed to batch upsert day profit records: %v", err)
+			return err
 		}
 	}
-
-	if len(errors) > 0 {
-		log.Printf("Encountered %d errors while processing user day profits:", len(errors))
-		for _, err := range errors {
-			log.Printf("Error: %v", err)
-		}
-		return fmt.Errorf("encountered %d errors while processing user day profits", len(errors))
-	}
-
 	return nil
 }
 
@@ -229,33 +196,49 @@ func (s *Service) calculateUserAccumulatedProfit() error {
 		return fmt.Errorf("failed to get EOS accounts: %w", err)
 	}
 
-	for _, eosAccount := range eosAccounts {
-		records, err := s.repo.GetUserBalanceRecordsInTimeRange(ctx, eosAccount.UID, beginTime, endTime)
-		if err != nil {
-			log.Printf("Failed to get balance records for user %s: %v", eosAccount.EOSAccount, err)
+	uidToAccount := make(map[string]db.EOSAccountInfo, len(eosAccounts))
+	uids := make([]string, len(eosAccounts))
+	for i, account := range eosAccounts {
+		uidToAccount[account.UID] = account
+		uids[i] = account.UID
+	}
+
+	records, err := s.repo.GetUserBalanceRecordsInTimeRangeForUIDs(ctx, uids, beginTime, endTime)
+	if err != nil {
+		return fmt.Errorf("failed to get balance records: %w", err)
+	}
+
+	userRecords := make(map[string][]db.UserBalanceRecord)
+	for _, record := range records {
+		userRecords[record.UID] = append(userRecords[record.UID], record)
+	}
+
+	var profitRecords []*db.UserAccumulatedProfitRecord
+	for uid, records := range userRecords {
+		if len(records) < 2 {
 			continue
 		}
 
-		if len(records) == 0 {
-			continue
-		}
+		sort.Slice(records, func(i, j int) bool {
+			return records[i].Time.Before(records[j].Time)
+		})
 
-		var profit decimal.Decimal
-		if len(records) >= 2 {
-			profit = records[len(records)-1].USDTAmount.Sub(records[0].USDTAmount)
-		}
+		profit := records[len(records)-1].USDTAmount.Sub(records[0].USDTAmount)
+		account := uidToAccount[uid]
 
-		record := &db.UserAccumulatedProfitRecord{
+		profitRecords = append(profitRecords, &db.UserAccumulatedProfitRecord{
 			BeginTime: beginTime,
 			EndTime:   endTime,
-			Account:   eosAccount.EOSAccount,
-			UID:       eosAccount.UID,
+			Account:   account.EOSAccount,
+			UID:       uid,
 			Profit:    profit,
-		}
+		})
+	}
 
-		if err := s.repo.UpsertUserAccumulatedProfitRecord(ctx, record); err != nil {
-			log.Printf("Failed to upsert accumulated profit record for user %s: %v", eosAccount.EOSAccount, err)
-			continue
+	if len(profitRecords) > 0 {
+		if err := s.repo.BatchUpsertUserAccumulatedProfitRecords(ctx, profitRecords); err != nil {
+			log.Printf("Failed to batch upsert accumulated profit records: %v", err)
+			return err
 		}
 	}
 

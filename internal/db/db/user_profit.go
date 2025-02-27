@@ -49,6 +49,15 @@ func (r *Repo) GetUserBalanceRecordsInTimeRange(ctx context.Context, uid string,
 	return records, err
 }
 
+func (r *Repo) GetUserBalanceRecordsInTimeRangeForUIDs(ctx context.Context, uids []string, beginTime, endTime time.Time) ([]UserBalanceRecord, error) {
+	var records []UserBalanceRecord
+	err := r.DB.WithContext(ctx).
+		Where("uid IN ? AND time >= ? AND time <= ?", uids, beginTime, endTime).
+		Order("time ASC").
+		Find(&records).Error
+	return records, err
+}
+
 func (r *Repo) GetUserBalanceRecordsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]UserBalanceRecord, error) {
 	var records []UserBalanceRecord
 	err := r.DB.WithContext(ctx).
@@ -81,6 +90,18 @@ func (r *Repo) UpsertUserDayProfitRecord(ctx context.Context, record *UserDayPro
 			DoUpdates: clause.AssignmentColumns([]string{"profit", "updated_at"}),
 		}).
 		Create(record).Error
+}
+
+func (r *Repo) BatchUpsertUserDayProfitRecords(ctx context.Context, records []*UserDayProfitRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+	return r.DB.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "uid"}, {Name: "time"}},
+			DoUpdates: clause.AssignmentColumns([]string{"profit", "updated_at"}),
+		}).
+		CreateInBatches(records, 100).Error
 }
 
 func (r *Repo) GetUserDayProfitRanking(ctx context.Context, dayTime time.Time, limit int) ([]UserDayProfitRecord, error) {
@@ -134,13 +155,18 @@ func (r *Repo) CreateUserAccumulatedProfitRecord(ctx context.Context, record *Us
 	return r.DB.WithContext(ctx).Create(record).Error
 }
 
-func (r *Repo) UpsertUserAccumulatedProfitRecord(ctx context.Context, record *UserAccumulatedProfitRecord) error {
+
+
+func (r *Repo) BatchUpsertUserAccumulatedProfitRecords(ctx context.Context, records []*UserAccumulatedProfitRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
 	return r.DB.WithContext(ctx).
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "uid"}, {Name: "begin_time"}, {Name: "end_time"}},
 			DoUpdates: clause.AssignmentColumns([]string{"profit", "updated_at"}),
 		}).
-		Create(record).Error
+		CreateInBatches(records, 100).Error
 }
 
 func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, beginTime, endTime time.Time) ([]UserAccumulatedProfitRecord, error) {
