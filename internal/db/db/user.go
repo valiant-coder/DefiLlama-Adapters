@@ -200,9 +200,4 @@ func (r *Repo) GetAllEOSAccounts(ctx context.Context) ([]EOSAccountInfo, error) 
 	return accounts, err
 }
 
-func (r *Repo) BatchCreateUserBalanceRecords(ctx context.Context, records []*UserBalanceRecord) error {
-	if len(records) == 0 {
-		return nil
-	}
-	return r.DB.WithContext(ctx).CreateInBatches(records, 100).Error
-}
+

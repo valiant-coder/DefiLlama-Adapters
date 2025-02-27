@@ -67,6 +67,18 @@ func (r *Repo) GetUserBalanceRecordsByTimeRange(ctx context.Context, startTime, 
 	return records, err
 }
 
+func (r *Repo) BatchCreateUserBalanceRecords(ctx context.Context, records []*UserBalanceRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+	return r.DB.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "uid"}, {Name: "time"}},
+			DoUpdates: clause.AssignmentColumns([]string{"usdt_amount", "updated_at"}),
+		}).
+		CreateInBatches(records, 100).Error
+}
+
 type UserDayProfitRecord struct {
 	gorm.Model
 	UID     string          `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_time"`
