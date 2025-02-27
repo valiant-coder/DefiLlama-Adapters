@@ -135,22 +135,18 @@ func (s *Service) calculateUserDayProfit() error {
 		return err
 	}
 
-	userProfits := make(map[string]*struct {
+	type UserProfitData struct {
 		account    string
 		uid        string
 		lastAmount decimal.Decimal
 		profit     decimal.Decimal
-	})
+	}
+	userProfits := make(map[string]*UserProfitData, len(records))
 
 	for _, record := range records {
 		userData, exists := userProfits[record.UID]
 		if !exists {
-			userProfits[record.UID] = &struct {
-				account    string
-				uid        string
-				lastAmount decimal.Decimal
-				profit     decimal.Decimal
-			}{
+			userProfits[record.UID] = &UserProfitData{
 				account:    record.Account,
 				uid:        record.UID,
 				lastAmount: record.USDTAmount,
@@ -164,17 +160,54 @@ func (s *Service) calculateUserDayProfit() error {
 		userData.lastAmount = record.USDTAmount
 	}
 
+	profitRecords := make([]*db.UserDayProfitRecord, 0, len(userProfits))
 	for _, userData := range userProfits {
-		profitRecord := &db.UserDayProfitRecord{
+		profitRecords = append(profitRecords, &db.UserDayProfitRecord{
 			Time:    dayStart,
 			Account: userData.account,
 			UID:     userData.uid,
 			Profit:  userData.profit,
+		})
+	}
+
+	workerCount := 10
+	if len(profitRecords) < workerCount {
+		workerCount = len(profitRecords)
+	}
+
+	taskChan := make(chan *db.UserDayProfitRecord, len(profitRecords))
+	for _, record := range profitRecords {
+		taskChan <- record
+	}
+	close(taskChan)
+
+	errChan := make(chan error, len(profitRecords))
+
+	for i := 0; i < workerCount; i++ {
+		go func() {
+			for record := range taskChan {
+				if err := s.repo.UpsertUserDayProfitRecord(ctx, record); err != nil {
+					errChan <- fmt.Errorf("failed to upsert user day profit record for %s: %w", record.Account, err)
+				} else {
+					errChan <- nil
+				}
+			}
+		}()
+	}
+
+	var errors []error
+	for i := 0; i < len(profitRecords); i++ {
+		if err := <-errChan; err != nil {
+			errors = append(errors, err)
 		}
-		if err := s.repo.UpsertUserDayProfitRecord(ctx, profitRecord); err != nil {
-			log.Printf("Failed to upsert user day profit record: %v", err)
-			continue
+	}
+
+	if len(errors) > 0 {
+		log.Printf("Encountered %d errors while processing user day profits:", len(errors))
+		for _, err := range errors {
+			log.Printf("Error: %v", err)
 		}
+		return fmt.Errorf("encountered %d errors while processing user day profits", len(errors))
 	}
 
 	return nil
