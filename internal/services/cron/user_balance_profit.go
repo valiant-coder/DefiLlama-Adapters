@@ -2,8 +2,10 @@ package cron
 
 import (
 	"context"
+	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/services/marketplace"
+	"fmt"
 	"log"
 	"time"
 
@@ -46,11 +48,16 @@ func (s *Service) RecordUserBalances() {
 			log.Printf("Failed to save balance record for user %s: %v", eosAccount.EOSAccount, err)
 		}
 	}
-	log.Printf("Record user balances done")
 	log.Printf("Calculate user day profit")
 	err = s.CalculateUserDayProfit()
 	if err != nil {
 		log.Printf("Failed to calculate user day profit: %v", err)
+	}
+
+	log.Printf("Calculate user accumulated profit")
+	err = s.CalculateUserAccumulatedProfit()
+	if err != nil {
+		log.Printf("Failed to calculate user accumulated profit: %v", err)
 	}
 }
 
@@ -101,9 +108,58 @@ func (s *Service) CalculateUserDayProfit() error {
 			UID:     userData.uid,
 			Profit:  userData.profit,
 		}
-
 		if err := s.repo.UpsertUserDayProfitRecord(ctx, profitRecord); err != nil {
 			log.Printf("Failed to upsert user day profit record: %v", err)
+			continue
+		}
+	}
+
+	return nil
+}
+
+
+func (s *Service) CalculateUserAccumulatedProfit() error {
+	ctx := context.Background()
+	beginTime := config.Conf().AccumulatedProfit.BeginTime
+	endTime := config.Conf().AccumulatedProfit.EndTime
+
+	now := time.Now()
+	if now.Before(beginTime) || now.After(endTime) {
+		log.Printf("Current time %v is not in accumulated profit time range [%v, %v]", now, beginTime, endTime)
+		return nil
+	}
+
+	eosAccounts, err := s.repo.GetAllEOSAccounts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get EOS accounts: %w", err)
+	}
+
+	for _, eosAccount := range eosAccounts {
+		records, err := s.repo.GetUserBalanceRecordsInTimeRange(ctx, eosAccount.UID, beginTime, endTime)
+		if err != nil {
+			log.Printf("Failed to get balance records for user %s: %v", eosAccount.EOSAccount, err)
+			continue
+		}
+
+		if len(records) == 0 {
+			continue
+		}
+
+		var profit decimal.Decimal
+		if len(records) >= 2 {
+			profit = records[len(records)-1].USDTAmount.Sub(records[0].USDTAmount)
+		}
+
+		record := &db.UserAccumulatedProfitRecord{
+			BeginTime: beginTime,
+			EndTime:   endTime,
+			Account:   eosAccount.EOSAccount,
+			UID:       eosAccount.UID,
+			Profit:    profit,
+		}
+
+		if err := s.repo.UpsertUserAccumulatedProfitRecord(ctx, record); err != nil {
+			log.Printf("Failed to upsert accumulated profit record for user %s: %v", eosAccount.EOSAccount, err)
 			continue
 		}
 	}

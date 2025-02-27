@@ -109,3 +109,15 @@ eos:
     log_send: logsend
     set_min_amt: setminamt
     set_pool_fee_rate: setpfeerate
+
+faucet:
+  enabled: false
+  evm_rpc_url: ""
+  usdt_token_address: ""
+  token_owner: ""
+  token_owner_private_key: ""
+  amount:  0
+
+accumulated_profit:
+  begin_time: "2025-02-26 00:00:00"
+  end_time: "2025-02-26 23:59:59"
