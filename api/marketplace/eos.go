@@ -6,6 +6,7 @@ import (
 	"exapp-go/internal/entity"
 	"exapp-go/internal/errno"
 	"exapp-go/internal/services/marketplace"
+	"strings"
 
 	pkeos "exapp-go/pkg/eos"
 
@@ -45,7 +46,23 @@ func payCPU(c *gin.Context) {
 		config.Conf().Eos.PayerPrivateKey,
 	)
 	if err != nil {
-		err = errno.DefaultParamsError("broadcast transaction failed,{0}", err)
+		errString := err.Error()
+		errSplit := strings.Split(errString, ":")
+		if len(errSplit) > 1 {
+			isAssertionFailure := false
+			for i, v := range errSplit {
+				if strings.Contains(v, "assertion failure with message") {
+					isAssertionFailure = true
+					err = errno.DefaultParamsError(errSplit[i+1])
+					break
+				}
+			}
+			if !isAssertionFailure {
+				err = errno.DefaultParamsError(errSplit[1])
+			}
+		} else {
+			err = errno.DefaultParamsError(errString)
+		}
 		api.Error(c, err)
 		return
 	}
