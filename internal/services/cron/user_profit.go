@@ -20,12 +20,32 @@ func getRoundedHour(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 }
 
-func (s *Service) RecordUserBalances() {
+func (s *Service) HandleUserProfit() {
+	err := s.recordUserBalances()
+	if err != nil {
+		log.Printf("Failed to record user balances: %v", err)
+		return
+	}
+
+	log.Printf("Calculate user day profit")
+	err = s.calculateUserDayProfit()
+	if err != nil {
+		log.Printf("Failed to calculate user day profit: %v", err)
+	}
+
+	log.Printf("Calculate user accumulated profit")
+	err = s.calculateUserAccumulatedProfit()
+	if err != nil {
+		log.Printf("Failed to calculate user accumulated profit: %v", err)
+	}
+}
+
+func (s *Service) recordUserBalances() error {
 	ctx := context.Background()
 	eosAccounts, err := s.repo.GetAllEOSAccounts(ctx)
 	if err != nil {
 		log.Printf("Failed to get EOS account list: %v", err)
-		return
+		return err
 	}
 	userService := marketplace.NewUserService()
 
@@ -48,20 +68,11 @@ func (s *Service) RecordUserBalances() {
 			log.Printf("Failed to save balance record for user %s: %v", eosAccount.EOSAccount, err)
 		}
 	}
-	log.Printf("Calculate user day profit")
-	err = s.CalculateUserDayProfit()
-	if err != nil {
-		log.Printf("Failed to calculate user day profit: %v", err)
-	}
 
-	log.Printf("Calculate user accumulated profit")
-	err = s.CalculateUserAccumulatedProfit()
-	if err != nil {
-		log.Printf("Failed to calculate user accumulated profit: %v", err)
-	}
+	return nil
 }
 
-func (s *Service) CalculateUserDayProfit() error {
+func (s *Service) calculateUserDayProfit() error {
 	ctx := context.Background()
 	now := time.Now().UTC()
 	dayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
@@ -117,8 +128,7 @@ func (s *Service) CalculateUserDayProfit() error {
 	return nil
 }
 
-
-func (s *Service) CalculateUserAccumulatedProfit() error {
+func (s *Service) calculateUserAccumulatedProfit() error {
 	ctx := context.Background()
 	beginTime := config.Conf().AccumulatedProfit.BeginTime
 	endTime := config.Conf().AccumulatedProfit.EndTime
