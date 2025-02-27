@@ -111,6 +111,8 @@ func Run(addr string, release bool) error {
 	auth.GET("/deposit-history", getDepositHistory)
 	auth.GET("/withdrawal-history", getWithdrawalHistory)
 
+	auth.GET("/profit/day-ranking", getDayProfitRanking)
+	auth.GET("/profit/accumulated-ranking", getAccumulatedProfitRanking)
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,
 			config.Conf().HTTPS.CertFile,

@@ -1,0 +1,78 @@
+package marketplace
+
+import (
+	"context"
+	"exapp-go/internal/db/db"
+	"exapp-go/internal/entity"
+	"time"
+)
+
+type UserProfitService struct {
+	repo *db.Repo
+}
+
+func NewUserProfitService() *UserProfitService {
+	return &UserProfitService{
+		repo: db.New(),
+	}
+}
+
+func (s *UserProfitService) GetDayProfitRanking(ctx context.Context, dayTime time.Time, uid string) (*entity.UserProfitRank, error) {
+	records, err := s.repo.GetUserDayProfitRanking(ctx, dayTime, 20)
+	if err != nil {
+		return nil, err
+	}
+
+	userRecord, userRank, err := s.repo.GetUserDayProfitRankAndProfit(ctx, dayTime, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &entity.UserProfitRank{
+		Items: make([]entity.UserProfit, 0, len(records)),
+	}
+
+	for _, record := range records {
+		result.Items = append(result.Items, entity.UserProfit{
+			UID:    record.UID,
+			Profit: record.Profit.String(),
+		})
+	}
+
+	if userRecord != nil {
+		result.UserProfit = userRecord.Profit.String()
+		result.Rank = userRank
+	}
+
+	return result, nil
+}
+
+func (s *UserProfitService) GetAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, uid string) (*entity.UserProfitRank, error) {
+	records, err := s.repo.GetUserAccumulatedProfitRanking(ctx, beginTime, endTime, 20)
+	if err != nil {
+		return nil, err
+	}
+
+	userRecord, userRank, err := s.repo.GetUserAccumulatedProfitRankAndProfit(ctx, beginTime, endTime, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &entity.UserProfitRank{
+		Items: make([]entity.UserProfit, 0, len(records)),
+	}
+
+	for _, record := range records {
+		result.Items = append(result.Items, entity.UserProfit{
+			UID:    record.UID,
+			Profit: record.Profit.String(),
+		})
+	}
+
+	if userRecord != nil {
+		result.UserProfit = userRecord.Profit.String()
+		result.Rank = userRank
+	}
+
+	return result, nil
+}

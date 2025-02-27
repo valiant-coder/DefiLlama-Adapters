@@ -5,22 +5,12 @@ import (
 	"errors"
 	"exapp-go/config"
 	"fmt"
-	"time"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
-func init() {
-	addMigrateFunc(func(repo *Repo) error {
-		return repo.AutoMigrate(
-			&UserBalanceRecord{},
-			&UserDayProfitRecord{},
-			&UserAccumulatedProfitRecord{},
-		)
-	})
-}
+
 
 type UserPoolBalance struct {
 	PoolID     uint64          `json:"pool_id"`
@@ -198,101 +188,4 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 	}
 
 	return result, nil
-}
-
-type UserBalanceRecord struct {
-	gorm.Model
-	Time       time.Time       `gorm:"column:time;type:timestamp;not null;index:idx_time"`
-	Account    string          `gorm:"column:account;type:varchar(255);not null;"`
-	UID        string          `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
-	USDTAmount decimal.Decimal `gorm:"column:usdt_amount;type:decimal(20,6);not null;"`
-}
-
-func (t *UserBalanceRecord) TableName() string {
-	return "user_balance_records"
-}
-
-func (r *Repo) CreateUserBalanceRecord(ctx context.Context, record *UserBalanceRecord) error {
-	return r.DB.WithContext(ctx).Create(record).Error
-}
-
-func (r *Repo) GetUserBalanceRecordsInTimeRange(ctx context.Context, uid string, beginTime, endTime time.Time) ([]UserBalanceRecord, error) {
-	var records []UserBalanceRecord
-	err := r.DB.WithContext(ctx).
-		Where("uid = ? AND time >= ? AND time <= ?", uid, beginTime, endTime).
-		Order("time ASC").
-		Find(&records).Error
-	return records, err
-}
-
-func (r *Repo) GetUserBalanceRecordsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]UserBalanceRecord, error) {
-	var records []UserBalanceRecord
-	err := r.DB.WithContext(ctx).
-		Where("time >= ? AND time < ?", startTime, endTime).
-		Order("time ASC").
-		Find(&records).Error
-	return records, err
-}
-
-type UserDayProfitRecord struct {
-	gorm.Model
-	Time    time.Time       `gorm:"column:time;type:timestamp;not null;uniqueIndex:idx_uid_time"`
-	Account string          `gorm:"column:account;type:varchar(255);not null;"`
-	UID     string          `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_time"`
-	Profit  decimal.Decimal `gorm:"column:profit;type:decimal(20,6);not null;"`
-}
-
-func (t *UserDayProfitRecord) TableName() string {
-	return "user_day_profit_records"
-}
-
-func (r *Repo) CreateUserDayProfitRecord(ctx context.Context, record *UserDayProfitRecord) error {
-	return r.DB.WithContext(ctx).Create(record).Error
-}
-
-
-
-func (r *Repo) UpsertUserDayProfitRecord(ctx context.Context, record *UserDayProfitRecord) error {
-	return r.DB.WithContext(ctx).
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "uid"}, {Name: "time"}},
-			DoUpdates: clause.AssignmentColumns([]string{"profit", "updated_at"}),
-		}).
-		Create(record).Error
-}
-
-type UserAccumulatedProfitRecord struct {
-	gorm.Model
-	BeginTime time.Time       `gorm:"column:begin_time;type:timestamp;not null;uniqueIndex:idx_uid_begin_end_time"`
-	EndTime   time.Time       `gorm:"column:end_time;type:timestamp;not null;uniqueIndex:idx_uid_begin_end_time"`
-	Account   string          `gorm:"column:account;type:varchar(255);not null;"`
-	UID       string          `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_begin_end_time"`
-	Profit    decimal.Decimal `gorm:"column:profit;type:decimal(20,6);not null;"`
-}
-
-func (t *UserAccumulatedProfitRecord) TableName() string {
-	return "user_accumulated_profit_records"
-}
-
-func (r *Repo) CreateUserAccumulatedProfitRecord(ctx context.Context, record *UserAccumulatedProfitRecord) error {
-	return r.DB.WithContext(ctx).Create(record).Error
-}
-
-
-func (r *Repo) UpsertUserAccumulatedProfitRecord(ctx context.Context, record *UserAccumulatedProfitRecord) error {
-	return r.DB.WithContext(ctx).
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "uid"}, {Name: "begin_time"}, {Name: "end_time"}},
-			DoUpdates: clause.AssignmentColumns([]string{"profit", "updated_at"}),
-		}).
-		Create(record).Error
-}
-
-
-func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, beginTime, endTime time.Time) ([]UserAccumulatedProfitRecord, error) {
-	var records []UserAccumulatedProfitRecord
-	err := r.DB.WithContext(ctx).
-		Where("begin_time = ? AND end_time = ?", beginTime, endTime).
-		Find(&records).Error
-	return records, err
 }

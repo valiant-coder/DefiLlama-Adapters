@@ -716,6 +716,77 @@
                 }
             }
         },
+        "/profit/accumulated-ranking": {
+            "get": {
+                "description": "Get top 20 users accumulated profit ranking for specified time range, and current user's ranking and profit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Profit"
+                ],
+                "summary": "Get user accumulated profit ranking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "begin timestamp",
+                        "name": "begin",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "end timestamp",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.UserProfitRank"
+                        }
+                    }
+                }
+            }
+        },
+        "/profit/day-ranking": {
+            "get": {
+                "description": "Get top 20 users profit ranking for specified date, and current user's ranking and profit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Profit"
+                ],
+                "summary": "Get user daily profit ranking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "UTC0 timezone date start timestamp",
+                        "name": "timestamp",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.UserProfitRank"
+                        }
+                    }
+                }
+            }
+        },
         "/support-tokens": {
             "get": {
                 "description": "Get support tokens",
@@ -1829,6 +1900,40 @@
                     "type": "boolean"
                 },
                 "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserProfit": {
+            "type": "object",
+            "properties": {
+                "profit": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserProfitRank": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserProfit"
+                    }
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_profit": {
                     "type": "string"
                 }
             }
