@@ -133,10 +133,11 @@ type PowerUpConfig struct {
 }
 
 type HyperionConfig struct {
-	StartBlock     uint64 `yaml:"start_block"`
-	BatchSize      int    `yaml:"batch_size"`
-	Endpoint       string `yaml:"endpoint"`
-	StreamEndpoint string `yaml:"stream_endpoint"`
+	StartBlock       uint64 `yaml:"start_block"`
+	BatchSize        int    `yaml:"batch_size"`
+	SyncTradeHistory bool   `yaml:"sync_trade_history"`
+	Endpoint         string `yaml:"endpoint"`
+	StreamEndpoint   string `yaml:"stream_endpoint"`
 }
 
 type OneDexConfig struct {

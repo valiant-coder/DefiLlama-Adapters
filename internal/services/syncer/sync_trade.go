@@ -31,12 +31,12 @@ func (s *Service) initTradeLastBlockNum(ctx context.Context) error {
 	} else {
 		lastBlockNum = lastBlockNum + 1
 	}
-	s.tradeLastBlockNum = lastBlockNum
+	s.tradeLastBlockNum = int64(lastBlockNum)
 
 	return nil
 }
 
-func (s *Service) syncTradeHistory(ctx context.Context) error {
+func (s *Service) syncTradeHistories(ctx context.Context) error {
 	if err := s.initTradeLastBlockNum(ctx); err != nil {
 		return fmt.Errorf("init trade last block number failed: %w", err)
 	}
@@ -52,7 +52,7 @@ func (s *Service) syncTradeHistory(ctx context.Context) error {
 			),
 			Limit: s.hyperionCfg.BatchSize,
 			Sort:  "asc",
-			After: strconv.FormatUint(s.tradeLastBlockNum, 10),
+			After: strconv.FormatInt(s.tradeLastBlockNum, 10),
 		})
 		if err != nil {
 			return fmt.Errorf("get actions failed: %w", err)
@@ -68,7 +68,7 @@ func (s *Service) syncTradeHistory(ctx context.Context) error {
 				return fmt.Errorf("publish action failed: %w", err)
 			}
 
-			s.tradeLastBlockNum = action.BlockNum
+			s.tradeLastBlockNum = int64(action.BlockNum)
 		}
 
 		if len(resp.Actions) < s.hyperionCfg.BatchSize {
@@ -82,11 +82,12 @@ func (s *Service) syncTradeHistory(ctx context.Context) error {
 }
 
 func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error) {
-
-	if err := s.syncTradeHistory(ctx); err != nil {
-		return nil, fmt.Errorf("sync trade history failed: %w", err)
+	if s.syncTradeHistory {
+		if err := s.syncTradeHistories(ctx); err != nil {
+			return nil, fmt.Errorf("sync trade history failed: %w", err)
+		}
+		log.Printf("sync trade history done, last block number: %d", s.tradeLastBlockNum)
 	}
-	log.Printf("sync trade history done, last block number: %d", s.tradeLastBlockNum)
 
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 
@@ -94,7 +95,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 			Contract:  s.cdexCfg.EventContract,
 			Action:    s.eosCfg.Events.EmitPlaced,
 			Account:   "",
-			StartFrom: int64(s.tradeLastBlockNum) + 1,
+			StartFrom: s.tradeLastBlockNum+ 1,
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
@@ -102,7 +103,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 			Contract:  s.cdexCfg.EventContract,
 			Action:    s.eosCfg.Events.EmitCanceled,
 			Account:   "",
-			StartFrom: int64(s.tradeLastBlockNum) + 1,
+			StartFrom: s.tradeLastBlockNum + 1,
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},
@@ -110,7 +111,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 			Contract:  s.cdexCfg.EventContract,
 			Action:    s.eosCfg.Events.EmitFilled,
 			Account:   "",
-			StartFrom: int64(s.tradeLastBlockNum) + 1,
+			StartFrom: s.tradeLastBlockNum + 1,
 			ReadUntil: 0,
 			Filters:   []hyperion.RequestFilter{},
 		},

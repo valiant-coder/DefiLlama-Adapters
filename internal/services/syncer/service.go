@@ -22,7 +22,7 @@ type Service struct {
 	hyperionClient       *hyperion.Client
 	streamClient         *hyperion.StreamClient
 	publisher            *nsqutil.Publisher
-	tradeLastBlockNum    uint64
+	tradeLastBlockNum    int64
 	depositLastBlockNum  uint64
 	withdrawLastBlockNum uint64
 	accountLastBlockNum  uint64
@@ -33,6 +33,7 @@ type Service struct {
 	cdexCfg              config.CdexConfig
 	oneDexCfg            config.OneDexConfig
 	exsatCfg             config.ExsatConfig
+	syncTradeHistory     bool
 }
 
 func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, error) {
@@ -44,17 +45,18 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 	}
 
 	return &Service{
-		repo:           db.New(),
-		ckhRepo:        ckhdb.New(),
-		hyperionClient: hyperionClient,
-		streamClient:   streamClient,
-		publisher:      nsqutil.NewPublisher(nsqCfg.Nsqds),
-		hyperionCfg:    hyperionCfg,
-		nsqCfg:         nsqCfg,
-		eosCfg:         eosCfg,
-		cdexCfg:        eosCfg.CdexConfig,
-		oneDexCfg:      eosCfg.OneDex,
-		exsatCfg:       eosCfg.Exsat,
+		repo:             db.New(),
+		ckhRepo:          ckhdb.New(),
+		hyperionClient:   hyperionClient,
+		streamClient:     streamClient,
+		publisher:        nsqutil.NewPublisher(nsqCfg.Nsqds),
+		hyperionCfg:      hyperionCfg,
+		nsqCfg:           nsqCfg,
+		eosCfg:           eosCfg,
+		cdexCfg:          eosCfg.CdexConfig,
+		oneDexCfg:        eosCfg.OneDex,
+		exsatCfg:         eosCfg.Exsat,
+		syncTradeHistory: eosCfg.Hyperion.SyncTradeHistory,
 	}, nil
 }
 
@@ -92,7 +94,7 @@ func (s *Service) Start(ctx context.Context) error {
 				log.Printf("Publish trade action failed: %v", err)
 				continue
 			}
-			s.tradeLastBlockNum = action.BlockNum
+			s.tradeLastBlockNum = int64(action.BlockNum)
 		case action, ok := <-depositActionsCh:
 			if !ok {
 				return fmt.Errorf("deposit action channel closed")
