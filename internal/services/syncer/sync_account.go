@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 )
 
 func (s *Service) initAccountLastBlockNum(ctx context.Context) error {
@@ -58,7 +57,7 @@ func (s *Service) syncAccountHistory(ctx context.Context) error {
 			break
 		}
 
-		time.Sleep(time.Millisecond * 100)
+		// time.Sleep(time.Millisecond * 100)
 	}
 
 	return nil

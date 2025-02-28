@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 )
 
 func (s *Service) initTradeLastBlockNum(ctx context.Context) error {
@@ -76,7 +75,7 @@ func (s *Service) syncTradeHistory(ctx context.Context) error {
 			break
 		}
 
-		time.Sleep(time.Millisecond * 100)
+		// time.Sleep(time.Millisecond * 100)
 	}
 
 	return nil
@@ -90,7 +89,7 @@ func (s *Service) SyncTrade(ctx context.Context) (<-chan hyperion.Action, error)
 	log.Printf("sync trade history done, last block number: %d", s.tradeLastBlockNum)
 
 	actionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
-	
+
 		{
 			Contract:  s.cdexCfg.EventContract,
 			Action:    s.eosCfg.Events.EmitPlaced,

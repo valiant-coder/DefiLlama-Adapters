@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 )
 
 func (s *Service) initPoolLastBlockNum(ctx context.Context) error {
@@ -32,15 +31,15 @@ func (s *Service) syncPoolHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf(
-				"%s:%s,%s:%s,%s:%s", 
-				s.cdexCfg.PoolContract, s.eosCfg.Events.Create, 
+			Filter: fmt.Sprintf(
+				"%s:%s,%s:%s,%s:%s",
+				s.cdexCfg.PoolContract, s.eosCfg.Events.Create,
 				s.cdexCfg.PoolContract, s.eosCfg.Events.SetMinAmt,
 				s.cdexCfg.PoolContract, s.eosCfg.Events.SetPoolFeeRate,
 			),
-			Limit:   s.hyperionCfg.BatchSize,
-			Sort:    "asc",
-			After:   strconv.FormatUint(s.poolLastBlockNum, 10),
+			Limit: s.hyperionCfg.BatchSize,
+			Sort:  "asc",
+			After: strconv.FormatUint(s.poolLastBlockNum, 10),
 		})
 		if err != nil {
 			return fmt.Errorf("get actions failed: %w", err)
@@ -61,11 +60,10 @@ func (s *Service) syncPoolHistory(ctx context.Context) error {
 			break
 		}
 
-		time.Sleep(time.Millisecond * 100)
+		// time.Sleep(time.Millisecond * 100)
 	}
 	return nil
 }
-
 
 func (s *Service) SyncPool(ctx context.Context) (<-chan hyperion.Action, error) {
 	if err := s.syncPoolHistory(ctx); err != nil {
