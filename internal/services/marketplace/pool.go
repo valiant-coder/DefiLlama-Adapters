@@ -42,7 +42,12 @@ func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.Que
 		return make([]*entity.PoolStats, 0), 0, err
 	}
 	result := make([]*entity.PoolStats, 0, len(pools))
+	poolsMap := make(map[uint64]bool)
 	for _, pool := range pools {
+		if _, ok := poolsMap[pool.PoolID]; ok {
+			continue
+		}
+		poolsMap[pool.PoolID] = true
 		result = append(result, entity.PoolStatusFromDB(pool))
 	}
 	return result, total, nil
