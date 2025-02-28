@@ -26,7 +26,7 @@ func (s *DepthService) GetDepth(ctx context.Context, poolID uint64, precision st
 	if err != nil {
 		return entity.Depth{
 			PoolID:    poolID,
-			Timestamp: entity.Time(time.Now()),
+			Timestamp: uint64(time.Now().UnixMilli()),
 			Bids:      make([][]string, 0),
 			Asks:      make([][]string, 0),
 		}, err
@@ -39,7 +39,7 @@ func (s *DepthService) GetDepth(ctx context.Context, poolID uint64, precision st
 	}
 	return entity.Depth{
 		PoolID:    depth.PoolID,
-		Timestamp: entity.Time(time.Now()),
+		Timestamp: uint64(time.Now().UnixMilli()),
 		Bids:      depth.Bids,
 		Asks:      depth.Asks,
 		Precision: precision,

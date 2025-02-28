@@ -31,7 +31,7 @@ func (s *Service) updateDepth(ctx context.Context, params db.UpdateDepthParams) 
 		asks = append(asks, ask)
 		depths = append(depths, entity.Depth{
 			PoolID:    params.PoolID,
-			Timestamp: entity.Time(time.Now()),
+			Timestamp: uint64(time.Now().UnixMilli()),
 			Bids:      bids,
 			Asks:      asks,
 			Precision: change.Precision,
