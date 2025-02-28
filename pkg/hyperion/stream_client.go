@@ -82,6 +82,12 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 		}
 	}
 
+	actions := make(map[string]bool)
+	for _, req := range reqs {
+		actions[req.Contract+"::"+req.Action] = true
+	}
+
+
 	c.client.OnMessage(func(event string, args []any) {
 		if event != "message" {
 			return
@@ -107,6 +113,12 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 			log.Printf("unmarshal response failed: %v", err)
 			return
 		}
+
+
+		if !actions[action.Act.Account+"::"+action.Act.Name] {
+			return
+		}
+
 
 		select {
 		case actionCh <- action:
