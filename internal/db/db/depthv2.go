@@ -246,3 +246,65 @@ func (s *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
 	}
 	return s.redis.Del(ctx, keys...).Err()
 }
+
+
+func (r *Repo) CleanInvalidDepth(ctx context.Context, poolID uint64, lastPrice decimal.Decimal, isBuy bool) (int64, error) {
+	var totalCleaned int64
+
+	pipe := r.redis.Pipeline()
+
+	for _, precision := range SupportedPrecisions {
+		var (
+			hashKey      string
+			sortedSetKey string
+			min          string
+			max          string
+		)
+
+		if isBuy {
+			// For buy orders, clean all sell orders less than or equal to the executed price
+			hashKey = fmt.Sprintf("depth:%d:sell:%s:hash", poolID, precision)
+			sortedSetKey = fmt.Sprintf("depth:%d:sell:%s:sorted_set", poolID, precision)
+			min = "-inf"
+			// For sell orders, round up based on precision to ensure cleaning all orders below executed price (exclusive)
+			precisionDecimal, _ := decimal.NewFromString(precision)
+			slotPrice := lastPrice.Div(precisionDecimal).Ceil().Mul(precisionDecimal)
+			max = "(" + slotPrice.String() // Use "(" prefix to exclude this price
+		} else {
+			// For sell orders, clean all buy orders greater than or equal to the executed price
+			hashKey = fmt.Sprintf("depth:%d:buy:%s:hash", poolID, precision)
+			sortedSetKey = fmt.Sprintf("depth:%d:buy:%s:sorted_set", poolID, precision)
+			// For buy orders, round down based on precision to ensure cleaning all orders above executed price
+			precisionDecimal, _ := decimal.NewFromString(precision)
+			slotPrice := lastPrice.Div(precisionDecimal).Floor().Mul(precisionDecimal)
+			min = "(" + slotPrice.String() // Use "(" prefix to exclude this price
+			max = "+inf"
+		}
+
+		// Get list of prices to delete
+		prices, err := r.redis.ZRangeByScore(ctx, sortedSetKey, &redis.ZRangeBy{
+			Min: min,
+			Max: max,
+		}).Result()
+		if err != nil {
+			return 0, fmt.Errorf("get invalid prices error for precision %s: %w", precision, err)
+		}
+
+		if len(prices) > 0 {
+			// Delete data from hash table
+			pipe.HDel(ctx, hashKey, prices...)
+			// Delete data from sorted set
+			pipe.ZRemRangeByScore(ctx, sortedSetKey, min, max)
+			totalCleaned += int64(len(prices))
+		}
+	}
+
+	if totalCleaned > 0 {
+		_, err := pipe.Exec(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("clean invalid depth error: %w", err)
+		}
+	}
+
+	return totalCleaned, nil
+}

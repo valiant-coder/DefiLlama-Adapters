@@ -11,6 +11,13 @@ import (
 )
 
 func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
+	go func() {
+		totalCleaned, err := s.repo.CleanInvalidDepth(ctx, trade.PoolID, trade.Price, trade.TakerIsBid)
+		if err != nil {
+			log.Printf("clean invalid depth failed: %v", err)
+		}
+		log.Printf("cleaned %d invalid depth", totalCleaned)
+	}()
 	err := s.ckhRepo.InsertTradeIfNotExist(ctx, trade)
 	if err != nil {
 		log.Printf("insert trade failed: %v", err)
