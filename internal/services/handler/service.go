@@ -220,12 +220,13 @@ func (s *Service) registerHandlers() {
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
-	log.Println("get new action")
+
 	var action hyperion.Action
 	if err := json.Unmarshal(msg.Body, &action); err != nil {
 		log.Printf("Unmarshal action failed: %v", err)
 		return nil
 	}
+	log.Printf("get new action: %d", action.GlobalSequence)
 
 	// has handled action
 	actionKey := fmt.Sprintf("%s%d", RedisKeyActionProcessed, action.GlobalSequence)
