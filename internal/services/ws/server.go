@@ -324,6 +324,15 @@ func (s *Server) handleConnection(args ...interface{}) {
 		})
 	})
 
+	// Subscribe to all pool stats data
+	client.On("subscribe_all_pool_stats", func(args ...interface{}) {
+		room := socket.Room("all_pool_stats")
+		client.Join(room)
+		client.Emit("subscribed", map[string]interface{}{
+			"type": "all_pool_stats",
+		})
+	})
+
 	// Subscribe to pool stats data
 	client.On("subscribe_pool_stats", func(args ...interface{}) {
 		if len(args) < 1 {
@@ -479,6 +488,22 @@ func (s *Server) handleConnection(args ...interface{}) {
 		client.Emit("unsubscribed_all_depth", map[string]interface{}{
 			"status":  "success",
 			"message": fmt.Sprintf("Unsubscribed from all depth data, total %d", unsubCount),
+		})
+	})
+
+	client.On("unsubscribe_all_pool_stats", func(args ...interface{}) {
+		rooms := client.Rooms()
+
+		for _, room := range rooms.Keys() {
+			if room == "all_pool_stats" {
+				client.Leave(room)
+				break
+			}
+		}
+
+		client.Emit("unsubscribed_all_pool_stats", map[string]interface{}{
+			"status":  "success",
+			"message": "Unsubscribed from all pool stats data",
 		})
 	})
 }

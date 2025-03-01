@@ -3,6 +3,8 @@ package ws
 import (
 	"context"
 	"exapp-go/internal/entity"
+
+	"github.com/zishang520/socket.io/v2/socket"
 )
 
 const (
@@ -96,6 +98,8 @@ func (p *Pusher) PushPoolStats(data entity.PoolStats) {
 		Type:   SubTypePoolStats,
 	}
 	p.server.Broadcast(sub, PushEventPoolStatsUpdate, data)
+
+	p.server.io.To(socket.Room("all_pool_stats")).Emit(PushEventPoolStatsUpdate, data)
 }
 
 // Push data to specific user
