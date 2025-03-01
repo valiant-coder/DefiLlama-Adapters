@@ -65,7 +65,12 @@ socket.emit('subscribe_pool_stats', poolId);
 socket.emit('subscribe_pool_stats', 1);
 ```
 
-### 5. Unsubscribe
+### 5. All Pools Stats Data Subscription
+```javascript
+socket.emit('subscribe_all_pool_stats');
+```
+
+### 6. Unsubscribe
 ```javascript
 socket.emit('unsubscribe', subscriptionType, poolId, interval, precision);
 
@@ -78,20 +83,26 @@ socket.emit('unsubscribe', 'trades', 1);
 socket.emit('unsubscribe', 'pool_stats', 1);
 ```
 
-### 6. Unsubscribe All
+### 7. Unsubscribe All
 ```javascript
 socket.emit('unsubscribe_all');
 ```
 
-### 7. Unsubscribe All Kline
+### 8. Unsubscribe All Kline
 ```javascript
 socket.emit('unsubscribe_all_kline');
 ```
 
-### 8. Unsubscribe All Depth
+### 9. Unsubscribe All Depth
 ```javascript
 socket.emit('unsubscribe_all_depth');
 ```
+
+### 10. Unsubscribe All Pool Stats
+```javascript
+socket.emit('unsubscribe_all_pool_stats');
+```
+
 
 ## Subscription Success Response
 
@@ -120,6 +131,10 @@ socket.on('subscribed', (response) => {
     // {
     //     "type": "pool_stats",
     //     "poolID": 1
+    // }
+
+    // {
+    //     "type": "all_pool_stats"
     // }
 });
 ```

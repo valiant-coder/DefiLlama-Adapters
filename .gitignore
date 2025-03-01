@@ -9,3 +9,4 @@ develop/data
 certs
 develop/*.yml
 __debug*
+.history
