@@ -12,8 +12,10 @@ type SystemInfo struct {
 }
 
 type TradingCompetition struct {
-	BeginTime Time `json:"begin_time"`
-	EndTime   Time `json:"end_time"`
+	BeginTime         Time  `json:"begin_time"`
+	EndTime           Time  `json:"end_time"`
+	DailyPoints       []int `json:"daily_points"`
+	AccumulatedPoints []int `json:"accumulated_points"`
 }
 
 type PayCPU struct {

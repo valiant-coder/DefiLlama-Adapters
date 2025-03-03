@@ -1865,8 +1865,20 @@ const docTemplatemarketplace = `{
         "entity.TradingCompetition": {
             "type": "object",
             "properties": {
+                "accumulated_points": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "begin_time": {
                     "type": "string"
+                },
+                "daily_points": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "end_time": {
                     "type": "string"
