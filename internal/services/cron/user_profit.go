@@ -186,8 +186,8 @@ func (s *Service) calculateUserDayProfit() error {
 
 func (s *Service) calculateUserAccumulatedProfit() error {
 	ctx := context.Background()
-	beginTime := config.Conf().AccumulatedProfit.BeginTime
-	endTime := config.Conf().AccumulatedProfit.EndTime
+	beginTime := config.Conf().TradingCompetition.BeginTime
+	endTime := config.Conf().TradingCompetition.EndTime
 
 	now := time.Now()
 	if now.Before(beginTime) || now.After(endTime) {
