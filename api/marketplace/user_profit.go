@@ -12,7 +12,8 @@ import (
 
 // @Summary Get user daily profit ranking
 // @Description Get top 20 users profit ranking for specified date, and current user's ranking and profit
-// @Tags User Profit
+// @Tags user profit
+// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param timestamp query int true "UTC0 timezone date start timestamp"
@@ -38,7 +39,8 @@ func getDayProfitRanking(c *gin.Context) {
 
 // @Summary Get user accumulated profit ranking
 // @Description Get top 20 users accumulated profit ranking for specified time range, and current user's ranking and profit
-// @Tags User Profit
+// @Tags user profit
+// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param begin query int true "begin timestamp"

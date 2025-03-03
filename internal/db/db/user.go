@@ -200,3 +200,17 @@ func (r *Repo) GetAllEOSAccounts(ctx context.Context) ([]EOSAccountInfo, error) 
 		Find(&accounts).Error
 	return accounts, err
 }
+
+func (r *Repo) GetUsersByUIDs(ctx context.Context, uids []string) (map[string]User, error) {
+	var users []User
+	err := r.DB.WithContext(ctx).Where("uid IN ?", uids).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+
+	userMap := make(map[string]User)
+	for _, user := range users {
+		userMap[user.UID] = user
+	}
+	return userMap, nil
+}

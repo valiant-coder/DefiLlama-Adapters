@@ -721,6 +721,11 @@ const docTemplatemarketplace = `{
         },
         "/profit/accumulated-ranking": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get top 20 users accumulated profit ranking for specified time range, and current user's ranking and profit",
                 "consumes": [
                     "application/json"
@@ -729,7 +734,7 @@ const docTemplatemarketplace = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User Profit"
+                    "user profit"
                 ],
                 "summary": "Get user accumulated profit ranking",
                 "parameters": [
@@ -760,6 +765,11 @@ const docTemplatemarketplace = `{
         },
         "/profit/day-ranking": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get top 20 users profit ranking for specified date, and current user's ranking and profit",
                 "consumes": [
                     "application/json"
@@ -768,7 +778,7 @@ const docTemplatemarketplace = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User Profit"
+                    "user profit"
                 ],
                 "summary": "Get user daily profit ranking",
                 "parameters": [
@@ -1009,7 +1019,7 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "timestamp": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -1910,6 +1920,9 @@ const docTemplatemarketplace = `{
         "entity.UserProfit": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "profit": {
                     "type": "string"
                 },
@@ -1924,6 +1937,9 @@ const docTemplatemarketplace = `{
         "entity.UserProfitRank": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "items": {
                     "type": "array",
                     "items": {
