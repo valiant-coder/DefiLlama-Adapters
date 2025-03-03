@@ -30,6 +30,7 @@ type User struct {
 	Username    string      `gorm:"column:username;type:varchar(255);not null;index:idx_username"`
 	UID         string      `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid"`
 	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
+	Avatar      string      `gorm:"column:avatar;type:varchar(255);not null;default:''"`
 	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
 }
 
@@ -199,5 +200,3 @@ func (r *Repo) GetAllEOSAccounts(ctx context.Context) ([]EOSAccountInfo, error) 
 		Find(&accounts).Error
 	return accounts, err
 }
-
-

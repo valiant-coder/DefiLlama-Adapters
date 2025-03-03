@@ -46,6 +46,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 			Username:    userInfo.Name,
 			OauthID:     userInfo.GoogleID,
 			LoginMethod: db.LoginMethodGoogle,
+			Avatar:      userInfo.Picture,
 		}
 	case "apple":
 		userInfo, err := oauth2.ParseAppleIDToken(req.IdToken, cfg.Oauth2.Apple.ClientID)
