@@ -20,13 +20,22 @@ import (
 // @Success 200 {object} entity.UserProfitRank
 // @Router /profit/day-ranking [get]
 func getDayProfitRanking(c *gin.Context) {
+	claims, err := authMiddleware.GetClaimsFromJWT(c)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	var uid string
+	if claims["uid"] != nil {
+		uid = claims["uid"].(string)
+	} 
+
 	dayTimestamp := c.Query("timestamp")
 	if dayTimestamp == "" {
 		api.Error(c, errors.New("timestamp is empty"))
 		return
 	}
 	dayTime := time.Unix(cast.ToInt64(dayTimestamp), 0)
-	uid := c.GetString("uid")
 	userProfitService := marketplace.NewUserProfitService()
 	result, err := userProfitService.GetDayProfitRanking(c.Request.Context(), dayTime, uid)
 	if err != nil {
@@ -48,6 +57,16 @@ func getDayProfitRanking(c *gin.Context) {
 // @Success 200 {object} entity.UserProfitRank
 // @Router /profit/accumulated-ranking [get]
 func getAccumulatedProfitRanking(c *gin.Context) {
+	claims, err := authMiddleware.GetClaimsFromJWT(c)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	var uid string
+	if claims["uid"] != nil {
+		uid = claims["uid"].(string)
+	}
+
 	beginTimestamp := c.Query("begin")
 	endTimestamp := c.Query("end")
 	if beginTimestamp == "" || endTimestamp == "" {
@@ -55,7 +74,6 @@ func getAccumulatedProfitRanking(c *gin.Context) {
 		return
 	}
 
-	uid := c.GetString("uid")
 	beginTime := time.Unix(cast.ToInt64(beginTimestamp), 0)
 	endTime := time.Unix(cast.ToInt64(endTimestamp), 0)
 

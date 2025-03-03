@@ -23,9 +23,13 @@ func (s *UserProfitService) GetDayProfitRanking(ctx context.Context, dayTime tim
 		return nil, err
 	}
 
-	userRecord, userRank, err := s.repo.GetUserDayProfitRankAndProfit(ctx, dayTime, uid)
-	if err != nil {
-		return nil, err
+	var userRecord *db.UserDayProfitRecord
+	var userRank int
+	if uid != "" {
+		userRecord, userRank, err = s.repo.GetUserDayProfitRankAndProfit(ctx, dayTime, uid)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	uids := make([]string, 0, len(records))
@@ -75,9 +79,13 @@ func (s *UserProfitService) GetAccumulatedProfitRanking(ctx context.Context, beg
 		return nil, err
 	}
 
-	userRecord, userRank, err := s.repo.GetUserAccumulatedProfitRankAndProfit(ctx, beginTime, endTime, uid)
-	if err != nil {
-		return nil, err
+	var userRecord *db.UserAccumulatedProfitRecord
+	var userRank int
+	if uid != "" {
+		userRecord, userRank, err = s.repo.GetUserAccumulatedProfitRankAndProfit(ctx, beginTime, endTime, uid)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	uids := make([]string, 0, len(records))

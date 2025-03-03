@@ -17,6 +17,20 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+var authMiddleware *jwt.GinJWTMiddleware
+
+func registerJwtMiddleware() {
+	var err error
+	jwtParams := api.InitParams()
+	jwtParams.Authenticator = authenticator
+	jwtParams.Authorizator = authorizator
+
+	authMiddleware, err = jwt.New(jwtParams)
+	if err != nil {
+		log.Logger().Errorf("[RegisterJwtMiddleWare] %s", err)
+	}
+}
+
 // @title exapp-go marketplace api
 // @version 1.0
 // @host 127.0.0.1:8080
@@ -82,17 +96,11 @@ func Run(addr string, release bool) error {
 	r.GET("/repair-pool", repairPool)
 	r.GET("/sys-trade-info", getSysTradeInfo)
 	r.POST("/faucet", claimFaucet)
-
-	jwtParams := api.InitParams()
-	jwtParams.Authenticator = authenticator
-	jwtParams.Authorizator = authorizator
-
-	authMiddleware, err := jwt.New(jwtParams)
-	if err != nil {
-		log.Logger().Errorf("[RegisterJwtMiddleWare] %s", err)
-	}
+	r.GET("/profit/day-ranking", getDayProfitRanking)
+	r.GET("/profit/accumulated-ranking", getAccumulatedProfitRanking)
 
 	// register middleware
+	registerJwtMiddleware()
 	r.Use(api.HandlerMiddleWare(authMiddleware))
 	r.POST("/login", authMiddleware.LoginHandler)
 	auth := r.Group("/", authMiddleware.MiddlewareFunc())
@@ -111,8 +119,6 @@ func Run(addr string, release bool) error {
 	auth.GET("/deposit-history", getDepositHistory)
 	auth.GET("/withdrawal-history", getWithdrawalHistory)
 
-	auth.GET("/profit/day-ranking", getDayProfitRanking)
-	auth.GET("/profit/accumulated-ranking", getAccumulatedProfitRanking)
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,
 			config.Conf().HTTPS.CertFile,
