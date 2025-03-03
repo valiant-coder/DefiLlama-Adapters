@@ -63,7 +63,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 		return "", errors.New("invalid login method")
 	}
 
-	if err := s.repo.CreateUserIfNotExist(ctx, user); err != nil {
+	if err := s.repo.UpsertUser(ctx, user); err != nil {
 		return "", err
 	}
 

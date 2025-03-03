@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func init() {
@@ -45,30 +46,11 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (r *Repo) CreateUserIfNotExist(ctx context.Context, user *User) error {
-	var existingUser User
-	result := r.DB.WithContext(ctx).Where(
-		"login_method = ? AND oauth_id = ?",
-		user.LoginMethod,
-		user.OauthID,
-	).First(&existingUser)
-
-	if result.Error == gorm.ErrRecordNotFound {
-		if err := r.DB.WithContext(ctx).Save(user).Error; err != nil {
-			if r.DB.WithContext(ctx).Where(
-				"login_method = ? AND oauth_id = ?",
-				user.LoginMethod,
-				user.OauthID,
-			).First(&existingUser).Error == nil {
-				*user = existingUser
-				return nil
-			}
-			return fmt.Errorf("create user failed: %w", err)
-		}
-		return nil
-	}
-	*user = existingUser
-	return nil
+func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
+	return r.DB.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "login_method"}, {Name: "oauth_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"avatar", "updated_at", "username"}),
+	}).Create(user).Error
 }
 
 func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
