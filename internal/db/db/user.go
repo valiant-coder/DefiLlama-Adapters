@@ -54,7 +54,7 @@ func (r *Repo) CreateUserIfNotExist(ctx context.Context, user *User) error {
 	).First(&existingUser)
 
 	if result.Error == gorm.ErrRecordNotFound {
-		if err := r.DB.WithContext(ctx).Create(user).Error; err != nil {
+		if err := r.DB.WithContext(ctx).Save(user).Error; err != nil {
 			if r.DB.WithContext(ctx).Where(
 				"login_method = ? AND oauth_id = ?",
 				user.LoginMethod,
