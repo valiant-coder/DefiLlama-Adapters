@@ -55,7 +55,7 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 	if err == nil {
 		existingUser.Avatar = user.Avatar
 		existingUser.Username = user.Username
-		user = &existingUser
+		*user = existingUser
 		return r.DB.WithContext(ctx).Save(user).Error
 	}
 	return r.DB.WithContext(ctx).Create(user).Error
