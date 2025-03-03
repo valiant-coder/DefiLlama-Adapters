@@ -22,11 +22,7 @@ import (
 // @Success 200 {object} entity.UserProfitRank
 // @Router /profit/day-ranking [get]
 func getDayProfitRanking(c *gin.Context) {
-	claims, err := authMiddleware.GetClaimsFromJWT(c)
-	if err != nil {
-		api.Error(c, err)
-		return
-	}
+	claims, _ := authMiddleware.GetClaimsFromJWT(c)
 	var uid string
 	if claims["uid"] != nil {
 		uid = claims["uid"].(string)
@@ -67,11 +63,7 @@ func getDayProfitRanking(c *gin.Context) {
 // @Success 200 {object} entity.UserProfitRank
 // @Router /profit/accumulated-ranking [get]
 func getAccumulatedProfitRanking(c *gin.Context) {
-	claims, err := authMiddleware.GetClaimsFromJWT(c)
-	if err != nil {
-		api.Error(c, err)
-		return
-	}
+	claims, _ := authMiddleware.GetClaimsFromJWT(c)
 	var uid string
 	if claims["uid"] != nil {
 		uid = claims["uid"].(string)
