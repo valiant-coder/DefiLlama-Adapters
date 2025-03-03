@@ -1659,6 +1659,9 @@ const docTemplatemarketplace = `{
                 "token_contract": {
                     "type": "string"
                 },
+                "trading_competition": {
+                    "$ref": "#/definitions/entity.TradingCompetition"
+                },
                 "vault_eos_address": {
                     "type": "string"
                 },
@@ -1858,6 +1861,17 @@ const docTemplatemarketplace = `{
                 "TradeSideBuy",
                 "TradeSideSell"
             ]
+        },
+        "entity.TradingCompetition": {
+            "type": "object",
+            "properties": {
+                "begin_time": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                }
+            }
         },
         "entity.UserBalance": {
             "type": "object",

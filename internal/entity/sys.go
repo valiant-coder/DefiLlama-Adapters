@@ -1,13 +1,19 @@
 package entity
 
 type SystemInfo struct {
-	Version         string       `json:"version"`
-	PayCPU          PayCPU       `json:"pay_cpu"`
-	VaultEVMAddress string       `json:"vault_evm_address"`
-	VaultEOSAddress string       `json:"vault_eos_address"`
-	TokenContract   string       `json:"token_contract"`
-	DexContract     string       `json:"dex_contract"`
-	ExsatNetwork    ExsatNetwork `json:"exsat_network"`
+	Version            string             `json:"version"`
+	PayCPU             PayCPU             `json:"pay_cpu"`
+	VaultEVMAddress    string             `json:"vault_evm_address"`
+	VaultEOSAddress    string             `json:"vault_eos_address"`
+	TokenContract      string             `json:"token_contract"`
+	DexContract        string             `json:"dex_contract"`
+	ExsatNetwork       ExsatNetwork       `json:"exsat_network"`
+	TradingCompetition TradingCompetition `json:"trading_competition"`
+}
+
+type TradingCompetition struct {
+	BeginTime Time `json:"begin_time"`
+	EndTime   Time `json:"end_time"`
 }
 
 type PayCPU struct {

@@ -35,6 +35,10 @@ func getSystemInfo(c *gin.Context) {
 			NetworkName:      config.Conf().ExsatNetwork.NetworkName,
 			BlockExplorerUrl: config.Conf().ExsatNetwork.BlockExplorerUrl,
 		},
+		TradingCompetition: entity.TradingCompetition{
+			BeginTime: entity.Time(config.Conf().TradingCompetition.BeginTime),
+			EndTime:   entity.Time(config.Conf().TradingCompetition.EndTime),
+		},
 	}
 	api.OK(c, sysInfo)
 }

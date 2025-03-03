@@ -85,10 +85,10 @@ type Config struct {
 		Amount               float64 `yaml:"amount"`
 	} `yaml:"faucet"`
 
-	AccumulatedProfit struct {
+	TradingCompetition struct {
 		BeginTime time.Time `yaml:"begin_time"`
 		EndTime   time.Time `yaml:"end_time"`
-	} `yaml:"accumulated_profit"`
+	} `yaml:"trading_competition"`
 }
 
 type ExsatNetworkConfig struct {
