@@ -1934,11 +1934,11 @@
                 "avatar": {
                     "type": "string"
                 },
+                "point": {
+                    "type": "integer"
+                },
                 "profit": {
                     "type": "string"
-                },
-                "score": {
-                    "type": "integer"
                 },
                 "uid": {
                     "type": "string"
@@ -1957,10 +1957,10 @@
                         "$ref": "#/definitions/entity.UserProfit"
                     }
                 },
-                "rank": {
+                "point": {
                     "type": "integer"
                 },
-                "score": {
+                "rank": {
                     "type": "integer"
                 },
                 "user_profit": {

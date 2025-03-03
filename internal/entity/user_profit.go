@@ -4,7 +4,7 @@ type UserProfit struct {
 	UID    string `json:"uid"`
 	Avatar string `json:"avatar"`
 	Profit string `json:"profit"`
-	Score  int    `json:"score"`
+	Point  int    `json:"point"`
 }
 
 type UserProfitRank struct {
@@ -12,6 +12,6 @@ type UserProfitRank struct {
 
 	Avatar     string `json:"avatar"`
 	UserProfit string `json:"user_profit"`
-	Score      int    `json:"score"`
+	Point      int    `json:"point"`
 	Rank       int    `json:"rank"`
 }

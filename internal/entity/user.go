@@ -62,3 +62,5 @@ type LockBalance struct {
 	PoolSymbol string `json:"pool_symbol"`
 	Balance    string `json:"balance"`
 }
+
+

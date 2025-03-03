@@ -3,6 +3,8 @@ package marketplace
 import (
 	"errors"
 	"exapp-go/api"
+	"exapp-go/config"
+	"exapp-go/internal/errno"
 	"exapp-go/internal/services/marketplace"
 	"time"
 
@@ -28,7 +30,7 @@ func getDayProfitRanking(c *gin.Context) {
 	var uid string
 	if claims["uid"] != nil {
 		uid = claims["uid"].(string)
-	} 
+	}
 
 	dayTimestamp := c.Query("timestamp")
 	if dayTimestamp == "" {
@@ -36,6 +38,14 @@ func getDayProfitRanking(c *gin.Context) {
 		return
 	}
 	dayTime := time.Unix(cast.ToInt64(dayTimestamp), 0)
+	if dayTime.Before(config.Conf().TradingCompetition.BeginTime) {
+		api.Error(c, errno.DefaultParamsError("timestamp is before trading competition begin time"))
+		return
+	}
+	if dayTime.After(config.Conf().TradingCompetition.EndTime) {
+		api.Error(c, errno.DefaultParamsError("timestamp is after trading competition end time"))
+		return
+	}
 	userProfitService := marketplace.NewUserProfitService()
 	result, err := userProfitService.GetDayProfitRanking(c.Request.Context(), dayTime, uid)
 	if err != nil {
@@ -69,13 +79,14 @@ func getAccumulatedProfitRanking(c *gin.Context) {
 
 	beginTimestamp := c.Query("begin")
 	endTimestamp := c.Query("end")
+	var beginTime, endTime time.Time
 	if beginTimestamp == "" || endTimestamp == "" {
-		api.Error(c, errors.New("begin or end timestamp is empty"))
-		return
+		beginTime = config.Conf().TradingCompetition.BeginTime
+		endTime = config.Conf().TradingCompetition.EndTime
+	} else {
+		beginTime = time.Unix(cast.ToInt64(beginTimestamp), 0)
+		endTime = time.Unix(cast.ToInt64(endTimestamp), 0)
 	}
-
-	beginTime := time.Unix(cast.ToInt64(beginTimestamp), 0)
-	endTime := time.Unix(cast.ToInt64(endTimestamp), 0)
 
 	userProfitService := marketplace.NewUserProfitService()
 	result, err := userProfitService.GetAccumulatedProfitRanking(c.Request.Context(), beginTime, endTime, uid)

@@ -1937,11 +1937,11 @@ const docTemplatemarketplace = `{
                 "avatar": {
                     "type": "string"
                 },
+                "point": {
+                    "type": "integer"
+                },
                 "profit": {
                     "type": "string"
-                },
-                "score": {
-                    "type": "integer"
                 },
                 "uid": {
                     "type": "string"
@@ -1960,10 +1960,10 @@ const docTemplatemarketplace = `{
                         "$ref": "#/definitions/entity.UserProfit"
                     }
                 },
-                "rank": {
+                "point": {
                     "type": "integer"
                 },
-                "score": {
+                "rank": {
                     "type": "integer"
                 },
                 "user_profit": {

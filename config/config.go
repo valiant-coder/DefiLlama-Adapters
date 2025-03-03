@@ -86,8 +86,10 @@ type Config struct {
 	} `yaml:"faucet"`
 
 	TradingCompetition struct {
-		BeginTime time.Time `yaml:"begin_time"`
-		EndTime   time.Time `yaml:"end_time"`
+		BeginTime         time.Time `yaml:"begin_time"`
+		EndTime           time.Time `yaml:"end_time"`
+		DailyPoints       []int     `yaml:"daily_points"`
+		AccumulatedPoints []int     `yaml:"accumulated_points"`
 	} `yaml:"trading_competition"`
 }
 

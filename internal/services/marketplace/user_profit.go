@@ -2,6 +2,7 @@ package marketplace
 
 import (
 	"context"
+	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 	"time"
@@ -9,11 +10,13 @@ import (
 
 type UserProfitService struct {
 	repo *db.Repo
+	cfg  *config.Config
 }
 
 func NewUserProfitService() *UserProfitService {
 	return &UserProfitService{
 		repo: db.New(),
+		cfg:  config.Conf(),
 	}
 }
 
@@ -49,16 +52,21 @@ func (s *UserProfitService) GetDayProfitRanking(ctx context.Context, dayTime tim
 		Items: make([]entity.UserProfit, 0, len(records)),
 	}
 
-	for _, record := range records {
+	for i, record := range records {
 		user, exists := userMap[record.UID]
 		avatar := ""
 		if exists {
 			avatar = user.Avatar
 		}
+		point := 0
+		if i < len(s.cfg.TradingCompetition.DailyPoints) {
+			point = s.cfg.TradingCompetition.DailyPoints[i]
+		}
 		result.Items = append(result.Items, entity.UserProfit{
 			UID:    record.UID,
 			Avatar: avatar,
 			Profit: record.Profit.String(),
+			Point:  point,
 		})
 	}
 
@@ -67,6 +75,9 @@ func (s *UserProfitService) GetDayProfitRanking(ctx context.Context, dayTime tim
 		result.Rank = userRank
 		if user, exists := userMap[userRecord.UID]; exists {
 			result.Avatar = user.Avatar
+		}
+		if userRank > 0 && userRank <= len(s.cfg.TradingCompetition.DailyPoints) {
+			result.Point = s.cfg.TradingCompetition.DailyPoints[userRank-1]
 		}
 	}
 
@@ -105,16 +116,21 @@ func (s *UserProfitService) GetAccumulatedProfitRanking(ctx context.Context, beg
 		Items: make([]entity.UserProfit, 0, len(records)),
 	}
 
-	for _, record := range records {
+	for i, record := range records {
 		user, exists := userMap[record.UID]
 		avatar := ""
 		if exists {
 			avatar = user.Avatar
 		}
+		point := 0
+		if i < len(s.cfg.TradingCompetition.AccumulatedPoints) {
+			point = s.cfg.TradingCompetition.AccumulatedPoints[i]
+		}
 		result.Items = append(result.Items, entity.UserProfit{
 			UID:    record.UID,
 			Avatar: avatar,
 			Profit: record.Profit.String(),
+			Point:  point,
 		})
 	}
 
@@ -123,6 +139,9 @@ func (s *UserProfitService) GetAccumulatedProfitRanking(ctx context.Context, beg
 		result.Rank = userRank
 		if user, exists := userMap[userRecord.UID]; exists {
 			result.Avatar = user.Avatar
+		}
+		if userRank > 0 && userRank <= len(s.cfg.TradingCompetition.AccumulatedPoints) {
+			result.Point = s.cfg.TradingCompetition.AccumulatedPoints[userRank-1]
 		}
 	}
 
