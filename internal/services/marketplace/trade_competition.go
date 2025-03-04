@@ -3,24 +3,26 @@ package marketplace
 import (
 	"context"
 	"exapp-go/config"
+	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 	"time"
 )
 
-type UserProfitService struct {
-	repo *db.Repo
-	cfg  *config.Config
+type TradeCompetitionService struct {
+	repo    *db.Repo
+	ckhRepo *ckhdb.ClickHouseRepo
+	cfg     *config.Config
 }
 
-func NewUserProfitService() *UserProfitService {
-	return &UserProfitService{
+func NewTradeCompetitionService() *TradeCompetitionService {
+	return &TradeCompetitionService{
 		repo: db.New(),
 		cfg:  config.Conf(),
 	}
 }
 
-func (s *UserProfitService) GetDayProfitRanking(ctx context.Context, dayTime time.Time, uid string) (*entity.UserProfitRank, error) {
+func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTime time.Time, uid string) (*entity.UserProfitRank, error) {
 	records, err := s.repo.GetUserDayProfitRanking(ctx, dayTime, 20)
 	if err != nil {
 		return nil, err
@@ -84,7 +86,7 @@ func (s *UserProfitService) GetDayProfitRanking(ctx context.Context, dayTime tim
 	return result, nil
 }
 
-func (s *UserProfitService) GetAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, uid string) (*entity.UserProfitRank, error) {
+func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, uid string) (*entity.UserProfitRank, error) {
 	records, err := s.repo.GetUserAccumulatedProfitRanking(ctx, beginTime, endTime, 20)
 	if err != nil {
 		return nil, err
@@ -146,4 +148,10 @@ func (s *UserProfitService) GetAccumulatedProfitRanking(ctx context.Context, beg
 	}
 
 	return result, nil
+}
+
+func (s *TradeCompetitionService) GetTotalTradeStats(ctx context.Context, uid string) (*entity.TotalTradeStats, error) {
+
+	return nil, nil
+
 }

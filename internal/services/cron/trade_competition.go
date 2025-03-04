@@ -21,7 +21,7 @@ func getRoundedHour(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
 }
 
-func (s *Service) HandleUserProfit() {
+func (s *Service) HandleTradeCompetition() {
 	log.Printf("Calculate user balances")
 	err := s.recordUserBalances()
 	if err != nil {

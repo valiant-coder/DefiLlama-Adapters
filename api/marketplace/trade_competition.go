@@ -14,13 +14,13 @@ import (
 
 // @Summary Get user daily profit ranking
 // @Description Get top 20 users profit ranking for specified date, and current user's ranking and profit
-// @Tags user profit
+// @Tags trade competition
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param timestamp query int true "UTC0 timezone date start timestamp"
 // @Success 200 {object} entity.UserProfitRank
-// @Router /profit/day-ranking [get]
+// @Router /trade-competition/day-ranking [get]
 func getDayProfitRanking(c *gin.Context) {
 	claims, _ := authMiddleware.GetClaimsFromJWT(c)
 	var uid string
@@ -42,8 +42,8 @@ func getDayProfitRanking(c *gin.Context) {
 		api.Error(c, errno.DefaultParamsError("timestamp is after trading competition end time"))
 		return
 	}
-	userProfitService := marketplace.NewUserProfitService()
-	result, err := userProfitService.GetDayProfitRanking(c.Request.Context(), dayTime, uid)
+	tradeCompetitionService := marketplace.NewTradeCompetitionService()
+	result, err := tradeCompetitionService.GetDayProfitRanking(c.Request.Context(), dayTime, uid)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -54,14 +54,14 @@ func getDayProfitRanking(c *gin.Context) {
 
 // @Summary Get user accumulated profit ranking
 // @Description Get top 20 users accumulated profit ranking for specified time range, and current user's ranking and profit
-// @Tags user profit
+// @Tags trade competition
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param begin query int true "begin timestamp"
 // @Param end query int true "end timestamp"
 // @Success 200 {object} entity.UserProfitRank
-// @Router /profit/accumulated-ranking [get]
+// @Router /trade-competition/accumulated-ranking [get]
 func getAccumulatedProfitRanking(c *gin.Context) {
 	claims, _ := authMiddleware.GetClaimsFromJWT(c)
 	var uid string
@@ -80,8 +80,32 @@ func getAccumulatedProfitRanking(c *gin.Context) {
 		endTime = time.Unix(cast.ToInt64(endTimestamp), 0)
 	}
 
-	userProfitService := marketplace.NewUserProfitService()
-	result, err := userProfitService.GetAccumulatedProfitRanking(c.Request.Context(), beginTime, endTime, uid)
+	tradeCompetitionService := marketplace.NewTradeCompetitionService()
+	result, err := tradeCompetitionService.GetAccumulatedProfitRanking(c.Request.Context(), beginTime, endTime, uid)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, result)
+}
+
+// @Summary Get total trade stats
+// @Description Get total trade stats
+// @Tags trade competition
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} entity.TotalTradeStats
+// @Router /trade-competition/total-trade-stats [get]
+func getTotalTradeStats(c *gin.Context) {
+	claims, _ := authMiddleware.GetClaimsFromJWT(c)
+	var uid string
+	if claims["uid"] != nil {
+		uid = claims["uid"].(string)
+	}
+	tradeCompetitionService := marketplace.NewTradeCompetitionService()
+	result, err := tradeCompetitionService.GetTotalTradeStats(c.Request.Context(), uid)
 	if err != nil {
 		api.Error(c, err)
 		return

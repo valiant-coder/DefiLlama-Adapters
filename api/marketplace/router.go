@@ -96,9 +96,9 @@ func Run(addr string, release bool) error {
 	r.GET("/repair-pool", repairPool)
 	r.GET("/sys-trade-info", getSysTradeInfo)
 	r.POST("/faucet", claimFaucet)
-	r.GET("/profit/day-ranking", getDayProfitRanking)
-	r.GET("/profit/accumulated-ranking", getAccumulatedProfitRanking)
-
+	r.GET("/trade-competition/day-ranking", getDayProfitRanking)
+	r.GET("/trade-competition/accumulated-ranking", getAccumulatedProfitRanking)
+	r.GET("/trade-competition/total-trade-stats", getTotalTradeStats)
 	// register middleware
 	registerJwtMiddleware()
 	r.Use(api.HandlerMiddleWare(authMiddleware))

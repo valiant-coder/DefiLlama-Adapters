@@ -15,3 +15,16 @@ type UserProfitRank struct {
 	Point      int    `json:"point"`
 	Rank       int    `json:"rank"`
 }
+
+type TotalTradeStats struct {
+	UserClaimedFaucet int     `json:"user_claimed_faucet"`
+	UserPoints        int     `json:"user_points"`
+	TotalPointsIssued int     `json:"total_points_issued"`
+	TotalTradeVolume  float64 `json:"total_trade_volume"`
+	TotalTradeUser    int     `json:"total_trade_user"`
+}
+
+
+
+
+
