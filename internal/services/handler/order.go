@@ -432,6 +432,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 			OrderID  string `json:"order_id"`
 			OrderCID string `json:"order_cid"`
 			IsBid    bool   `json:"is_bid"`
+			Price    string `json:"price"`
 			Trader   struct {
 				Actor      string `json:"actor"`
 				Permission string `json:"permission"`
@@ -455,19 +456,24 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	orderID := cast.ToUint64(data.EV.OrderID)
 	poolID := cast.ToUint64(data.EV.PoolID)
-	order, err := s.repo.GetOpenOrder(ctx, poolID, orderID, data.EV.IsBid)
-	if err != nil {
-		log.Printf("get open order failed: %v", err)
-		return nil
+	pool, ok := s.poolCache[poolID]
+	if !ok {
+		pool, err = s.repo.GetPoolByID(ctx, poolID)
+		if err != nil {
+			log.Printf("get pool failed: %v", err)
+			return nil
+		}
+		s.poolCache[poolID] = pool
 	}
+
+	price := decimal.New(cast.ToInt64(data.EV.Price), -int32(pool.PricePrecision))
 
 	if data.EV.IsBid {
 		err = s.updateDepth(ctx, db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
-			Price:  order.Price,
+			Price:  price,
 			Amount: canceledQuantity.Neg(),
 			IsBuy:  true,
 		})
@@ -475,13 +481,20 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		err = s.updateDepth(ctx, db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
-			Price:  order.Price,
+			Price:  price,
 			Amount: canceledQuantity.Neg(),
 			IsBuy:  false,
 		})
 	}
 	if err != nil {
 		log.Printf("update depth failed: :%v", err)
+		return nil
+	}
+
+	orderID := cast.ToUint64(data.EV.OrderID)
+	order, err := s.repo.GetOpenOrder(ctx, poolID, orderID, data.EV.IsBid)
+	if err != nil {
+		log.Printf("get open order failed: %v", err)
 		return nil
 	}
 
