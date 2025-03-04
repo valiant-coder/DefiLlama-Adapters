@@ -103,7 +103,6 @@ func (p *NSQPublisher) PublishOrderUpdate(account string, id string) error {
 	p.mutex.RUnlock()
 
 	if exists && lastOrder == orderUpdate {
-		log.Printf("skip duplicate order update: %s-%s", account, id)
 		return nil
 	}
 
