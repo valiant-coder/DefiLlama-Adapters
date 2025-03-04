@@ -216,7 +216,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
-		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &order)
+		err = s.ckhRepo.InsertOrder(ctx, &order)
 		if err != nil {
 			log.Printf("insert history order failed: %v", err)
 			return nil
@@ -435,7 +435,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
-		err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
+		err = s.ckhRepo.InsertOrder(ctx, &historyOrder)
 		if err != nil {
 			log.Printf("insert history order failed: %v", err)
 		}
@@ -567,7 +567,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		BaseCoinPrecision:  order.BaseCoinPrecision,
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
-	err = s.ckhRepo.InsertOrderIfNotExist(ctx, &historyOrder)
+	err = s.ckhRepo.InsertOrder(ctx, &historyOrder)
 	if err != nil {
 		log.Printf("insert history order failed: %v", err)
 		return nil

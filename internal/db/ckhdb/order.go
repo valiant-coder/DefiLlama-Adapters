@@ -61,9 +61,8 @@ func (HistoryOrder) TableName() string {
 	return "history_orders"
 }
 
-func (r *ClickHouseRepo) InsertOrderIfNotExist(ctx context.Context, order *HistoryOrder) error {
-
-	return r.DB.WithContext(ctx).Model(&HistoryOrder{}).Where("pool_id = ? and order_id = ? and is_bid = ?", order.PoolID, order.OrderID, order.IsBid).FirstOrCreate(order).Error
+func (r *ClickHouseRepo) InsertOrder(ctx context.Context, order *HistoryOrder) error {
+	return r.DB.WithContext(ctx).Create(order).Error
 }
 
 func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
