@@ -153,11 +153,11 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				log.Printf("get trades failed: %v", err)
 				return nil
 			}
+			log.Printf("[性能] 获取交易记录耗时: %v", time.Since(tradeStart))
 			if len(trades) == 0 {
 				log.Printf("no trades found for executed order: %v", orderTag)
 				return s.publisher.DeferPublishCreateOrder(action)
 			}
-			log.Printf("[性能] 获取交易记录耗时: %v", time.Since(tradeStart))
 
 			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
 			for _, trade := range trades {
