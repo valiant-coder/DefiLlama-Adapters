@@ -25,10 +25,6 @@ func eosAssetToDecimal(a string) (decimal.Decimal, error) {
 }
 
 func (s *Service) handleCreateOrder(action hyperion.Action) error {
-	start := time.Now()
-	defer func() {
-		log.Printf("[性能] handleCreateOrder 总耗时: %v", time.Since(start))
-	}()
 
 	var newOrder struct {
 		EV struct {
@@ -93,7 +89,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	}
 
 	if newOrder.EV.IsInserted {
-		dbStart := time.Now()
 		order := db.OpenOrder{
 			App:                newOrder.EV.App,
 			TxID:               action.TrxID,
@@ -118,9 +113,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		if err != nil {
 			log.Printf("insert open order failed: %v", err)
 		}
-		log.Printf("[性能] 插入订单数据耗时: %v", time.Since(dbStart))
 
-		depthStart := time.Now()
 		err = s.updateDepth(ctx, db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
@@ -131,7 +124,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		if err != nil {
 			log.Printf("update depth failed: :%v", err)
 		}
-		log.Printf("[性能] 更新深度数据耗时: %v", time.Since(depthStart))
 
 	} else {
 		var avgPrice, price decimal.Decimal
@@ -217,10 +209,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 }
 
 func (s *Service) handleMatchOrder(action hyperion.Action) error {
-	start := time.Now()
-	defer func() {
-		log.Printf("[性能] handleMatchOrder 总耗时: %v", time.Since(start))
-	}()
 
 	var data struct {
 		EV struct {
@@ -312,7 +300,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	tradeStart := time.Now()
 	trade := ckhdb.Trade{
 		TxID:           action.TrxID,
 		PoolID:         poolID,
@@ -354,9 +341,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	if err != nil {
 		log.Printf("new trade failed: %v", err)
 	}
-	log.Printf("[性能] 创建交易记录耗时: %v", time.Since(tradeStart))
 
-	depthStart := time.Now()
 	if data.EV.TakerIsBid {
 		err = s.updateDepth(ctx, db.UpdateDepthParams{
 			PoolID: poolID,
@@ -377,7 +362,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	if err != nil {
 		log.Printf("update depth failed: :%v", err)
 	}
-	log.Printf("[性能] 更新深度数据耗时: %v", time.Since(depthStart))
 
 	makerOrder, err := s.repo.GetOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
 	if err != nil {
@@ -440,10 +424,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 }
 
 func (s *Service) handleCancelOrder(action hyperion.Action) error {
-	start := time.Now()
-	defer func() {
-		log.Printf("[性能] handleCancelOrder 总耗时: %v", time.Since(start))
-	}()
 
 	var data struct {
 		EV struct {
@@ -483,7 +463,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	depthStart := time.Now()
 	if data.EV.IsBid {
 		err = s.updateDepth(ctx, db.UpdateDepthParams{
 			PoolID: poolID,
@@ -505,15 +484,12 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		log.Printf("update depth failed: :%v", err)
 		return nil
 	}
-	log.Printf("[性能] 更新深度数据耗时: %v", time.Since(depthStart))
 
-	deleteStart := time.Now()
 	err = s.repo.DeleteOpenOrder(ctx, poolID, orderID, order.IsBid)
 	if err != nil {
 		log.Printf("delete open order failed: %v", err)
 		return nil
 	}
-	log.Printf("[性能] 删除订单耗时: %v", time.Since(deleteStart))
 
 	canceledTime, err := utils.ParseTime(data.EV.Time)
 	if err != nil {
@@ -527,7 +503,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		status = ckhdb.OrderStatusCancelled
 	}
 
-	historyStart := time.Now()
 	historyOrder := ckhdb.HistoryOrder{
 		App:                order.App,
 		PoolID:             order.PoolID,
@@ -555,7 +530,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
 	s.orderBuffer.Add(&historyOrder)
-	log.Printf("[性能] 插入历史订单耗时: %v", time.Since(historyStart))
 
 	go s.updateUserTokenBalance(data.EV.Trader.Actor)
 	go s.publisher.PublishOrderUpdate(data.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[data.EV.IsBid]))

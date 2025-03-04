@@ -107,7 +107,6 @@ func (p *NSQPublisher) PublishOrderUpdate(account string, id string) error {
 		return nil
 	}
 
-	log.Printf("publish order update: %s-%s", account, id)
 	msg := struct {
 		Type string      `json:"type"`
 		Data interface{} `json:"data"`
