@@ -45,18 +45,11 @@ func (Trade) TableName() string {
 	return "trades"
 }
 
-func (r *ClickHouseRepo) InsertTradeIfNotExist(ctx context.Context, trade *Trade) error {
-	var makerSide, takerSide uint8
-	if trade.TakerIsBid {
-		takerSide = 0
-		makerSide = 1
-	} else {
-		takerSide = 1
-		makerSide = 0
-	}
-	trade.MakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.MakerOrderID, makerSide)
-	trade.TakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, takerSide)
-	return r.DB.WithContext(ctx).Create(trade).Error
+
+
+
+func (r *ClickHouseRepo) BatchInsertTrades(ctx context.Context, trades []*Trade) error {
+	return r.DB.WithContext(ctx).CreateInBatches(trades, 100).Error
 }
 
 func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {

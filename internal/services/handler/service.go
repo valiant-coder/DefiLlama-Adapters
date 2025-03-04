@@ -48,6 +48,8 @@ type Service struct {
 	handlers    map[string]func(hyperion.Action) error
 	hyperionCli *hyperion.Client
 	tradeCache  map[string][]*ckhdb.Trade
+	tradeBuffer *ckhdb.TradeBuffer
+	orderBuffer *ckhdb.OrderBuffer
 }
 
 func NewService() (*Service, error) {
@@ -83,6 +85,8 @@ func NewService() (*Service, error) {
 		handlers:    make(map[string]func(hyperion.Action) error),
 		hyperionCli: hyperionCli,
 		tradeCache:  make(map[string][]*ckhdb.Trade),
+		tradeBuffer: ckhdb.NewTradeBuffer(500, ckhRepo),
+		orderBuffer: ckhdb.NewOrderBuffer(500, ckhRepo),
 	}
 
 	// Register all handlers

@@ -216,11 +216,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
-		err = s.ckhRepo.InsertOrder(ctx, &order)
-		if err != nil {
-			log.Printf("insert history order failed: %v", err)
-			return nil
-		}
+		s.orderBuffer.Add(&order)
 
 	}
 
@@ -356,6 +352,16 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		TakerIsBid:     data.EV.TakerIsBid,
 		CreatedAt:      time.Now(),
 	}
+	var makerSide, takerSide uint8
+	if trade.TakerIsBid {
+		takerSide = 0
+		makerSide = 1
+	} else {
+		takerSide = 1
+		makerSide = 0
+	}
+	trade.MakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.MakerOrderID, makerSide)
+	trade.TakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, takerSide)
 	err = s.newTrade(ctx, &trade)
 	if err != nil {
 		log.Printf("new trade failed: %v", err)
@@ -435,12 +441,10 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
-		err = s.ckhRepo.InsertOrder(ctx, &historyOrder)
-		if err != nil {
-			log.Printf("insert history order failed: %v", err)
-		}
+		s.orderBuffer.Add(&historyOrder)
 
 	}
+
 	go s.updateUserTokenBalance(data.EV.Maker.Actor)
 	go s.updateUserTokenBalance(data.EV.Taker.Actor)
 	go s.publisher.PublishOrderUpdate(data.EV.Maker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.MakerOrderID), map[bool]string{true: "0", false: "1"}[!data.EV.TakerIsBid]))
@@ -567,11 +571,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		BaseCoinPrecision:  order.BaseCoinPrecision,
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
-	err = s.ckhRepo.InsertOrder(ctx, &historyOrder)
-	if err != nil {
-		log.Printf("insert history order failed: %v", err)
-		return nil
-	}
+	s.orderBuffer.Add(&historyOrder)
 	log.Printf("[性能] 插入历史订单耗时: %v", time.Since(historyStart))
 
 	go s.updateUserTokenBalance(data.EV.Trader.Actor)

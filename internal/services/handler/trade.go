@@ -24,11 +24,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 	}()
 
 	insertStart := time.Now()
-	err := s.ckhRepo.InsertTradeIfNotExist(ctx, trade)
-	if err != nil {
-		log.Printf("insert trade failed: %v", err)
-		return nil
-	}
+	s.tradeBuffer.Add(trade)
 	log.Printf("Performance Stats - Insert Trade Record Time: %v", time.Since(insertStart))
 
 	cacheStart := time.Now()
@@ -177,7 +173,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		}
 
 		// Publish kline update
-		err = s.publisher.PublishKlineUpdate(entity.DbKlineToEntity(klineMap[interval]))
+		err := s.publisher.PublishKlineUpdate(entity.DbKlineToEntity(klineMap[interval]))
 		if err != nil {
 			log.Printf("publish kline update failed: %v", err)
 		}
