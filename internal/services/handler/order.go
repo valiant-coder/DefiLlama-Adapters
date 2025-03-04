@@ -51,7 +51,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		log.Printf("unmarshal create order data failed: %v", err)
 		return nil
 	}
-	log.Printf("newOrder: %v-%v,global_sequence: %v", newOrder.EV.PoolID, newOrder.EV.OrderCID, action.GlobalSequence)
+	log.Printf("newOrder: %v-%v-%v-%v,global_sequence: %v", newOrder.EV.PoolID, newOrder.EV.OrderID, newOrder.EV.IsBid, newOrder.EV.IsInserted, action.GlobalSequence)
 
 	ctx := context.Background()
 	poolID := cast.ToUint64(newOrder.EV.PoolID)
@@ -248,7 +248,10 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		log.Printf("unmarshal match order data failed: %v", err)
 		return nil
 	}
-	log.Printf("match order: %v-%v,global_sequence: %v", data.EV.PoolID, data.EV.TakerOrderCID, action.GlobalSequence)
+
+	log.Printf("match taker order: %v-%v-%v,global_sequence: %v", data.EV.PoolID, data.EV.TakerOrderID, data.EV.TakerIsBid, action.GlobalSequence)
+	log.Printf("match maker order: %v-%v-%v-%v,global_sequence: %v", data.EV.PoolID, data.EV.MakerOrderID, !data.EV.TakerIsBid, data.EV.MakerRemoved, action.GlobalSequence)
+
 
 	ctx := context.Background()
 	var err error
@@ -447,7 +450,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		log.Printf("unmarshal cancel order data failed: %v", err)
 		return nil
 	}
-	log.Printf("cancel order: %v-%v,global_sequence: %v", data.EV.PoolID, data.EV.OrderCID, action.GlobalSequence)
+	log.Printf("cancel order: %v-%v-%v,global_sequence: %v", data.EV.PoolID, data.EV.OrderID, data.EV.IsBid, action.GlobalSequence)
 
 	ctx := context.Background()
 	canceledQuantity, err := eosAssetToDecimal(data.EV.CanceledBaseQuantity)
