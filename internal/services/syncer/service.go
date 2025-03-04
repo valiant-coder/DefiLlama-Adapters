@@ -89,7 +89,7 @@ func (s *Service) Start(ctx context.Context) error {
 			if !ok {
 				return fmt.Errorf("trade action channel closed")
 			}
-			log.Printf("new trade action: %v", string(action.TrxID))
+			log.Printf("new trade action: %v", string(action.GlobalSequence))
 			if err := s.publishAction(action); err != nil {
 				log.Printf("Publish trade action failed: %v", err)
 				continue
