@@ -196,7 +196,7 @@ func (s *Service) calculateUserAccumulatedProfit() error {
 	endTime := config.Conf().TradingCompetition.EndTime
 
 	now := time.Now()
-	if now.Before(beginTime) || now.After(endTime) {
+	if now.Before(beginTime) || now.After(endTime.Add(30*time.Second)) {
 		log.Printf("Current time %v is not in accumulated profit time range [%v, %v]", now, beginTime, endTime)
 		return nil
 	}
@@ -265,7 +265,7 @@ func (s *Service) calculateTradeCompetitionPoints() error {
 	competitionBeginTime := config.Conf().TradingCompetition.BeginTime
 	competitionEndTime := config.Conf().TradingCompetition.EndTime
 
-	if now.Before(competitionBeginTime) || now.After(competitionEndTime.Add(10*time.Second)) {
+	if now.Before(competitionBeginTime) || now.After(competitionEndTime.Add(30*time.Second)) {
 		log.Printf("Current time %v is not in competition time range [%v, %v]", now, competitionBeginTime, competitionEndTime)
 		return nil
 	}
