@@ -73,7 +73,7 @@ type ActionStreamResponse struct {
 }
 
 func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Action, error) {
-	actionCh := make(chan Action, 100)
+	actionCh := make(chan Action, 20000)
 
 	for _, req := range reqs {
 		_, err := c.client.EmitWithAck("action_stream_request", req)
