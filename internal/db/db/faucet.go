@@ -35,3 +35,9 @@ func (r *Repo) IsUserClaimFaucet(ctx context.Context, uid string) (bool, error) 
 	err := r.DB.WithContext(ctx).Model(&FaucetRecord{}).Where("uid = ?", uid).Count(&count).Error
 	return count > 0, err
 }
+
+func (r *Repo) ClaimFaucetCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.DB.WithContext(ctx).Model(&FaucetRecord{}).Count(&count).Error
+	return count, err
+}

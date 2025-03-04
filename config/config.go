@@ -90,6 +90,7 @@ type Config struct {
 		EndTime           time.Time `yaml:"end_time"`
 		DailyPoints       []int     `yaml:"daily_points"`
 		AccumulatedPoints []int     `yaml:"accumulated_points"`
+		FaucetPoint       int       `yaml:"faucet_points"`
 	} `yaml:"trading_competition"`
 }
 

@@ -1810,7 +1810,7 @@ const docTemplatemarketplace = `{
                     "type": "number"
                 },
                 "user_claimed_faucet": {
-                    "type": "integer"
+                    "type": "boolean"
                 },
                 "user_points": {
                     "type": "integer"

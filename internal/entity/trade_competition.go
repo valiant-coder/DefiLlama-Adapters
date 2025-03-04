@@ -17,14 +17,9 @@ type UserProfitRank struct {
 }
 
 type TotalTradeStats struct {
-	UserClaimedFaucet int     `json:"user_claimed_faucet"`
+	UserClaimedFaucet bool    `json:"user_claimed_faucet"`
 	UserPoints        int     `json:"user_points"`
 	TotalPointsIssued int     `json:"total_points_issued"`
 	TotalTradeVolume  float64 `json:"total_trade_volume"`
-	TotalTradeUser    int     `json:"total_trade_user"`
+	TotalTradeUser    int64   `json:"total_trade_user"`
 }
-
-
-
-
-

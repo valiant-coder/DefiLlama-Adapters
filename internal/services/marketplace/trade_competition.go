@@ -6,6 +6,7 @@ import (
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
+	"fmt"
 	"time"
 )
 
@@ -17,8 +18,9 @@ type TradeCompetitionService struct {
 
 func NewTradeCompetitionService() *TradeCompetitionService {
 	return &TradeCompetitionService{
-		repo: db.New(),
-		cfg:  config.Conf(),
+		repo:    db.New(),
+		ckhRepo: ckhdb.New(),
+		cfg:     config.Conf(),
 	}
 }
 
@@ -151,7 +153,57 @@ func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Contex
 }
 
 func (s *TradeCompetitionService) GetTotalTradeStats(ctx context.Context, uid string) (*entity.TotalTradeStats, error) {
+	beginTime := s.cfg.TradingCompetition.BeginTime
+	endTime := s.cfg.TradingCompetition.EndTime
 
-	return nil, nil
+	userPoints := 0
+	if uid != "" {
+		points, err := s.repo.GetUserTotalPoints(ctx, uid, beginTime, endTime)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user points: %w", err)
+		}
+		userPoints = points
+	}
 
+	totalPoints := 0
+	totalPoints, err := s.repo.GetIssuedPoints(ctx, beginTime, endTime)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total points: %w", err)
+	}
+
+	claimFaucetCount, err := s.repo.ClaimFaucetCount(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get claim faucet count: %w", err)
+	}
+
+	totalPoints += int(claimFaucetCount) * s.cfg.TradingCompetition.FaucetPoint
+
+	var userClaimFaucet bool
+	if uid != "" {
+		claimed, err := s.repo.IsUserClaimFaucet(ctx, uid)
+		if err != nil {
+			return nil, err
+		}
+		if claimed {
+			userPoints += s.cfg.TradingCompetition.FaucetPoint
+		}
+		userClaimFaucet = claimed
+	}
+
+	_, tradeVolume, err := s.ckhRepo.GetTradeCountAndVolume(ctx)
+	if err != nil {
+		return nil, err
+	}
+	totalUserCount, err := s.repo.GetTotalUserCount(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.TotalTradeStats{
+		UserClaimedFaucet: userClaimFaucet,
+		UserPoints:        userPoints,
+		TotalPointsIssued: totalPoints,
+		TotalTradeVolume:  tradeVolume,
+		TotalTradeUser:    totalUserCount,
+	}, nil
 }

@@ -40,6 +40,12 @@ func (s *Service) HandleTradeCompetition() {
 	if err != nil {
 		log.Printf("Failed to calculate user accumulated profit: %v", err)
 	}
+
+	log.Printf("Calculate trade competition points")
+	err = s.calculateTradeCompetitionPoints()
+	if err != nil {
+		log.Printf("Failed to calculate trade competition points: %v", err)
+	}
 }
 
 func (s *Service) recordUserBalances() error {
@@ -243,6 +249,72 @@ func (s *Service) calculateUserAccumulatedProfit() error {
 		if err := s.repo.BatchUpsertUserAccumulatedProfitRecords(ctx, profitRecords); err != nil {
 			log.Printf("Failed to batch upsert accumulated profit records: %v", err)
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) calculateTradeCompetitionPoints() error {
+	ctx := context.Background()
+	now := time.Now().UTC()
+	yesterday := now.Add(-24 * time.Hour)
+	yesterdayStart := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, time.UTC)
+	yesterdayEnd := yesterdayStart.Add(24 * time.Hour)
+
+	competitionBeginTime := config.Conf().TradingCompetition.BeginTime
+	competitionEndTime := config.Conf().TradingCompetition.EndTime
+
+	if now.Before(competitionBeginTime) || now.After(competitionEndTime.Add(10*time.Second)) {
+		log.Printf("Current time %v is not in competition time range [%v, %v]", now, competitionBeginTime, competitionEndTime)
+		return nil
+	}
+
+	dayProfitRecords, err := s.repo.GetUserDayProfitRanking(ctx, yesterdayStart, len(config.Conf().TradingCompetition.DailyPoints))
+	if err != nil {
+		return fmt.Errorf("failed to get day profit ranking: %w", err)
+	}
+
+	var records []*db.TradeCompetitionRecord
+	for i, record := range dayProfitRecords {
+		if i >= len(config.Conf().TradingCompetition.DailyPoints) {
+			break
+		}
+		points := config.Conf().TradingCompetition.DailyPoints[i]
+		records = append(records, &db.TradeCompetitionRecord{
+			UID:       record.UID,
+			Points:    points,
+			BeginTime: yesterdayStart,
+			EndTime:   yesterdayEnd,
+		})
+	}
+
+	if now.After(competitionEndTime){
+		accumulatedRecords, err := s.repo.GetUserAccumulatedProfitRanking(ctx, competitionBeginTime, competitionEndTime, len(config.Conf().TradingCompetition.AccumulatedPoints))
+		if err != nil {
+			return fmt.Errorf("failed to get accumulated profit ranking: %w", err)
+		}
+
+		for i, record := range accumulatedRecords {
+			if i >= len(config.Conf().TradingCompetition.AccumulatedPoints) {
+				break
+			}
+			points := config.Conf().TradingCompetition.AccumulatedPoints[i]
+			records = append(records, &db.TradeCompetitionRecord{
+				UID:       record.UID,
+				Points:    points,
+				BeginTime: competitionBeginTime,
+				EndTime:   competitionEndTime,
+			})
+		}
+	}
+
+	if len(records) > 0 {
+		for _, record := range records {
+			err := s.repo.UpsertTradeCompetitionRecord(ctx, record)
+			if err != nil {
+				log.Printf("Failed to upsert trade competition record for uid %s: %v", record.UID, err)
+			}
 		}
 	}
 
