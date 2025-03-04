@@ -90,7 +90,7 @@ func NewService() (*Service, error) {
 	}
 
 	// Register all handlers
-	s.registerHandlers()
+	s.registerHandlers() 
 
 	return s, nil
 }

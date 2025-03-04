@@ -12,30 +12,23 @@ import (
 )
 
 func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
-	startTime := time.Now()
 
 	go func() {
-		cleanStart := time.Now()
 		totalCleaned, err := s.repo.CleanInvalidDepth(ctx, trade.PoolID, trade.Price, trade.TakerIsBid)
 		if err != nil {
 			log.Printf("clean invalid depth failed: %v", err)
 		}
-		log.Printf("Performance Stats - Clean Depth Data: Cleaned %d invalid depths, took: %v", totalCleaned, time.Since(cleanStart))
+		log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
 	}()
 
-	insertStart := time.Now()
 	s.tradeBuffer.Add(trade)
-	log.Printf("Performance Stats - Insert Trade Record Time: %v", time.Since(insertStart))
 
-	cacheStart := time.Now()
 	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
 	if s.tradeCache == nil {
 		s.tradeCache = make(map[string][]*ckhdb.Trade)
 	}
 	s.tradeCache[orderTag] = append(s.tradeCache[orderTag], trade)
-	log.Printf("Performance Stats - Trade Cache Processing Time: %v", time.Since(cacheStart))
 
-	publishStart := time.Now()
 	var buyer, seller string
 	if trade.TakerIsBid {
 		buyer = trade.Taker
@@ -53,9 +46,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		TradedAt: entity.Time(trade.Time),
 		Side:     entity.TradeSide(map[bool]string{true: "buy", false: "sell"}[trade.TakerIsBid]),
 	})
-	log.Printf("Performance Stats - Publish Trade Update Time: %v", time.Since(publishStart))
 
-	klineStart := time.Now()
 	// Get kline data from cache
 	klineMap, ok := s.klineCache[trade.PoolID]
 	if !ok {
@@ -66,13 +57,11 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 
 	// Get data from database if cache is empty
 	if len(klineMap) == 0 {
-		dbStart := time.Now()
 		klines, err := s.ckhRepo.GetLatestTwoKlines(ctx, trade.PoolID)
 		if err != nil {
 			log.Printf("get latest kline failed: %v", err)
 			return nil
 		}
-		log.Printf("Performance Stats - Get Kline Data from DB Time: %v", time.Since(dbStart))
 
 		// Group kline data by interval
 		tmpKlineMap := make(map[ckhdb.KlineInterval][]*ckhdb.Kline)
@@ -92,7 +81,6 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		}
 	}
 
-	updateStart := time.Now()
 	// Update all kline intervals
 	intervals := []ckhdb.KlineInterval{
 		ckhdb.KlineInterval1m,
@@ -178,10 +166,6 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 			log.Printf("publish kline update failed: %v", err)
 		}
 	}
-	log.Printf("Performance Stats - Kline Update Processing Time: %v", time.Since(updateStart))
-	log.Printf("Performance Stats - Total Kline Processing Time: %v", time.Since(klineStart))
-	log.Printf("Performance Stats - Total newTrade Time: %v", time.Since(startTime))
-
 	return nil
 }
 

@@ -51,19 +51,16 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		} `json:"ev"`
 	}
 
-	parseStart := time.Now()
 	if err := json.Unmarshal(action.Act.Data, &newOrder); err != nil {
 		log.Printf("unmarshal create order data failed: %v", err)
 		return nil
 	}
-	log.Printf("[性能] 解析数据耗时: %v", time.Since(parseStart))
 
 	ctx := context.Background()
 	poolID := cast.ToUint64(newOrder.EV.PoolID)
 	orderID := cast.ToUint64(newOrder.EV.OrderID)
 
 	var err error
-	poolStart := time.Now()
 	pool, ok := s.poolCache[poolID]
 	if !ok {
 		pool, err = s.repo.GetPoolByID(ctx, poolID)
@@ -73,7 +70,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		}
 		s.poolCache[poolID] = pool
 	}
-	log.Printf("[性能] 获取Pool信息耗时: %v", time.Since(poolStart))
 
 	placedQuantity, err := eosAssetToDecimal(newOrder.EV.PlacedQuantity)
 	if err != nil {
@@ -117,10 +113,9 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			Status:             db.OrderStatus(newOrder.EV.Status),
 		}
-		err := s.repo.InsertOpenOrderIfNotExist(ctx, &order)
+		err := s.repo.InsertOpenOrder(ctx, &order)
 		if err != nil {
 			log.Printf("insert open order failed: %v", err)
-			return nil
 		}
 		log.Printf("[性能] 插入订单数据耗时: %v", time.Since(dbStart))
 
@@ -147,7 +142,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				orderTag = fmt.Sprintf("%d-%d-%d", poolID, orderID, 1)
 			}
 
-			tradeStart := time.Now()
 			var trades []ckhdb.Trade
 			if s.tradeCache != nil {
 				if cachedTrades, ok := s.tradeCache[orderTag]; ok {
@@ -155,7 +149,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 					for i, t := range cachedTrades {
 						trades[i] = *t
 					}
-					log.Printf("[性能] 从缓存获取交易记录")
 				}
 				if len(trades) != 0 {
 					delete(s.tradeCache, orderTag)
@@ -170,10 +163,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 					log.Printf("get trades failed: %v", err)
 					return nil
 				}
-				log.Printf("[性能] 从数据库获取交易记录")
 			}
-			log.Printf("[性能] 获取交易记录耗时: %v", time.Since(tradeStart))
-
 			if len(trades) == 0 {
 				log.Printf("no trades found for executed order: %v", orderTag)
 				return s.publisher.DeferPublishCreateOrder(action)
@@ -231,7 +221,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		log.Printf("[性能] handleMatchOrder 总耗时: %v", time.Since(start))
 	}()
 
-	parseStart := time.Now()
 	var data struct {
 		EV struct {
 			MakerApp string `json:"maker_app"`
@@ -270,11 +259,9 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		log.Printf("unmarshal match order data failed: %v", err)
 		return nil
 	}
-	log.Printf("[性能] 解析数据耗时: %v", time.Since(parseStart))
 
 	ctx := context.Background()
 	var err error
-	poolStart := time.Now()
 	poolID := cast.ToUint64(data.EV.PoolID)
 	pool, ok := s.poolCache[poolID]
 	if !ok {
@@ -285,7 +272,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		}
 		s.poolCache[poolID] = pool
 	}
-	log.Printf("[性能] 获取Pool信息耗时: %v", time.Since(poolStart))
 
 	baseQuantity, err := eosAssetToDecimal(data.EV.BaseQuantity)
 	if err != nil {
@@ -391,13 +377,11 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	}
 	log.Printf("[性能] 更新深度数据耗时: %v", time.Since(depthStart))
 
-	orderStart := time.Now()
 	makerOrder, err := s.repo.GetOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
 	if err != nil {
 		log.Printf("get maker order failed: %v", err)
 		return nil
 	}
-	log.Printf("[性能] 获取maker订单耗时: %v", time.Since(orderStart))
 
 	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
@@ -459,7 +443,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		log.Printf("[性能] handleCancelOrder 总耗时: %v", time.Since(start))
 	}()
 
-	parseStart := time.Now()
 	var data struct {
 		EV struct {
 			App      string `json:"app"`
@@ -481,7 +464,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		log.Printf("unmarshal cancel order data failed: %v", err)
 		return nil
 	}
-	log.Printf("[性能] 解析数据耗时: %v", time.Since(parseStart))
 
 	ctx := context.Background()
 	canceledQuantity, err := eosAssetToDecimal(data.EV.CanceledBaseQuantity)
@@ -492,13 +474,11 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 
 	orderID := cast.ToUint64(data.EV.OrderID)
 	poolID := cast.ToUint64(data.EV.PoolID)
-	orderStart := time.Now()
 	order, err := s.repo.GetOpenOrder(ctx, poolID, orderID, data.EV.IsBid)
 	if err != nil {
 		log.Printf("get open order failed: %v", err)
 		return nil
 	}
-	log.Printf("[性能] 获取订单信息耗时: %v", time.Since(orderStart))
 
 	depthStart := time.Now()
 	if data.EV.IsBid {
