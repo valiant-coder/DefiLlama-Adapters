@@ -232,7 +232,6 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		log.Printf("Unmarshal action failed: %v", err)
 		return nil
 	}
-	log.Printf("get new action: %d", action.GlobalSequence)
 
 	// has handled action
 	actionKey := fmt.Sprintf("%s%d", RedisKeyActionProcessed, action.GlobalSequence)
@@ -242,7 +241,6 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 		return nil
 	}
 	if exists > 0 {
-		log.Printf("Action %d already processed, skipping", action.GlobalSequence)
 		return nil
 	}
 
@@ -264,7 +262,6 @@ func (s *Service) HandleMessage(msg *nsq.Message) error {
 	}
 
 	if !s.shouldProcessMessage(partitionKey) {
-		log.Printf("Skip message with partition key: %s", partitionKey)
 		return nil
 	}
 
