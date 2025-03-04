@@ -148,12 +148,32 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			}
 
 			tradeStart := time.Now()
-			trades, err := s.ckhRepo.GetTrades(ctx, orderTag)
-			if err != nil {
-				log.Printf("get trades failed: %v", err)
-				return nil
+			var trades []ckhdb.Trade
+			if s.tradeCache != nil {
+				if cachedTrades, ok := s.tradeCache[orderTag]; ok {
+					trades = make([]ckhdb.Trade, len(cachedTrades))
+					for i, t := range cachedTrades {
+						trades[i] = *t
+					}
+					log.Printf("[性能] 从缓存获取交易记录")
+				}
+				if len(trades) != 0 {
+					delete(s.tradeCache, orderTag)
+				}
+
+			}
+
+			if len(trades) == 0 {
+				var err error
+				trades, err = s.ckhRepo.GetTrades(ctx, orderTag)
+				if err != nil {
+					log.Printf("get trades failed: %v", err)
+					return nil
+				}
+				log.Printf("[性能] 从数据库获取交易记录")
 			}
 			log.Printf("[性能] 获取交易记录耗时: %v", time.Since(tradeStart))
+
 			if len(trades) == 0 {
 				log.Printf("no trades found for executed order: %v", orderTag)
 				return s.publisher.DeferPublishCreateOrder(action)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/entity"
+	"fmt"
 	"log"
 	"time"
 
@@ -23,6 +24,14 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		log.Printf("insert trade failed: %v", err)
 		return nil
 	}
+
+	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
+	if s.tradeCache == nil {
+		s.tradeCache = make(map[string][]*ckhdb.Trade)
+	}
+	s.tradeCache[orderTag] = append(s.tradeCache[orderTag], trade)
+
+
 	var buyer, seller string
 	if trade.TakerIsBid {
 		buyer = trade.Taker

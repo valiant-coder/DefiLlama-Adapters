@@ -56,7 +56,7 @@ func (r *ClickHouseRepo) InsertTradeIfNotExist(ctx context.Context, trade *Trade
 	}
 	trade.MakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.MakerOrderID, makerSide)
 	trade.TakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, takerSide)
-	return r.DB.WithContext(ctx).Model(&Trade{}).Where("global_sequence = ?", trade.GlobalSequence).FirstOrCreate(trade).Error
+	return r.DB.WithContext(ctx).Create(trade).Error
 }
 
 func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {

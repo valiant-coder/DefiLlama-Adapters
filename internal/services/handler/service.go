@@ -47,6 +47,7 @@ type Service struct {
 	klineCache  map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
 	handlers    map[string]func(hyperion.Action) error
 	hyperionCli *hyperion.Client
+	tradeCache  map[string][]*ckhdb.Trade
 }
 
 func NewService() (*Service, error) {
@@ -81,6 +82,7 @@ func NewService() (*Service, error) {
 		klineCache:  make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
 		handlers:    make(map[string]func(hyperion.Action) error),
 		hyperionCli: hyperionCli,
+		tradeCache:  make(map[string][]*ckhdb.Trade),
 	}
 
 	// Register all handlers
