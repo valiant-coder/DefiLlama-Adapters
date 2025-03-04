@@ -39,8 +39,8 @@ type OpenOrder struct {
 	App                string          `gorm:"column:app;type:varchar(255)"`
 	CreatedAt          time.Time       `gorm:"column:created_at;type:timestamp;index:idx_created_at;index:idx_pool_created_at"`
 	BlockNumber        uint64          `gorm:"column:block_number;type:bigint(20);index:idx_block_number"`
-	PoolID             uint64          `gorm:"uniqueIndex:idx_order_id_pool_id_is_bid;column:pool_id;type:bigint(20);index:idx_pool_created_at"`
 	OrderID            uint64          `gorm:"uniqueIndex:idx_order_id_pool_id_is_bid;column:order_id;type:bigint(20)"`
+	PoolID             uint64          `gorm:"uniqueIndex:idx_order_id_pool_id_is_bid;column:pool_id;type:bigint(20);index:idx_pool_created_at"`
 	PoolSymbol         string          `gorm:"column:pool_symbol;type:varchar(255)"`
 	PoolBaseCoin       string          `gorm:"column:pool_base_coin;type:varchar(255)"`
 	PoolQuoteCoin      string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
