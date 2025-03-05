@@ -16,7 +16,6 @@ import (
 	"github.com/spf13/cast"
 )
 
-
 func eosAssetToDecimal(a string) (decimal.Decimal, error) {
 	asset, err := eosgo.NewAssetFromString(a)
 	if err != nil {
@@ -26,6 +25,10 @@ func eosAssetToDecimal(a string) (decimal.Decimal, error) {
 }
 
 func (s *Service) handleCreateOrder(action hyperion.Action) error {
+	start := time.Now()
+	defer func() {
+		log.Printf("[Performance Log] handleCreateOrder total time: %v", time.Since(start))
+	}()
 
 	var newOrder struct {
 		EV struct {
@@ -52,6 +55,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		log.Printf("unmarshal create order data failed: %v", err)
 		return nil
 	}
+
 	log.Printf("newOrder: %v-%v-%v-%v,global_sequence: %v", newOrder.EV.PoolID, newOrder.EV.OrderID, newOrder.EV.IsBid, newOrder.EV.IsInserted, action.GlobalSequence)
 
 	ctx := context.Background()
@@ -90,6 +94,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 	}
 
 	if newOrder.EV.IsInserted {
+		bufferStart := time.Now()
 		order := db.OpenOrder{
 			App:                newOrder.EV.App,
 			TxID:               action.TrxID,
@@ -111,7 +116,9 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			Status:             db.OrderStatus(newOrder.EV.Status),
 		}
 		s.openOrderBuffer.Add(&order)
+		log.Printf("[Performance Log] openOrderBuffer add time: %v", time.Since(bufferStart))
 
+		depthStart := time.Now()
 		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
@@ -119,8 +126,10 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			Amount: placedQuantity,
 			IsBuy:  newOrder.EV.IsBid,
 		})
+		log.Printf("[Performance Log] depthBuffer add time: %v", time.Since(depthStart))
 
 	} else {
+		tradeStart := time.Now()
 		var avgPrice, price decimal.Decimal
 		if executedQuantity.GreaterThan(decimal.Zero) {
 			var orderTag string
@@ -151,6 +160,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 					log.Printf("get trades failed: %v", err)
 					return nil
 				}
+				log.Printf("[Performance Log] get trades time: %v", time.Since(tradeStart))
 			}
 			if len(trades) == 0 {
 				log.Printf("no trades found for executed order: %v", orderTag)
@@ -194,7 +204,9 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
+		bufferStart := time.Now()
 		s.orderBuffer.Add(&order)
+		log.Printf("[Performance Log] orderBuffer add time: %v", time.Since(bufferStart))
 
 	}
 
@@ -204,6 +216,10 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 }
 
 func (s *Service) handleMatchOrder(action hyperion.Action) error {
+	start := time.Now()
+	defer func() {
+		log.Printf("[Performance Log] handleMatchOrder total time: %v", time.Since(start))
+	}()
 
 	var data struct {
 		EV struct {
@@ -334,11 +350,14 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	}
 	trade.MakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.MakerOrderID, makerSide)
 	trade.TakerOrderTag = fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, takerSide)
+	tradeStart := time.Now()
 	err = s.newTrade(ctx, &trade)
 	if err != nil {
 		log.Printf("new trade failed: %v", err)
 	}
+	log.Printf("[Performance Log] create new trade time: %v", time.Since(tradeStart))
 
+	depthStart := time.Now()
 	if data.EV.TakerIsBid {
 		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
@@ -356,12 +375,15 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			IsBuy:  true,
 		})
 	}
+	log.Printf("[Performance Log] depthBuffer update time: %v", time.Since(depthStart))
 
+	orderStart := time.Now()
 	makerOrder, err := s.openOrderBuffer.Get(poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
 	if err != nil {
 		log.Printf("get maker order failed: %v", err)
 		return nil
 	}
+	log.Printf("[Performance Log] get maker order time: %v", time.Since(orderStart))
 
 	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
@@ -410,6 +432,10 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 }
 
 func (s *Service) handleCancelOrder(action hyperion.Action) error {
+	start := time.Now()
+	defer func() {
+		log.Printf("[Performance Log] handleCancelOrder total time: %v", time.Since(start))
+	}()
 
 	var data struct {
 		EV struct {
@@ -433,6 +459,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		log.Printf("unmarshal cancel order data failed: %v", err)
 		return nil
 	}
+
 	log.Printf("cancel order: %v-%v-%v,global_sequence: %v", data.EV.PoolID, data.EV.OrderID, data.EV.IsBid, action.GlobalSequence)
 
 	ctx := context.Background()
@@ -474,14 +501,17 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 
 	orderID := cast.ToUint64(data.EV.OrderID)
+	orderStart := time.Now()
 	order, err := s.openOrderBuffer.Get(poolID, orderID, data.EV.IsBid)
 	if err != nil {
 		log.Printf("get open order failed: %v", err)
 		return nil
 	}
+	log.Printf("[Performance Log] get order time: %v", time.Since(orderStart))
 
+	bufferStart := time.Now()
 	s.openOrderBuffer.Delete(poolID, orderID, order.IsBid)
-
+	log.Printf("[Performance Log] delete order time: %v", time.Since(bufferStart))
 
 	canceledTime, err := utils.ParseTime(data.EV.Time)
 	if err != nil {
@@ -495,6 +525,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		status = ckhdb.OrderStatusCancelled
 	}
 
+	historyStart := time.Now()
 	historyOrder := ckhdb.HistoryOrder{
 		App:                order.App,
 		PoolID:             order.PoolID,
@@ -522,6 +553,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
 	s.orderBuffer.Add(&historyOrder)
+	log.Printf("[Performance Log] add history order time: %v", time.Since(historyStart))
 
 	go s.updateUserTokenBalance(data.EV.Trader.Actor)
 	go s.publisher.PublishOrderUpdate(data.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[data.EV.IsBid]))
