@@ -90,7 +90,7 @@ func NewService() (*Service, error) {
 	}
 
 	// Register all handlers
-	s.registerHandlers() 
+	s.registerHandlers()
 
 	return s, nil
 }
@@ -293,7 +293,7 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 			log.Printf("Unmarshal action data failed: %v", err)
 			return ""
 		}
-		return fmt.Sprintf("pool-%s", data.EV.PoolID)
+		return fmt.Sprintf("%s", data.EV.PoolID)
 	case s.eosCfg.Events.Create, s.eosCfg.Events.SetMinAmt, s.eosCfg.Events.SetPoolFeeRate:
 		// Use fixed partition key for pool creation
 		return "pool-action"
@@ -310,18 +310,20 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 
 // shouldProcessMessage determines if should process this message
 func (s *Service) shouldProcessMessage(partitionKey string) bool {
-	// Use consistent hashing to determine whether to process the message
-	hasher := fnv.New32a()
-	hasher.Write([]byte(partitionKey))
-	hash := hasher.Sum32()
-
 	// Get current instance info
 	currentInstance, totalInstances := s.getInstanceInfo(context.Background())
 	if totalInstances == 0 {
 		totalInstances = 1
 	}
 
-	// Use hash value to determine which instance should process the message
+	if num, err := strconv.ParseUint(partitionKey, 10, 32); err == nil {
+		targetInstance := int(num % uint64(totalInstances))
+		return targetInstance == currentInstance
+	}
+
+	hasher := fnv.New32a()
+	hasher.Write([]byte(partitionKey))
+	hash := hasher.Sum32()
 	targetInstance := int(hash % uint32(totalInstances))
 	return targetInstance == currentInstance
 }
