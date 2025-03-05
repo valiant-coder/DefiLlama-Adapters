@@ -25,7 +25,7 @@ func NewTradeCompetitionService() *TradeCompetitionService {
 }
 
 func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTime time.Time, uid string) (*entity.UserProfitRank, error) {
-	records, err := s.repo.GetUserDayProfitRanking(ctx, dayTime, 20)
+	records, err := s.repo.GetUserDayProfitRanking(ctx, dayTime, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTi
 }
 
 func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, uid string) (*entity.UserProfitRank, error) {
-	records, err := s.repo.GetUserAccumulatedProfitRanking(ctx, beginTime, endTime, 20)
+	records, err := s.repo.GetUserAccumulatedProfitRanking(ctx, beginTime, endTime, 10)
 	if err != nil {
 		return nil, err
 	}
