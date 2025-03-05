@@ -6,7 +6,6 @@ import (
 	"exapp-go/pkg/nsqutil"
 	"fmt"
 	"log"
-	"reflect"
 	"sync"
 	"time"
 )
@@ -164,16 +163,6 @@ func (p *NSQPublisher) PublishDepthUpdate(depth entity.Depth) error {
 
 // PublishKlineUpdate publishes a kline update message
 func (p *NSQPublisher) PublishKlineUpdate(kline entity.Kline) error {
-	p.mutex.RLock()
-	symbol := fmt.Sprintf("%d-%s-%d-%v", kline.PoolID, kline.Interval, kline.Timestamp.Timestamp(), kline.Turnover)
-	lastKline, exists := p.lastKline[symbol]
-	p.mutex.RUnlock()
-
-	if exists && reflect.DeepEqual(lastKline, kline) {
-		log.Printf("skip duplicate kline update for symbol: %s", symbol)
-		return nil
-	}
-
 	msg := struct {
 		Type string      `json:"type"`
 		Data interface{} `json:"data"`
@@ -182,13 +171,7 @@ func (p *NSQPublisher) PublishKlineUpdate(kline entity.Kline) error {
 		Data: kline,
 	}
 
-	err := p.publisher.Publish(TopicCdexUpdates, msg)
-	if err == nil {
-		p.mutex.Lock()
-		p.lastKline[symbol] = kline
-		p.mutex.Unlock()
-	}
-	return err
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 }
 
 func (p *NSQPublisher) DeferPublishCreateOrder(action hyperion.Action) error {
