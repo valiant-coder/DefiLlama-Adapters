@@ -49,7 +49,11 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 		s.pusher.PushOrderUpdate(orderUpdate.Account, orderUpdate)
 
 	case MsgTypeBalanceUpdate:
-		account := string(nsqMsg.Data)
+		var account string
+		if err := json.Unmarshal(nsqMsg.Data, &account); err != nil {
+			log.Printf("Failed to unmarshal balance update: %v", err)
+			return nil
+		}
 		// Push balance update to specific user
 		s.pusher.PushBalanceUpdate(account)
 
