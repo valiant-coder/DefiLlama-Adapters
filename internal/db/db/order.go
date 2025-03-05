@@ -78,12 +78,12 @@ func (r *Repo) DeleteOpenOrder(ctx context.Context, poolID uint64, orderID uint6
 }
 
 func (r *Repo) UpdateOpenOrder(ctx context.Context, order *OpenOrder) error {
-	return r.WithContext(ctx).Model(&OpenOrder{}).Where("pool_id = ? and order_id = ? and is_bid = ?", order.PoolID, order.OrderID, order.IsBid).Updates(order).Error
+	return r.WithContext(ctx).Model(&OpenOrder{}).Where("order_id = ? and pool_id = ? and is_bid = ?", order.OrderID, order.PoolID, order.IsBid).Updates(order).Error
 }
 
 func (r *Repo) GetOpenOrder(ctx context.Context, poolID uint64, orderID uint64, isBid bool) (*OpenOrder, error) {
 	order := OpenOrder{}
-	err := r.WithContext(ctx).Where("pool_id = ? and order_id = ? and is_bid = ?", poolID, orderID, isBid).First(&order).Error
+	err := r.WithContext(ctx).Where("order_id = ? and pool_id = ? and is_bid = ?", orderID, poolID, isBid).First(&order).Error
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +166,51 @@ func (r *Repo) BatchInsertOpenOrders(ctx context.Context, orders []*OpenOrder) e
 	if len(orders) == 0 {
 		return nil
 	}
-
 	return r.WithContext(ctx).CreateInBatches(orders, 100).Error
+}
+
+func (r *Repo) BatchUpdateOpenOrders(ctx context.Context, orders []*OpenOrder) error {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	tx := r.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	for _, order := range orders {
+		err := tx.Model(&OpenOrder{}).
+			Where("order_id = ? AND pool_id = ? AND is_bid = ?", order.OrderID, order.PoolID, order.IsBid).
+			Updates(map[string]interface{}{
+				"executed_quantity": order.ExecutedQuantity,
+				"status":            order.Status,
+			}).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error
+}
+
+func (r *Repo) BatchDeleteOpenOrders(ctx context.Context, orders []*OpenOrder) error {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	tx := r.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	for _, order := range orders {
+		err := tx.Where("order_id = ? AND pool_id = ? AND is_bid = ?", order.OrderID, order.PoolID, order.IsBid).Delete(&OpenOrder{}).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit().Error
 }

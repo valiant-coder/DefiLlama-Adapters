@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cast"
 )
 
+
 func eosAssetToDecimal(a string) (decimal.Decimal, error) {
 	asset, err := eosgo.NewAssetFromString(a)
 	if err != nil {
@@ -109,10 +110,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			Status:             db.OrderStatus(newOrder.EV.Status),
 		}
-		err := s.repo.InsertOpenOrder(ctx, &order)
-		if err != nil {
-			log.Printf("insert open order failed: %v", err)
-		}
+		s.openOrderBuffer.Add(&order)
 
 		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
@@ -121,7 +119,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			Amount: placedQuantity,
 			IsBuy:  newOrder.EV.IsBid,
 		})
-
 
 	} else {
 		var avgPrice, price decimal.Decimal
@@ -250,7 +247,6 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	log.Printf("match taker order: %v-%v-%v,global_sequence: %v", data.EV.PoolID, data.EV.TakerOrderID, data.EV.TakerIsBid, action.GlobalSequence)
 	log.Printf("match maker order: %v-%v-%v-%v,global_sequence: %v", data.EV.PoolID, data.EV.MakerOrderID, !data.EV.TakerIsBid, data.EV.MakerRemoved, action.GlobalSequence)
 
-
 	ctx := context.Background()
 	var err error
 	poolID := cast.ToUint64(data.EV.PoolID)
@@ -361,7 +357,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		})
 	}
 
-	makerOrder, err := s.repo.GetOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
+	makerOrder, err := s.openOrderBuffer.Get(poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
 	if err != nil {
 		log.Printf("get maker order failed: %v", err)
 		return nil
@@ -377,15 +373,9 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	}
 
 	if !data.EV.MakerRemoved {
-		err = s.repo.UpdateOpenOrder(ctx, makerOrder)
-		if err != nil {
-			log.Printf("update open order failed: %v", err)
-		}
+		s.openOrderBuffer.Update(makerOrder)
 	} else {
-		err = s.repo.DeleteOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), makerOrder.IsBid)
-		if err != nil {
-			log.Printf("delete open order failed: %v", err)
-		}
+		s.openOrderBuffer.Delete(poolID, cast.ToUint64(data.EV.MakerOrderID), makerOrder.IsBid)
 
 		historyOrder := ckhdb.HistoryOrder{
 			App:                makerOrder.App,
@@ -486,17 +476,14 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 
 	orderID := cast.ToUint64(data.EV.OrderID)
-	order, err := s.repo.GetOpenOrder(ctx, poolID, orderID, data.EV.IsBid)
+	order, err := s.openOrderBuffer.Get(poolID, orderID, data.EV.IsBid)
 	if err != nil {
 		log.Printf("get open order failed: %v", err)
 		return nil
 	}
 
-	err = s.repo.DeleteOpenOrder(ctx, poolID, orderID, order.IsBid)
-	if err != nil {
-		log.Printf("delete open order failed: %v", err)
-		return nil
-	}
+	s.openOrderBuffer.Delete(poolID, orderID, order.IsBid)
+
 
 	canceledTime, err := utils.ParseTime(data.EV.Time)
 	if err != nil {
