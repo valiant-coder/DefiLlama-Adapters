@@ -2,7 +2,6 @@ package marketplace
 
 import (
 	"context"
-	"errors"
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
@@ -11,7 +10,6 @@ import (
 	"log"
 
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 func NewFaucetService() *FaucetService {
@@ -27,24 +25,21 @@ type FaucetService struct {
 func (s *FaucetService) ClaimFaucet(ctx context.Context, req *entity.ReqClaimFaucet) (*entity.RespClaimFaucet, error) {
 	faucetConfig := config.Conf().Faucet
 	if !faucetConfig.Enabled {
-		return nil, errno.DefaultParamsError("faucet is not enabled")
+		return nil, errno.NewParamsError(errno.EpFaucetNotEnabled)
 	}
 	uid, err := s.repo.GetUIDByDepositAddress(ctx, req.DepositAddress)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errno.DefaultParamsError("deposit address not found")
-		}
 		return nil, err
 	}
 	if uid == "" {
-		return nil, errno.DefaultParamsError("only for registered users")
+		return nil, errno.NewParamsError(errno.EpFaucetNotRegistered)
 	}
 	isClaimed, err := s.repo.IsUserClaimFaucet(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
 	if isClaimed {
-		return nil, errno.DefaultParamsError("user has already claimed faucet")
+		return nil, errno.NewParamsError(errno.EpFaucetClaimed)
 	}
 	record := &db.FaucetRecord{
 		UID:            uid,
@@ -70,7 +65,7 @@ func (s *FaucetService) ClaimFaucet(ctx context.Context, req *entity.ReqClaimFau
 	)
 	if err != nil {
 		log.Default().Printf("transfer usdt error: %v", err)
-		return nil, errno.DefaultParamsError("transfer usdt error")
+		return nil, errno.DefaultParamsError("Transfer usdt error")
 	}
 	record.TxHash = txHash
 	err = s.repo.CreateFaucetRecord(ctx, record)
