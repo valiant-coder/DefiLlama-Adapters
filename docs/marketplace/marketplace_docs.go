@@ -2003,6 +2003,9 @@ const docTemplatemarketplace = `{
                 "profit": {
                     "type": "string"
                 },
+                "rank": {
+                    "type": "integer"
+                },
                 "uid": {
                     "type": "string"
                 }

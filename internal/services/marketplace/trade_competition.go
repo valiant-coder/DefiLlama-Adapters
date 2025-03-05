@@ -71,6 +71,7 @@ func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTi
 			Avatar: avatar,
 			Profit: record.Profit.String(),
 			Point:  point,
+			Rank:   i + 1,
 		})
 	}
 
@@ -135,6 +136,7 @@ func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Contex
 			Avatar: avatar,
 			Profit: record.Profit.String(),
 			Point:  point,
+			Rank:   i + 1,
 		})
 	}
 
