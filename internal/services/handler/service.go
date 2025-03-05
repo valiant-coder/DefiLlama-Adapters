@@ -50,6 +50,7 @@ type Service struct {
 	tradeCache  map[string][]*ckhdb.Trade
 	tradeBuffer *ckhdb.TradeBuffer
 	orderBuffer *ckhdb.OrderBuffer
+	depthBuffer *DepthBuffer
 }
 
 func NewService() (*Service, error) {
@@ -87,6 +88,7 @@ func NewService() (*Service, error) {
 		tradeCache:  make(map[string][]*ckhdb.Trade),
 		tradeBuffer: ckhdb.NewTradeBuffer(500, ckhRepo),
 		orderBuffer: ckhdb.NewOrderBuffer(500, ckhRepo),
+		depthBuffer: NewDepthBuffer(repo, publisher),
 	}
 
 	// Register all handlers

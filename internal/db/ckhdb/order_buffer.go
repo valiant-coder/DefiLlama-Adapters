@@ -52,7 +52,7 @@ func (b *OrderBuffer) flush() {
 }
 
 func (b *OrderBuffer) periodicFlush() {
-	ticker := time.NewTicker(time.Second * 1)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
 	for range ticker.C {

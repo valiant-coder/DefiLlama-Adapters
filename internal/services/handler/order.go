@@ -114,16 +114,14 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			log.Printf("insert open order failed: %v", err)
 		}
 
-		err = s.updateDepth(ctx, db.UpdateDepthParams{
+		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
 			Price:  order.Price,
 			Amount: placedQuantity,
 			IsBuy:  newOrder.EV.IsBid,
 		})
-		if err != nil {
-			log.Printf("update depth failed: :%v", err)
-		}
+
 
 	} else {
 		var avgPrice, price decimal.Decimal
@@ -346,7 +344,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	}
 
 	if data.EV.TakerIsBid {
-		err = s.updateDepth(ctx, db.UpdateDepthParams{
+		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
 			Price:  trade.Price,
@@ -354,16 +352,13 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			IsBuy:  false,
 		})
 	} else {
-		err = s.updateDepth(ctx, db.UpdateDepthParams{
+		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
 			Price:  trade.Price,
 			Amount: baseQuantity.Neg(),
 			IsBuy:  true,
 		})
-	}
-	if err != nil {
-		log.Printf("update depth failed: :%v", err)
 	}
 
 	makerOrder, err := s.repo.GetOpenOrder(ctx, poolID, cast.ToUint64(data.EV.MakerOrderID), !data.EV.TakerIsBid)
@@ -473,7 +468,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	price := decimal.New(cast.ToInt64(data.EV.Price), -int32(pool.PricePrecision))
 
 	if data.EV.IsBid {
-		err = s.updateDepth(ctx, db.UpdateDepthParams{
+		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
 			Price:  price,
@@ -481,17 +476,13 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 			IsBuy:  true,
 		})
 	} else {
-		err = s.updateDepth(ctx, db.UpdateDepthParams{
+		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
 			UniqID: cast.ToString(action.GlobalSequence),
 			Price:  price,
 			Amount: canceledQuantity.Neg(),
 			IsBuy:  false,
 		})
-	}
-	if err != nil {
-		log.Printf("update depth failed: :%v", err)
-		return nil
 	}
 
 	orderID := cast.ToUint64(data.EV.OrderID)

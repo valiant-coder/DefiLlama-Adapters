@@ -46,13 +46,13 @@ func (b *TradeBuffer) flush() {
 	go func() {
 		ctx := context.Background()
 		if err := b.ckhRepo.BatchInsertTrades(ctx, trades); err != nil {
-			log.Printf("批量插入交易记录失败: %v", err)
+			log.Printf("insert trades failed: %v", err)
 		}
 	}()
 }
 
 func (b *TradeBuffer) periodicFlush() {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
 	for range ticker.C {
