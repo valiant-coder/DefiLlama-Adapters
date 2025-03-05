@@ -90,7 +90,7 @@ func NewService() (*Service, error) {
 		tradeBuffer:     ckhdb.NewTradeBuffer(500, ckhRepo),
 		orderBuffer:     ckhdb.NewOrderBuffer(500, ckhRepo),
 		depthBuffer:     NewDepthBuffer(repo, publisher),
-		openOrderBuffer: db.NewOpenOrderBuffer(100, repo),
+		openOrderBuffer: db.NewOpenOrderBuffer(500, repo),
 	}
 
 	// Register all handlers
