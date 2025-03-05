@@ -286,7 +286,7 @@ func (s *Service) calculateTradeCompetitionPoints() error {
 		})
 	}
 
-	if now.After(competitionEndTime){
+	if now.After(competitionEndTime) {
 		accumulatedRecords, err := s.repo.GetUserAccumulatedProfitRanking(ctx, competitionBeginTime, competitionEndTime, len(config.Conf().TradingCompetition.AccumulatedPoints))
 		if err != nil {
 			return fmt.Errorf("failed to get accumulated profit ranking: %w", err)

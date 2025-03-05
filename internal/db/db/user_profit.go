@@ -119,7 +119,7 @@ func (r *Repo) BatchUpsertUserDayProfitRecords(ctx context.Context, records []*U
 func (r *Repo) GetUserDayProfitRanking(ctx context.Context, dayTime time.Time, limit int) ([]UserDayProfitRecord, error) {
 	var records []UserDayProfitRecord
 	err := r.DB.WithContext(ctx).
-		Where("time = ?", dayTime).
+		Where("time = ? and profit > 0", dayTime).
 		Order("profit DESC").
 		Limit(limit).
 		Find(&records).Error
@@ -136,6 +136,9 @@ func (r *Repo) GetUserDayProfitRankAndProfit(ctx context.Context, dayTime time.T
 			return nil, 0, nil
 		}
 		return nil, 0, err
+	}
+	if record.Profit.Equal(decimal.Zero) {
+		return &record, 0, nil
 	}
 
 	var rank int64
@@ -167,8 +170,6 @@ func (r *Repo) CreateUserAccumulatedProfitRecord(ctx context.Context, record *Us
 	return r.DB.WithContext(ctx).Create(record).Error
 }
 
-
-
 func (r *Repo) BatchUpsertUserAccumulatedProfitRecords(ctx context.Context, records []*UserAccumulatedProfitRecord) error {
 	if len(records) == 0 {
 		return nil
@@ -192,7 +193,7 @@ func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, be
 func (r *Repo) GetUserAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, limit int) ([]UserAccumulatedProfitRecord, error) {
 	var records []UserAccumulatedProfitRecord
 	err := r.DB.WithContext(ctx).
-		Where("begin_time = ? AND end_time = ?", beginTime, endTime).
+		Where("begin_time = ? AND end_time = ? AND profit > 0", beginTime, endTime).
 		Order("profit DESC").
 		Limit(limit).
 		Find(&records).Error
@@ -209,6 +210,9 @@ func (r *Repo) GetUserAccumulatedProfitRankAndProfit(ctx context.Context, beginT
 			return nil, 0, nil
 		}
 		return nil, 0, err
+	}
+	if record.Profit.Equal(decimal.Zero) {
+		return &record, 0, nil
 	}
 
 	var rank int64
