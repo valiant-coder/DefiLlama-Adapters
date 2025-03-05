@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"exapp-go/internal/entity"
+	"log"
 
 	"github.com/zishang520/socket.io/v2/socket"
 )
@@ -77,6 +78,7 @@ func (p *Pusher) PushTrade(data entity.Trade) {
 // Push balance update
 func (p *Pusher) PushBalanceUpdate(account string) {
 	// Push balance update to specific user
+	log.Printf("push balance update to %s", account)
 	p.pushToUser(account, PushEventBalanceUpdate, BalanceUpdate{Account: account})
 }
 
