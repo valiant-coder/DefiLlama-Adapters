@@ -170,9 +170,6 @@ func (s *Service) calculateUserDayProfit() error {
 
 	profitRecords := make([]*db.UserDayProfitRecord, 0, len(userProfits))
 	for _, userData := range userProfits {
-		if userData.profit.Equal(decimal.Zero) {
-			continue
-		}
 		profitRecords = append(profitRecords, &db.UserDayProfitRecord{
 			Time:    dayStart,
 			Account: userData.account,
