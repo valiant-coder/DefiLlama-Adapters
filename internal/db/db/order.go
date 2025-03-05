@@ -166,7 +166,7 @@ func (r *Repo) BatchInsertOpenOrders(ctx context.Context, orders []*OpenOrder) e
 	if len(orders) == 0 {
 		return nil
 	}
-	return r.WithContext(ctx).CreateInBatches(orders, 100).Error
+	return r.WithContext(ctx).CreateInBatches(orders, 500).Error
 }
 
 func (r *Repo) BatchUpdateOpenOrders(ctx context.Context, orders []*OpenOrder) error {

@@ -32,26 +32,26 @@ const (
 )
 
 type Service struct {
-	ckhRepo         *ckhdb.ClickHouseRepo
-	repo            *db.Repo
-	consumer        *nsqutil.Consumer
-	poolCache       map[uint64]*db.Pool
-	eosCfg          config.EosConfig
-	cdexCfg         config.CdexConfig
-	oneDexCfg       config.OneDexConfig
-	exsatCfg        config.ExsatConfig
-	publisher       *NSQPublisher
-	redisCli        redis.Cmdable
-	instanceID      string
-	curInstance     int
-	klineCache      map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
-	handlers        map[string]func(hyperion.Action) error
-	hyperionCli     *hyperion.Client
-	tradeCache      map[string][]*ckhdb.Trade
-	tradeBuffer     *ckhdb.TradeBuffer
-	orderBuffer     *ckhdb.OrderBuffer
-	depthBuffer     *DepthBuffer
-	openOrderBuffer *db.OpenOrderBuffer
+	ckhRepo            *ckhdb.ClickHouseRepo
+	repo               *db.Repo
+	consumer           *nsqutil.Consumer
+	poolCache          map[uint64]*db.Pool
+	eosCfg             config.EosConfig
+	cdexCfg            config.CdexConfig
+	oneDexCfg          config.OneDexConfig
+	exsatCfg           config.ExsatConfig
+	publisher          *NSQPublisher
+	redisCli           redis.Cmdable
+	instanceID         string
+	curInstance        int
+	klineCache         map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
+	handlers           map[string]func(hyperion.Action) error
+	hyperionCli        *hyperion.Client
+	tradeCache         map[string][]*ckhdb.Trade
+	tradeBuffer        *ckhdb.TradeBuffer
+	historyOrderBuffer *ckhdb.OrderBuffer
+	depthBuffer        *DepthBuffer
+	openOrderBuffer    *db.OpenOrderBuffer
 }
 
 func NewService() (*Service, error) {
@@ -72,25 +72,25 @@ func NewService() (*Service, error) {
 	hyperionCli := hyperion.NewClient(cfg.Eos.Hyperion.Endpoint)
 
 	s := &Service{
-		ckhRepo:         ckhRepo,
-		repo:            repo,
-		poolCache:       make(map[uint64]*db.Pool),
-		eosCfg:          cfg.Eos,
-		cdexCfg:         cfg.Eos.CdexConfig,
-		oneDexCfg:       cfg.Eos.OneDex,
-		exsatCfg:        cfg.Eos.Exsat,
-		publisher:       publisher,
-		redisCli:        redisCli,
-		instanceID:      instanceID,
-		consumer:        consumer,
-		klineCache:      make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
-		handlers:        make(map[string]func(hyperion.Action) error),
-		hyperionCli:     hyperionCli,
-		tradeCache:      make(map[string][]*ckhdb.Trade),
-		tradeBuffer:     ckhdb.NewTradeBuffer(500, ckhRepo),
-		orderBuffer:     ckhdb.NewOrderBuffer(500, ckhRepo),
-		depthBuffer:     NewDepthBuffer(repo, publisher),
-		openOrderBuffer: db.NewOpenOrderBuffer(500, repo),
+		ckhRepo:            ckhRepo,
+		repo:               repo,
+		poolCache:          make(map[uint64]*db.Pool),
+		eosCfg:             cfg.Eos,
+		cdexCfg:            cfg.Eos.CdexConfig,
+		oneDexCfg:          cfg.Eos.OneDex,
+		exsatCfg:           cfg.Eos.Exsat,
+		publisher:          publisher,
+		redisCli:           redisCli,
+		instanceID:         instanceID,
+		consumer:           consumer,
+		klineCache:         make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
+		handlers:           make(map[string]func(hyperion.Action) error),
+		hyperionCli:        hyperionCli,
+		tradeCache:         make(map[string][]*ckhdb.Trade),
+		tradeBuffer:        ckhdb.NewTradeBuffer(10000, ckhRepo),
+		historyOrderBuffer: ckhdb.NewOrderBuffer(10000, ckhRepo),
+		depthBuffer:        NewDepthBuffer(10000, repo, publisher),
+		openOrderBuffer:    db.NewOpenOrderBuffer(1000, repo),
 	}
 
 	// Register all handlers

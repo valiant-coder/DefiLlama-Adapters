@@ -17,11 +17,11 @@ type DepthBuffer struct {
 	publisher *NSQPublisher
 }
 
-func NewDepthBuffer(repo *db.Repo, publisher *NSQPublisher) *DepthBuffer {
+func NewDepthBuffer(batchSize int, repo *db.Repo, publisher *NSQPublisher) *DepthBuffer {
 	buffer := &DepthBuffer{
-		params:    make([]db.UpdateDepthParams, 0, 500),
+		params:    make([]db.UpdateDepthParams, 0, batchSize),
 		repo:      repo,
-		batchSize: 500,
+		batchSize: batchSize,
 		publisher: publisher,
 	}
 	go buffer.periodicFlush()

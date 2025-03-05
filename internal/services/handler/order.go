@@ -205,7 +205,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
 		bufferStart := time.Now()
-		s.orderBuffer.Add(&order)
+		s.historyOrderBuffer.Add(&order)
 		log.Printf("[Performance Log] orderBuffer add time: %v", time.Since(bufferStart))
 
 	}
@@ -421,7 +421,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			BaseCoinPrecision:  pool.BaseCoinPrecision,
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
-		s.orderBuffer.Add(&historyOrder)
+		s.historyOrderBuffer.Add(&historyOrder)
 
 	}
 
@@ -552,7 +552,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		BaseCoinPrecision:  order.BaseCoinPrecision,
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
 	}
-	s.orderBuffer.Add(&historyOrder)
+	s.historyOrderBuffer.Add(&historyOrder)
 	log.Printf("[Performance Log] add history order time: %v", time.Since(historyStart))
 
 	go s.updateUserTokenBalance(data.EV.Trader.Actor)
