@@ -196,16 +196,13 @@ func (s *TradeCompetitionService) GetTotalTradeStats(ctx context.Context, uid st
 	if err != nil {
 		return nil, err
 	}
-	totalUserCount, err := s.repo.GetTotalUserCount(ctx)
-	if err != nil {
-		return nil, err
-	}
+	
 
 	return &entity.TotalTradeStats{
 		UserClaimedFaucet: userClaimFaucet,
 		UserPoints:        userPoints,
 		TotalPointsIssued: totalPoints,
 		TotalTradeVolume:  tradeVolume,
-		TotalTradeUser:    totalUserCount,
+		TotalTradeUser:    claimFaucetCount,
 	}, nil
 }
