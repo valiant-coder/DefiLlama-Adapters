@@ -193,6 +193,11 @@ func (t *Token) MintERC20(c *Client,
 	gasPriceDecimal := decimal.NewFromBigInt(gasPrice, 0).Mul(decimal.NewFromFloat(1.25))
 	gasPrice = gasPriceDecimal.BigInt()
 
+	// min 0.6Gwei
+	if gasPrice.Cmp(big.NewInt(600000000)) < 0 {
+		gasPrice = big.NewInt(600000000)
+	}
+
 	chainID, err := c.ethClient.ChainID(context.Background())
 	if err != nil {
 		return "", err
