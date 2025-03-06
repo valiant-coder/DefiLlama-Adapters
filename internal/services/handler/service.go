@@ -13,6 +13,7 @@ import (
 	"log"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,7 +45,7 @@ type Service struct {
 	redisCli           redis.Cmdable
 	instanceID         string
 	curInstance        int
-	klineCache         map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline // Cache latest kline data for each trading pair's intervals
+	klineCache         map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline
 	handlers           map[string]func(hyperion.Action) error
 	hyperionCli        *hyperion.Client
 	tradeCache         map[string][]*ckhdb.Trade
@@ -52,6 +53,10 @@ type Service struct {
 	historyOrderBuffer *ckhdb.OrderBuffer
 	depthBuffer        *DepthBuffer
 	openOrderBuffer    *db.OpenOrderBuffer
+	cleanDepthTicker   *time.Ticker
+	lastTrade          *ckhdb.Trade
+	mu                 sync.Mutex
+	stopChan           chan struct{}
 }
 
 func NewService() (*Service, error) {
@@ -91,6 +96,8 @@ func NewService() (*Service, error) {
 		historyOrderBuffer: ckhdb.NewOrderBuffer(10000, ckhRepo),
 		depthBuffer:        NewDepthBuffer(10000, repo, publisher),
 		openOrderBuffer:    db.NewOpenOrderBuffer(1000, repo),
+		cleanDepthTicker:   time.NewTicker(10 * time.Second),
+		stopChan:           make(chan struct{}),
 	}
 
 	// Register all handlers
@@ -100,10 +107,12 @@ func NewService() (*Service, error) {
 }
 
 func (s *Service) Start(ctx context.Context) error {
-
 	s.redisCli.HSet(ctx, RedisKeyHandlerInstances, s.instanceID, time.Now().Unix())
 	// Start heartbeat goroutine
 	go s.heartbeat(ctx)
+
+	// Start depth cleaning goroutine
+	go s.startDepthCleaning(ctx)
 
 	// Initialize kline cache
 	if err := s.initKlineCache(ctx); err != nil {
@@ -123,6 +132,11 @@ func (s *Service) Start(ctx context.Context) error {
 func (s *Service) Stop(ctx context.Context) error {
 	// Remove instance info from Redis
 	s.redisCli.HDel(ctx, RedisKeyHandlerInstances, s.instanceID)
+
+	if s.cleanDepthTicker != nil {
+		s.cleanDepthTicker.Stop()
+	}
+	close(s.stopChan)
 
 	s.consumer.Stop()
 	if s.publisher != nil {
@@ -369,4 +383,27 @@ func (s *Service) initKlineCache(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (s *Service) startDepthCleaning(ctx context.Context) {
+	for {
+		select {
+		case <-s.cleanDepthTicker.C:
+			s.mu.Lock()
+			lastTrade := s.lastTrade
+			s.mu.Unlock()
+
+			if lastTrade != nil {
+				totalCleaned, err := s.repo.CleanInvalidDepth(ctx, lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
+				if err != nil {
+					log.Printf("clean invalid depth failed: %v", err)
+				}
+				if totalCleaned > 0 {
+					log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
+				}
+			}
+		case <-s.stopChan:
+			return
+		}
+	}
 }

@@ -17,13 +17,9 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		log.Printf("Total newTrade processing time: %v", time.Since(start))
 	}()
 
-	go func() {
-		totalCleaned, err := s.repo.CleanInvalidDepth(ctx, trade.PoolID, trade.Price, trade.TakerIsBid)
-		if err != nil {
-			log.Printf("clean invalid depth failed: %v", err)
-		}
-		log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
-	}()
+	s.mu.Lock()
+	s.lastTrade = trade
+	s.mu.Unlock()
 
 	s.tradeBuffer.Add(trade)
 	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
