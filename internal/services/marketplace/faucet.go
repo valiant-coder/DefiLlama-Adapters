@@ -62,6 +62,7 @@ func (s *FaucetService) ClaimFaucet(ctx context.Context, req *entity.ReqClaimFau
 		req.DepositAddress,
 		faucetConfig.Amount,
 		faucetConfig.TokenOwnerPrivateKey,
+		0,
 	)
 	if err != nil {
 		log.Default().Printf("transfer usdt error: %v", err)
