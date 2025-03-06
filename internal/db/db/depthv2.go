@@ -34,6 +34,7 @@ type DepthChange struct {
 
 // Ordered list of supported precisions (from small to large)
 var SupportedPrecisions = []string{
+	"0.000000001",
 	"0.00000001",
 	"0.0000001",
 	"0.000001",
@@ -44,16 +45,73 @@ var SupportedPrecisions = []string{
 	"0.1",
 	"1",
 	"10",
-	"100",
-	"1000",
-	"10000",
+}
+
+// getRelevantPrecisions returns precision levels based on price
+func getRelevantPrecisions(price decimal.Decimal) []string {
+	// If price is 0, return empty slice
+	if price.IsZero() {
+		return []string{}
+	}
+
+	var relevantPrecisions []string
+
+	// For price greater than 10
+	if price.GreaterThanOrEqual(decimal.NewFromInt(10)) {
+		// Find suitable base precision
+		relevantPrecisions = []string{"0.01", "0.1", "1", "10"}
+
+	} else if price.GreaterThanOrEqual(decimal.NewFromInt(1)) {
+		// For price greater than 1, keep 4 decimal places precision and previous 3 levels
+		relevantPrecisions = []string{"0.0001", "0.001", "0.01", "0.1"}
+	} else {
+		// For price less than 1, find first non-zero decimal place
+		decimalPart := price.Sub(price.Floor())
+		decimalStr := decimalPart.String()
+
+		firstNonZeroIndex := 2 // Skip "0."
+		for i := 2; i < len(decimalStr); i++ {
+			if decimalStr[i] != '0' {
+				firstNonZeroIndex = i
+				break
+			}
+		}
+
+		// Calculate required precision digits (4 digits after first non-zero)
+		precisionCount := firstNonZeroIndex - 1 + 4
+
+		// Find corresponding precision levels
+		var targetPrecisions []string
+		for _, p := range SupportedPrecisions {
+			precision, _ := decimal.NewFromString(p)
+			decimalPlaces := len(precision.String()) - 2 // Subtract "0."
+			if decimalPlaces <= precisionCount && decimalPlaces >= firstNonZeroIndex-1 {
+				targetPrecisions = append(targetPrecisions, p)
+			}
+		}
+
+		// Keep only last 4 precision levels
+		if len(targetPrecisions) > 4 {
+			relevantPrecisions = targetPrecisions[len(targetPrecisions)-4:]
+		} else {
+			relevantPrecisions = targetPrecisions
+		}
+	}
+
+	return relevantPrecisions
 }
 
 // Calculate price slots for all precisions
 func calculateAllSlots(price decimal.Decimal, isBid bool) map[string]string {
 	slots := make(map[string]string)
 
-	for _, p := range SupportedPrecisions {
+	// Get relevant precision levels
+	relevantPrecisions := getRelevantPrecisions(price)
+	if !contains(relevantPrecisions, "0.000000001") {
+		relevantPrecisions = append(relevantPrecisions, "0.000000001")
+	}
+
+	for _, p := range relevantPrecisions {
 		precision, _ := decimal.NewFromString(p)
 		if isBid {
 			slot := price.Div(precision).Floor().Mul(precision)
