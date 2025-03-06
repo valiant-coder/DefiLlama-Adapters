@@ -22,7 +22,9 @@ func TestToken_MintERC20(t *testing.T) {
 		"0xB89B2B925fd2BA154051a5B77161EfB9AF1Fd7Fd",
 		"",
 		100,
-		"")
+		"",
+		170,
+	)
 	if err != nil {
 		log.Default().Printf("Failed to mint token: %v", err)
 		t.Fatalf("Failed to mint token: %v", err)
