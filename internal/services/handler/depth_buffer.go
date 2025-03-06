@@ -85,7 +85,7 @@ func (b *DepthBuffer) flush() {
 }
 
 func (b *DepthBuffer) periodicFlush() {
-	ticker := time.NewTicker(time.Millisecond * 100)
+	ticker := time.NewTicker(time.Millisecond * 200)
 	defer ticker.Stop()
 
 	for range ticker.C {

@@ -97,7 +97,7 @@ func NewService() (*Service, error) {
 		tradeBuffer:        ckhdb.NewTradeBuffer(10000, ckhRepo),
 		historyOrderBuffer: ckhdb.NewOrderBuffer(10000, ckhRepo),
 		depthBuffer:        NewDepthBuffer(10000, repo, publisher),
-		openOrderBuffer:    db.NewOpenOrderBuffer(1000, repo),
+		openOrderBuffer:    db.NewOpenOrderBuffer(10000, repo),
 		cleanDepthTicker:   time.NewTicker(10 * time.Second),
 		stopChan:           make(chan struct{}),
 	}
