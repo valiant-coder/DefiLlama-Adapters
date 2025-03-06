@@ -33,6 +33,7 @@ const (
 )
 
 type Service struct {
+	nsqChannel         string
 	ckhRepo            *ckhdb.ClickHouseRepo
 	repo               *db.Repo
 	consumer           *nsqutil.Consumer
@@ -77,6 +78,7 @@ func NewService() (*Service, error) {
 	hyperionCli := hyperion.NewClient(cfg.Eos.Hyperion.Endpoint)
 
 	s := &Service{
+		nsqChannel:         uuid.New().String(),
 		ckhRepo:            ckhRepo,
 		repo:               repo,
 		poolCache:          make(map[uint64]*db.Pool),
@@ -119,7 +121,7 @@ func (s *Service) Start(ctx context.Context) error {
 		log.Printf("init kline cache failed: %v", err)
 	}
 
-	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("%s#ephemeral", uuid.New().String()), s.HandleMessage)
+	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("%s#ephemeral", s.nsqChannel), s.HandleMessage)
 	if err != nil {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
@@ -392,7 +394,7 @@ func (s *Service) startDepthCleaning(ctx context.Context) {
 			s.mu.Lock()
 			lastTrade := s.lastTrade
 			s.mu.Unlock()
-
+			log.Printf("nsqChannel: %s", s.nsqChannel)
 			if lastTrade != nil {
 				totalCleaned, err := s.repo.CleanInvalidDepth(ctx, lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
 				if err != nil {
