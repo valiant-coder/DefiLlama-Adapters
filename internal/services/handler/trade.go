@@ -92,8 +92,6 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		ckhdb.KlineInterval1h,
 		ckhdb.KlineInterval4h,
 		ckhdb.KlineInterval1d,
-		ckhdb.KlineInterval1w,
-		ckhdb.KlineInterval1M,
 	}
 
 	for _, interval := range intervals {

@@ -47,6 +47,7 @@ func (b *DepthBuffer) flush() {
 	copy(params, b.params)
 	b.params = b.params[:0]
 
+	log.Printf("flush depth buffer, %d params", len(params))
 	ctx := context.Background()
 	changes, err := b.repo.UpdateDepthV2(ctx, params)
 	if err != nil {

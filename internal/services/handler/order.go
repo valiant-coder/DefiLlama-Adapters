@@ -469,7 +469,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		return nil
 	}
 
-	poolID := cast.ToUint64(data.EV.PoolID)
+		poolID := cast.ToUint64(data.EV.PoolID)
 	pool, ok := s.poolCache[poolID]
 	if !ok {
 		pool, err = s.repo.GetPoolByID(ctx, poolID)
@@ -482,6 +482,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 
 	price := decimal.New(cast.ToInt64(data.EV.Price), -int32(pool.PricePrecision))
 
+	depthStart := time.Now()
 	if data.EV.IsBid {
 		s.depthBuffer.Add(db.UpdateDepthParams{
 			PoolID: poolID,
@@ -499,6 +500,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 			IsBuy:  false,
 		})
 	}
+	log.Printf("[Performance Log] depthBuffer update time: %v", time.Since(depthStart))
 
 	orderID := cast.ToUint64(data.EV.OrderID)
 	orderStart := time.Now()
