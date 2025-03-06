@@ -163,7 +163,7 @@ func (b *OpenOrderBuffer) flush() {
 }
 
 func (b *OpenOrderBuffer) periodicFlush() {
-	ticker := time.NewTicker(time.Millisecond * 200)
+	ticker := time.NewTicker(time.Millisecond * 50)
 	cleanTicker := time.NewTicker(time.Minute) 
 	defer ticker.Stop()
 	defer cleanTicker.Stop()
