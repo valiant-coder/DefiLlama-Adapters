@@ -164,7 +164,13 @@ func (t *Token) TransferERC20(c *Client, fromAddr string, toAddr string, amount 
 	return signedTx.Hash().Hex(), nil
 }
 
-func (t *Token) MintERC20(c *Client, ownerAddr string, toAddr string, amount float64, privateKey string) (string, error) {
+func (t *Token) MintERC20(c *Client,
+	ownerAddr string,
+	toAddr string,
+	amount float64,
+	privateKey string,
+	nonce uint64,
+) (string, error) {
 	ownerAddress := common.HexToAddress(ownerAddr)
 	toAddress := common.HexToAddress(toAddr)
 	decimals, err := t.GetDecimals(c)
@@ -172,9 +178,11 @@ func (t *Token) MintERC20(c *Client, ownerAddr string, toAddr string, amount flo
 		return "", err
 	}
 
-	nonce, err := c.ethClient.PendingNonceAt(context.Background(), ownerAddress)
-	if err != nil {
-		return "", err
+	if nonce == 0 {
+		nonce, err = c.ethClient.PendingNonceAt(context.Background(), ownerAddress)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	gasPrice, err := c.ethClient.SuggestGasPrice(context.Background())
