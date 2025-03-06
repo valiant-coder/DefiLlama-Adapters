@@ -267,7 +267,9 @@ func (s *Service) calculateTradeCompetitionPoints() error {
 		return nil
 	}
 
-	dayProfitRecords, err := s.repo.GetUserDayProfitRanking(ctx, yesterdayStart, len(config.Conf().TradingCompetition.DailyPoints))
+	maxDailyPoints := len(config.Conf().TradingCompetition.DailyPoints)
+
+	dayProfitRecords, err := s.repo.GetUserDayProfitRanking(ctx, yesterdayStart, maxDailyPoints, config.Conf().TradingCompetition.Blacklist)
 	if err != nil {
 		return fmt.Errorf("failed to get day profit ranking: %w", err)
 	}
@@ -287,7 +289,8 @@ func (s *Service) calculateTradeCompetitionPoints() error {
 	}
 
 	if now.After(competitionEndTime) {
-		accumulatedRecords, err := s.repo.GetUserAccumulatedProfitRanking(ctx, competitionBeginTime, competitionEndTime, len(config.Conf().TradingCompetition.AccumulatedPoints))
+		maxAccumulatedPoints := len(config.Conf().TradingCompetition.AccumulatedPoints)
+		accumulatedRecords, err := s.repo.GetUserAccumulatedProfitRanking(ctx, competitionBeginTime, competitionEndTime, maxAccumulatedPoints, config.Conf().TradingCompetition.Blacklist)
 		if err != nil {
 			return fmt.Errorf("failed to get accumulated profit ranking: %w", err)
 		}

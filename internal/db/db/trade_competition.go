@@ -60,3 +60,75 @@ func (r *Repo) GetIssuedPoints(ctx context.Context, beginTime, endTime time.Time
 		Scan(&totalPoints).Error
 	return totalPoints, err
 }
+
+func (r *Repo) GetUserDayProfitRanking(ctx context.Context, dayTime time.Time, limit int, blacklist []string) ([]UserDayProfitRecord, error) {
+	var records []UserDayProfitRecord
+	query := r.DB.WithContext(ctx).
+		Where("time = ?", dayTime)
+
+	if len(blacklist) > 0 {
+		query = query.Where("uid NOT IN (?)", blacklist)
+	}
+
+	err := query.Order("profit DESC").
+		Limit(limit).
+		Find(&records).Error
+	return records, err
+}
+
+func (r *Repo) GetUserDayProfitRankAndProfit(ctx context.Context, dayTime time.Time, uid string, blacklist []string) (*UserDayProfitRecord, int, error) {
+	var record UserDayProfitRecord
+	err := r.DB.WithContext(ctx).
+		Where("uid = ? and time = ?", uid, dayTime).
+		First(&record).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var rank int64
+	err = r.DB.WithContext(ctx).
+		Model(&UserDayProfitRecord{}).
+		Where("time = ? AND profit > ? AND uid NOT IN (?)", dayTime, record.Profit, blacklist).
+		Count(&rank).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return &record, int(rank + 1), nil
+}
+
+func (r *Repo) GetUserAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, limit int, blacklist []string) ([]UserAccumulatedProfitRecord, error) {
+	var records []UserAccumulatedProfitRecord
+	query := r.DB.WithContext(ctx).
+		Where("begin_time = ? AND end_time = ?", beginTime, endTime)
+
+	if len(blacklist) > 0 {
+		query = query.Where("uid NOT IN (?)", blacklist)
+	}
+
+	err := query.Order("profit DESC").
+		Limit(limit).
+		Find(&records).Error
+	return records, err
+}
+
+func (r *Repo) GetUserAccumulatedProfitRankAndProfit(ctx context.Context, beginTime, endTime time.Time, uid string, blacklist []string) (*UserAccumulatedProfitRecord, int, error) {
+	var record UserAccumulatedProfitRecord
+	err := r.DB.WithContext(ctx).
+		Where("begin_time = ? AND end_time = ? AND uid = ?", beginTime, endTime, uid).
+		First(&record).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var rank int64
+	err = r.DB.WithContext(ctx).
+		Model(&UserAccumulatedProfitRecord{}).
+		Where("begin_time = ? AND end_time = ? AND profit > ? AND uid NOT IN (?)", beginTime, endTime, record.Profit, blacklist).
+		Count(&rank).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return &record, int(rank + 1), nil
+}

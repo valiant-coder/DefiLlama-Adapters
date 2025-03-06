@@ -25,7 +25,15 @@ func NewTradeCompetitionService() *TradeCompetitionService {
 }
 
 func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTime time.Time, uid string) (*entity.UserProfitRank, error) {
-	records, err := s.repo.GetUserDayProfitRanking(ctx, dayTime, 10)
+	isBlacklisted := false
+	for _, blacklistUID := range s.cfg.TradingCompetition.Blacklist {
+		if uid == blacklistUID {
+			isBlacklisted = true
+			break
+		}
+	}
+
+	records, err := s.repo.GetUserDayProfitRanking(ctx, dayTime, 10, s.cfg.TradingCompetition.Blacklist)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +41,7 @@ func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTi
 	var userRecord *db.UserDayProfitRecord
 	var userRank int
 	if uid != "" {
-		userRecord, userRank, err = s.repo.GetUserDayProfitRankAndProfit(ctx, dayTime, uid)
+		userRecord, userRank, err = s.repo.GetUserDayProfitRankAndProfit(ctx, dayTime, uid, s.cfg.TradingCompetition.Blacklist)
 		if err != nil {
 			return nil, err
 		}
@@ -75,14 +83,23 @@ func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTi
 		})
 	}
 
-	if userRecord != nil {
-		result.UserProfit = userRecord.Profit.String()
-		result.Rank = userRank
-		if user, exists := userMap[userRecord.UID]; exists {
-			result.Avatar = user.Avatar
-		}
-		if userRank > 0 && userRank <= len(s.cfg.TradingCompetition.DailyPoints) {
-			result.Point = s.cfg.TradingCompetition.DailyPoints[userRank-1]
+	if uid != "" {
+		if isBlacklisted {
+			if user, exists := userMap[uid]; exists {
+				result.Avatar = user.Avatar
+			}
+			result.UserProfit = "0"
+			result.Rank = 0
+			result.Point = 0
+		} else if userRecord != nil {
+			result.UserProfit = userRecord.Profit.String()
+			result.Rank = userRank
+			if user, exists := userMap[userRecord.UID]; exists {
+				result.Avatar = user.Avatar
+			}
+			if userRank > 0 && userRank <= len(s.cfg.TradingCompetition.DailyPoints) {
+				result.Point = s.cfg.TradingCompetition.DailyPoints[userRank-1]
+			}
 		}
 	}
 
@@ -90,7 +107,15 @@ func (s *TradeCompetitionService) GetDayProfitRanking(ctx context.Context, dayTi
 }
 
 func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, uid string) (*entity.UserProfitRank, error) {
-	records, err := s.repo.GetUserAccumulatedProfitRanking(ctx, beginTime, endTime, 10)
+	isBlacklisted := false
+	for _, blacklistUID := range s.cfg.TradingCompetition.Blacklist {
+		if uid == blacklistUID {
+			isBlacklisted = true
+			break
+		}
+	}
+
+	records, err := s.repo.GetUserAccumulatedProfitRanking(ctx, beginTime, endTime, 10, s.cfg.TradingCompetition.Blacklist)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +123,7 @@ func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Contex
 	var userRecord *db.UserAccumulatedProfitRecord
 	var userRank int
 	if uid != "" {
-		userRecord, userRank, err = s.repo.GetUserAccumulatedProfitRankAndProfit(ctx, beginTime, endTime, uid)
+		userRecord, userRank, err = s.repo.GetUserAccumulatedProfitRankAndProfit(ctx, beginTime, endTime, uid, s.cfg.TradingCompetition.Blacklist)
 		if err != nil {
 			return nil, err
 		}
@@ -140,14 +165,23 @@ func (s *TradeCompetitionService) GetAccumulatedProfitRanking(ctx context.Contex
 		})
 	}
 
-	if userRecord != nil {
-		result.UserProfit = userRecord.Profit.String()
-		result.Rank = userRank
-		if user, exists := userMap[userRecord.UID]; exists {
-			result.Avatar = user.Avatar
-		}
-		if userRank > 0 && userRank <= len(s.cfg.TradingCompetition.AccumulatedPoints) {
-			result.Point = s.cfg.TradingCompetition.AccumulatedPoints[userRank-1]
+	if uid != "" {
+		if isBlacklisted {
+			if user, exists := userMap[uid]; exists {
+				result.Avatar = user.Avatar
+			}
+			result.UserProfit = "0"
+			result.Rank = 0
+			result.Point = 0
+		} else if userRecord != nil {
+			result.UserProfit = userRecord.Profit.String()
+			result.Rank = userRank
+			if user, exists := userMap[userRecord.UID]; exists {
+				result.Avatar = user.Avatar
+			}
+			if userRank > 0 && userRank <= len(s.cfg.TradingCompetition.AccumulatedPoints) {
+				result.Point = s.cfg.TradingCompetition.AccumulatedPoints[userRank-1]
+			}
 		}
 	}
 
@@ -160,6 +194,13 @@ func (s *TradeCompetitionService) GetTotalTradeStats(ctx context.Context, uid st
 
 	userPoints := 0
 	if uid != "" {
+		for _, blacklistUID := range s.cfg.TradingCompetition.Blacklist {
+			if uid == blacklistUID {
+				userPoints = 0
+				break
+			}
+		}
+
 		points, err := s.repo.GetUserTotalPoints(ctx, uid, beginTime, endTime)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get user points: %w", err)

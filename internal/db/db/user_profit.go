@@ -116,43 +116,6 @@ func (r *Repo) BatchUpsertUserDayProfitRecords(ctx context.Context, records []*U
 		CreateInBatches(records, 100).Error
 }
 
-func (r *Repo) GetUserDayProfitRanking(ctx context.Context, dayTime time.Time, limit int) ([]UserDayProfitRecord, error) {
-	var records []UserDayProfitRecord
-	err := r.DB.WithContext(ctx).
-		Where("time = ? and profit > 0", dayTime).
-		Order("profit DESC").
-		Limit(limit).
-		Find(&records).Error
-	return records, err
-}
-
-func (r *Repo) GetUserDayProfitRankAndProfit(ctx context.Context, dayTime time.Time, uid string) (*UserDayProfitRecord, int, error) {
-	var record UserDayProfitRecord
-	err := r.DB.WithContext(ctx).
-		Where("uid = ? AND time = ?", uid, dayTime).
-		First(&record).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, 0, nil
-		}
-		return nil, 0, err
-	}
-	if record.Profit.Equal(decimal.Zero) {
-		return &record, 0, nil
-	}
-
-	var rank int64
-	err = r.DB.WithContext(ctx).
-		Model(&UserDayProfitRecord{}).
-		Where("time = ? AND profit > ?", dayTime, record.Profit).
-		Count(&rank).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return &record, int(rank + 1), nil
-}
-
 type UserAccumulatedProfitRecord struct {
 	gorm.Model
 	UID       string          `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_begin_end_time"`
@@ -188,41 +151,4 @@ func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, be
 		Where("begin_time = ? AND end_time = ?", beginTime, endTime).
 		Find(&records).Error
 	return records, err
-}
-
-func (r *Repo) GetUserAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, limit int) ([]UserAccumulatedProfitRecord, error) {
-	var records []UserAccumulatedProfitRecord
-	err := r.DB.WithContext(ctx).
-		Where("begin_time = ? AND end_time = ? AND profit > 0", beginTime, endTime).
-		Order("profit DESC").
-		Limit(limit).
-		Find(&records).Error
-	return records, err
-}
-
-func (r *Repo) GetUserAccumulatedProfitRankAndProfit(ctx context.Context, beginTime, endTime time.Time, uid string) (*UserAccumulatedProfitRecord, int, error) {
-	var record UserAccumulatedProfitRecord
-	err := r.DB.WithContext(ctx).
-		Where("uid = ? AND begin_time = ? AND end_time = ?", uid, beginTime, endTime).
-		First(&record).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, 0, nil
-		}
-		return nil, 0, err
-	}
-	if record.Profit.Equal(decimal.Zero) {
-		return &record, 0, nil
-	}
-
-	var rank int64
-	err = r.DB.WithContext(ctx).
-		Model(&UserAccumulatedProfitRecord{}).
-		Where("begin_time = ? AND end_time = ? AND profit > ?", beginTime, endTime, record.Profit).
-		Count(&rank).Error
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return &record, int(rank + 1), nil
 }

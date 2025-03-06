@@ -91,6 +91,7 @@ type Config struct {
 		DailyPoints       []int     `yaml:"daily_points"`
 		AccumulatedPoints []int     `yaml:"accumulated_points"`
 		FaucetPoint       int       `yaml:"faucet_points"`
+		Blacklist         []string  `yaml:"blacklist"`
 	} `yaml:"trading_competition"`
 }
 
