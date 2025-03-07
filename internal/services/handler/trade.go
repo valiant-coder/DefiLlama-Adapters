@@ -6,10 +6,18 @@ import (
 	"exapp-go/internal/entity"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/shopspring/decimal"
 )
+
+// TradeBuffer is an object pool for caching trade data
+var tradeBufferPool = sync.Pool{
+	New: func() interface{} {
+		return make([]*ckhdb.Trade, 0, 128)
+	},
+}
 
 func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 	start := time.Now()
@@ -17,17 +25,31 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		log.Printf("Total newTrade processing time: %v", time.Since(start))
 	}()
 
-	s.mu.Lock()
-	s.lastTrade = trade
-	s.mu.Unlock()
+	// Reduce lock scope
+	func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		s.lastTrade = trade
+	}()
 
 	s.tradeBuffer.Add(trade)
-	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
-	if s.tradeCache == nil {
-		s.tradeCache = make(map[string][]*ckhdb.Trade)
-	}
-	s.tradeCache[orderTag] = append(s.tradeCache[orderTag], trade)
 
+	// Pre-calculate orderTag to avoid calculation inside lock
+	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
+
+	// Use function scope to limit lock range
+	func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if s.tradeCache == nil {
+			s.tradeCache = make(map[string][]*ckhdb.Trade, 1000)
+		}
+		trades := tradeBufferPool.Get().([]*ckhdb.Trade)
+		trades = append(trades, trade)
+		s.tradeCache[orderTag] = trades
+	}()
+
+	// Pre-calculate buyer and seller info
 	var buyer, seller string
 	if trade.TakerIsBid {
 		buyer = trade.Taker
@@ -36,26 +58,34 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		buyer = trade.Maker
 		seller = trade.Taker
 	}
-	go func() {
-		s.publisher.PublishTradeUpdate(entity.Trade{
-			PoolID:   trade.PoolID,
-			Buyer:    buyer,
-			Seller:   seller,
-			Quantity: trade.BaseQuantity.String(),
-			Price:    trade.Price.String(),
-			TradedAt: entity.Time(trade.Time),
-			Side:     entity.TradeSide(map[bool]string{true: "buy", false: "sell"}[trade.TakerIsBid]),
-		})
+
+	// Asynchronously publish trade update
+	go s.publisher.PublishTradeUpdate(entity.Trade{
+		PoolID:   trade.PoolID,
+		Buyer:    buyer,
+		Seller:   seller,
+		Quantity: trade.BaseQuantity.String(),
+		Price:    trade.Price.String(),
+		TradedAt: entity.Time(trade.Time),
+		Side:     entity.TradeSide(map[bool]string{true: "buy", false: "sell"}[trade.TakerIsBid]),
+	})
+
+	// Get or initialize kline map, use function scope to limit lock range
+	klineMap := func() map[ckhdb.KlineInterval]*ckhdb.Kline {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if s.klineCache == nil {
+			s.klineCache = make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline)
+		}
+		klineMap, ok := s.klineCache[trade.PoolID]
+		if !ok {
+			klineMap = make(map[ckhdb.KlineInterval]*ckhdb.Kline, 8) // Pre-allocate capacity
+			s.klineCache[trade.PoolID] = klineMap
+		}
+		return klineMap
 	}()
 
-	// Get kline data from cache
-	klineMap, ok := s.klineCache[trade.PoolID]
-	if !ok {
-		klineMap = make(map[ckhdb.KlineInterval]*ckhdb.Kline)
-		s.klineCache[trade.PoolID] = klineMap
-	}
-
-	// Get data from database if cache is empty
+	// If cache is empty, get data from database
 	if len(klineMap) == 0 {
 		dbStart := time.Now()
 		klines, err := s.ckhRepo.GetLatestTwoKlines(ctx, trade.PoolID)
@@ -65,25 +95,23 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		}
 		log.Printf("Kline DB fetch time: %v", time.Since(dbStart))
 
-		// Group kline data by interval
-		tmpKlineMap := make(map[ckhdb.KlineInterval][]*ckhdb.Kline)
+		// Use pre-allocated map to store kline data
+		tmpKlineMap := make(map[ckhdb.KlineInterval][]*ckhdb.Kline, len(klines))
 		for _, kline := range klines {
 			tmpKlineMap[kline.Interval] = append(tmpKlineMap[kline.Interval], kline)
 		}
 
-		// Process klines for each interval
 		for interval, intervalKlines := range tmpKlineMap {
 			if len(intervalKlines) > 0 {
-				// Set latest kline's open price to previous kline's close price if two klines exist
 				if len(intervalKlines) == 2 {
 					intervalKlines[0].Open = intervalKlines[1].Close
 				}
-				klineMap[interval] = intervalKlines[0] // Only cache the latest kline
+				klineMap[interval] = intervalKlines[0]
 			}
 		}
 	}
 
-	// Update all kline intervals
+	// Pre-define all intervals
 	intervals := []ckhdb.KlineInterval{
 		ckhdb.KlineInterval1m,
 		ckhdb.KlineInterval5m,
@@ -94,13 +122,20 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		ckhdb.KlineInterval1d,
 	}
 
+	// Cache trade time to avoid repeated retrieval
+	tradeTime := trade.Time
+
+	// Batch process kline updates
+	updates := make([]entity.Kline, 0, len(intervals))
+
 	for _, interval := range intervals {
 		latestKline, exists := klineMap[interval]
 		if !exists {
-			// Create new kline if no data exists for this interval
+			// Create new kline
+			intervalStart := s.getIntervalStart(tradeTime, interval)
 			latestKline = &ckhdb.Kline{
 				PoolID:        trade.PoolID,
-				IntervalStart: s.getIntervalStart(trade.Time, interval),
+				IntervalStart: intervalStart,
 				Interval:      interval,
 				Open:          trade.Price,
 				High:          trade.Price,
@@ -109,11 +144,10 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				Volume:        trade.BaseQuantity,
 				QuoteVolume:   trade.QuoteQuantity,
 				Trades:        1,
-				UpdateTime:    trade.Time,
+				UpdateTime:    tradeTime,
 			}
 			klineMap[interval] = latestKline
 		} else {
-			// Check if trade is within current kline period
 			var periodEnd time.Time
 			if interval == ckhdb.KlineInterval1M {
 				periodEnd = latestKline.IntervalStart.Add(s.getMonthDuration(latestKline.IntervalStart))
@@ -121,7 +155,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				periodEnd = latestKline.IntervalStart.Add(s.getIntervalDuration(interval))
 			}
 
-			if trade.Time.Before(periodEnd) {
+			if tradeTime.Before(periodEnd) {
 				// Update current kline
 				latestKline.High = decimal.Max(latestKline.High, trade.Price)
 				latestKline.Low = decimal.Min(latestKline.Low, trade.Price)
@@ -129,32 +163,36 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				latestKline.Volume = latestKline.Volume.Add(trade.BaseQuantity)
 				latestKline.QuoteVolume = latestKline.QuoteVolume.Add(trade.QuoteQuantity)
 				latestKline.Trades++
-				latestKline.UpdateTime = trade.Time
+				latestKline.UpdateTime = tradeTime
 			} else {
 				// Create new kline period
+				intervalStart := s.getIntervalStart(tradeTime, interval)
 				newKline := &ckhdb.Kline{
 					PoolID:        trade.PoolID,
-					IntervalStart: s.getIntervalStart(trade.Time, interval),
+					IntervalStart: intervalStart,
 					Interval:      interval,
-					Open:          latestKline.Close, // Use previous kline's close price as open price
+					Open:          latestKline.Close,
 					High:          trade.Price,
 					Low:           trade.Price,
 					Close:         trade.Price,
 					Volume:        trade.BaseQuantity,
 					QuoteVolume:   trade.QuoteQuantity,
 					Trades:        1,
-					UpdateTime:    trade.Time,
+					UpdateTime:    tradeTime,
 				}
 				klineMap[interval] = newKline
 			}
 		}
 
-		// Publish kline update
-		err := s.publisher.PublishKlineUpdate(entity.DbKlineToEntity(klineMap[interval]))
-		if err != nil {
+		// Collect kline updates
+		updates = append(updates, entity.DbKlineToEntity(klineMap[interval]))
+	}
+
+	// Batch publish kline updates
+	for _, update := range updates {
+		if err := s.publisher.PublishKlineUpdate(update); err != nil {
 			log.Printf("publish kline update failed: %v", err)
 		}
-
 	}
 
 	return nil
