@@ -20,10 +20,6 @@ var tradeBufferPool = sync.Pool{
 }
 
 func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
-	start := time.Now()
-	defer func() {
-		log.Printf("Total newTrade processing time: %v", time.Since(start))
-	}()
 
 	// Reduce lock scope
 	func() {
@@ -32,16 +28,13 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		s.lastTrade = trade
 	}()
 
-	bufferStart := time.Now()
 	s.tradeBuffer.Add(trade)
-	log.Printf("tradeBuffer add time: %v", time.Since(bufferStart))
 
 	// Pre-calculate orderTag to avoid calculation inside lock
 	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
 
 	// Use function scope to limit lock range
 	func() {
-		cacheStart := time.Now()
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		if s.tradeCache == nil {
@@ -50,7 +43,6 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		trades := tradeBufferPool.Get().([]*ckhdb.Trade)
 		trades = append(trades, trade)
 		s.tradeCache[orderTag] = trades
-		log.Printf("tradeCache update lock time: %v", time.Since(cacheStart))
 	}()
 
 	// Pre-calculate buyer and seller info
@@ -64,25 +56,17 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 	}
 
 	// Asynchronously publish trade update
-	publishStart := time.Now()
-	go func() {
-		pubErr := s.publisher.PublishTradeUpdate(entity.Trade{
-			PoolID:   trade.PoolID,
-			Buyer:    buyer,
-			Seller:   seller,
-			Quantity: trade.BaseQuantity.String(),
-			Price:    trade.Price.String(),
-			TradedAt: entity.Time(trade.Time),
-			Side:     entity.TradeSide(map[bool]string{true: "buy", false: "sell"}[trade.TakerIsBid]),
-		})
-		if pubErr != nil {
-			log.Printf("trade publish error: %v", pubErr)
-		}
-		log.Printf("trade publish time: %v", time.Since(publishStart))
-	}()
+	go s.publisher.PublishTradeUpdate(entity.Trade{
+		PoolID:   trade.PoolID,
+		Buyer:    buyer,
+		Seller:   seller,
+		Quantity: trade.BaseQuantity.String(),
+		Price:    trade.Price.String(),
+		TradedAt: entity.Time(trade.Time),
+		Side:     entity.TradeSide(map[bool]string{true: "buy", false: "sell"}[trade.TakerIsBid]),
+	})
 
 	// Get or initialize kline map, use function scope to limit lock range
-	klineMapStart := time.Now()
 	klineMap := func() map[ckhdb.KlineInterval]*ckhdb.Kline {
 		s.mu.Lock()
 		defer s.mu.Unlock()
@@ -96,19 +80,15 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		}
 		return klineMap
 	}()
-	log.Printf("klineMap initialization time: %v", time.Since(klineMapStart))
 
 	// If cache is empty, get data from database
 	if len(klineMap) == 0 {
-		dbStart := time.Now()
 		klines, err := s.ckhRepo.GetLatestTwoKlines(ctx, trade.PoolID)
 		if err != nil {
 			log.Printf("get latest kline failed: %v", err)
 			return nil
 		}
-		log.Printf("Kline DB fetch time: %v", time.Since(dbStart))
 
-		cacheProcessStart := time.Now()
 		// Use pre-allocated map to store kline data
 		tmpKlineMap := make(map[ckhdb.KlineInterval][]*ckhdb.Kline, len(klines))
 		for _, kline := range klines {
@@ -123,10 +103,8 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				klineMap[interval] = intervalKlines[0]
 			}
 		}
-		log.Printf("Kline cache processing time: %v", time.Since(cacheProcessStart))
 	}
 
-	updateStart := time.Now()
 	// Pre-define all intervals
 	intervals := []ckhdb.KlineInterval{
 		ckhdb.KlineInterval1m,
@@ -203,16 +181,13 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 		// Collect kline updates
 		updates = append(updates, entity.DbKlineToEntity(klineMap[interval]))
 	}
-	log.Printf("Kline updates processing time: %v", time.Since(updateStart))
 	// Batch publish kline updates
-	publishKlineStart := time.Now()
 	for _, update := range updates {
-		if err := s.publisher.PublishKlineUpdate(update); err != nil {
-			log.Printf("publish kline update failed: %v", err)
-		}
+		update := update
+		go func() {
+			s.publisher.PublishKlineUpdate(update)
+		}()
 	}
-	log.Printf("Kline updates publish time: %v", time.Since(publishKlineStart))
-
 	return nil
 }
 
