@@ -17,7 +17,10 @@ type DepthService struct {
 
 func (s *DepthService) GetDepth(ctx context.Context, poolID uint64, precision string, limit int) (entity.Depth, error) {
 	if precision == "" {
-		precision = "0.00000001"
+		precision = "0.000000001"
+	}
+	if precision == "0.00000001" && limit == 1 {
+		precision = "0.000000001"
 	}
 	if limit == 0 {
 		limit = 100
