@@ -129,7 +129,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	// Check UniqID
 	for _, param := range params {
 		if param.UniqID != "" {
-			exists, err := r.redis.SIsMember(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID).Result()
+			exists, err := r.redis.SIsMember(ctx, fmt.Sprintf("{depth:%d}:processed_ids", param.PoolID), param.UniqID).Result()
 			if err != nil {
 				return nil, fmt.Errorf("check uniq id error: %w", err)
 			}
@@ -143,7 +143,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	pipe := r.redis.Pipeline()
 	for _, param := range params {
 		if param.UniqID != "" {
-			pipe.SAdd(ctx, fmt.Sprintf("depth:%d:processed_ids", param.PoolID), param.UniqID)
+			pipe.SAdd(ctx, fmt.Sprintf("{depth:%d}:processed_ids", param.PoolID), param.UniqID)
 		}
 	}
 	if _, err := pipe.Exec(ctx); err != nil {
@@ -192,8 +192,8 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 
 		for precision, slot := range slots {
 			// Generate keys for each precision
-			hashKey := fmt.Sprintf("depth:%d:%s:%s:hash", param.PoolID, side, precision)
-			sortedSetKey := fmt.Sprintf("depth:%d:%s:%s:sorted_set", param.PoolID, side, precision)
+			hashKey := fmt.Sprintf("{depth:%d}:%s:%s:hash", param.PoolID, side, precision)
+			sortedSetKey := fmt.Sprintf("{depth:%d}:%s:%s:sorted_set", param.PoolID, side, precision)
 
 			// Execute script
 			newTotal, err := script.Run(ctx, r.redis, []string{hashKey, sortedSetKey}, slot, param.Amount.String()).Result()
@@ -230,12 +230,12 @@ func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, 
 	// Get depth data using minimum precision
 
 	// Get bids (buy orders)
-	bidsHash := fmt.Sprintf("depth:%d:buy:%s:hash", poolId, precision)
-	bidsSortedSet := fmt.Sprintf("depth:%d:buy:%s:sorted_set", poolId, precision)
+	bidsHash := fmt.Sprintf("{depth:%d}:buy:%s:hash", poolId, precision)
+	bidsSortedSet := fmt.Sprintf("{depth:%d}:buy:%s:sorted_set", poolId, precision)
 
 	// Get asks (sell orders)
-	asksHash := fmt.Sprintf("depth:%d:sell:%s:hash", poolId, precision)
-	asksSortedSet := fmt.Sprintf("depth:%d:sell:%s:sorted_set", poolId, precision)
+	asksHash := fmt.Sprintf("{depth:%d}:sell:%s:hash", poolId, precision)
+	asksSortedSet := fmt.Sprintf("{depth:%d}:sell:%s:sorted_set", poolId, precision)
 
 	// Get bids (high to low, limit 100)
 	bids, err := r.redis.ZRevRange(ctx, bidsSortedSet, 0, int64(limit-1)).Result()
@@ -295,14 +295,14 @@ func contains(s []string, e string) bool {
 // ClearDepths clears depth data
 func (s *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
 	keys := []string{
-		fmt.Sprintf("depth:%d:processed_ids", poolID),
+		fmt.Sprintf("{depth:%d}:processed_ids", poolID),
 	}
 	for _, precision := range SupportedPrecisions {
 		keys = append(keys, []string{
-			fmt.Sprintf("depth:%d:buy:%s:hash", poolID, precision),
-			fmt.Sprintf("depth:%d:buy:%s:sorted_set", poolID, precision),
-			fmt.Sprintf("depth:%d:sell:%s:hash", poolID, precision),
-			fmt.Sprintf("depth:%d:sell:%s:sorted_set", poolID, precision),
+			fmt.Sprintf("{depth:%d}:buy:%s:hash", poolID, precision),
+			fmt.Sprintf("{depth:%d}:buy:%s:sorted_set", poolID, precision),
+			fmt.Sprintf("{depth:%d}:sell:%s:hash", poolID, precision),
+			fmt.Sprintf("{depth:%d}:sell:%s:sorted_set", poolID, precision),
 		}...)
 	}
 	return s.redis.Del(ctx, keys...).Err()
@@ -324,8 +324,8 @@ func (r *Repo) CleanInvalidDepth(ctx context.Context, poolID uint64, lastPrice d
 
 		if isBuy {
 			// For buy orders, clean all sell orders less than or equal to the executed price
-			hashKey = fmt.Sprintf("depth:%d:sell:%s:hash", poolID, precision)
-			sortedSetKey = fmt.Sprintf("depth:%d:sell:%s:sorted_set", poolID, precision)
+			hashKey = fmt.Sprintf("{depth:%d}:sell:%s:hash", poolID, precision)
+			sortedSetKey = fmt.Sprintf("{depth:%d}:sell:%s:sorted_set", poolID, precision)
 			min = "-inf"
 			// For sell orders, round up based on precision to ensure cleaning all orders below executed price (exclusive)
 			precisionDecimal, _ := decimal.NewFromString(precision)
@@ -333,8 +333,8 @@ func (r *Repo) CleanInvalidDepth(ctx context.Context, poolID uint64, lastPrice d
 			max = "(" + slotPrice.String() // Use "(" prefix to exclude this price
 		} else {
 			// For sell orders, clean all buy orders greater than or equal to the executed price
-			hashKey = fmt.Sprintf("depth:%d:buy:%s:hash", poolID, precision)
-			sortedSetKey = fmt.Sprintf("depth:%d:buy:%s:sorted_set", poolID, precision)
+			hashKey = fmt.Sprintf("{depth:%d}:buy:%s:hash", poolID, precision)
+			sortedSetKey = fmt.Sprintf("{depth:%d}:buy:%s:sorted_set", poolID, precision)
 			// For buy orders, round down based on precision to ensure cleaning all orders above executed price
 			precisionDecimal, _ := decimal.NewFromString(precision)
 			slotPrice := lastPrice.Div(precisionDecimal).Floor().Mul(precisionDecimal)
