@@ -55,34 +55,36 @@ func (b *DepthBuffer) flush() {
 		return
 	}
 
-	bids, asks := [][]string{}, [][]string{}
-	depths := []entity.Depth{}
+	depthByPrecision := make(map[string]*entity.Depth)
+
 	for _, change := range changes {
-		bid := make([]string, 0)
-		ask := make([]string, 0)
-		if change.IsBuy {
-			bid = append(bid, change.Price.String())
-			bid = append(bid, change.Amount.String())
-		} else {
-			ask = append(ask, change.Price.String())
-			ask = append(ask, change.Amount.String())
+		depth, exists := depthByPrecision[change.Precision]
+		if !exists {
+			depth = &entity.Depth{
+				PoolID:    change.PoolID,
+				Timestamp: uint64(time.Now().UnixMilli()),
+				Bids:      [][]string{},
+				Asks:      [][]string{},
+				Precision: change.Precision,
+			}
+			depthByPrecision[change.Precision] = depth
 		}
-		bids = append(bids, bid)
-		asks = append(asks, ask)
-		depths = append(depths, entity.Depth{
-			PoolID:    change.PoolID,
-			Timestamp: uint64(time.Now().UnixMilli()),
-			Bids:      bids,
-			Asks:      asks,
-			Precision: change.Precision,
-		})
-		bids, asks = [][]string{}, [][]string{}
-	}
 
-	for _, depth := range depths {
-		go b.publisher.PublishDepthUpdate(depth)
+		if change.IsBuy {
+			depth.Bids = append(depth.Bids, []string{
+				change.Price.String(),
+				change.Amount.String(),
+			})
+		} else {
+			depth.Asks = append(depth.Asks, []string{
+				change.Price.String(),
+				change.Amount.String(),
+			})
+		}
 	}
-
+	for _, depth := range depthByPrecision {
+		go b.publisher.PublishDepthUpdate(*depth)
+	}
 }
 
 func (b *DepthBuffer) periodicFlush() {
