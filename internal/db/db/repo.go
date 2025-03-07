@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"exapp-go/config"
 	"exapp-go/internal/db/plugins"
@@ -62,8 +63,16 @@ func New() *Repo {
 				Addrs:    redisCfg.Cluster.Urls,
 				Username: redisCfg.Cluster.User,
 				Password: redisCfg.Cluster.Pass,
+				TLSConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
 			})
 			repo.redis = clusterRDB
+			if err := clusterRDB.Ping(context.Background()).Err(); err != nil {
+				fmt.Printf("redis cluster connect err: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("redis cluster connect success")
 		} else {
 			rdb := redis.NewClient(&redis.Options{
 				Addr:     fmt.Sprintf("%s:%d", redisCfg.Host, redisCfg.Port),
@@ -71,6 +80,11 @@ func New() *Repo {
 				DB:       redisCfg.DB,
 			})
 			repo.redis = rdb
+			if err := rdb.Ping(context.Background()).Err(); err != nil {
+				fmt.Printf("redis connect err: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("redis connect success")
 		}
 		if len(migrateFuncs) > 0 && mysqlCfg.Migrate {
 			for _, f := range migrateFuncs {
