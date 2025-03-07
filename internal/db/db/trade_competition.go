@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -64,7 +65,7 @@ func (r *Repo) GetIssuedPoints(ctx context.Context, beginTime, endTime time.Time
 func (r *Repo) GetUserDayProfitRanking(ctx context.Context, dayTime time.Time, limit int, blacklist []string) ([]UserDayProfitRecord, error) {
 	var records []UserDayProfitRecord
 	query := r.DB.WithContext(ctx).
-		Where("time = ?", dayTime)
+		Where("time = ? and profit > 0", dayTime)
 
 	if len(blacklist) > 0 {
 		query = query.Where("uid NOT IN (?)", blacklist)
@@ -84,6 +85,9 @@ func (r *Repo) GetUserDayProfitRankAndProfit(ctx context.Context, dayTime time.T
 	if err != nil {
 		return nil, 0, err
 	}
+	if record.Profit.Equal(decimal.Zero) {
+		return &record, 0, nil
+	}
 
 	var rank int64
 	err = r.DB.WithContext(ctx).
@@ -100,7 +104,7 @@ func (r *Repo) GetUserDayProfitRankAndProfit(ctx context.Context, dayTime time.T
 func (r *Repo) GetUserAccumulatedProfitRanking(ctx context.Context, beginTime, endTime time.Time, limit int, blacklist []string) ([]UserAccumulatedProfitRecord, error) {
 	var records []UserAccumulatedProfitRecord
 	query := r.DB.WithContext(ctx).
-		Where("begin_time = ? AND end_time = ?", beginTime, endTime)
+		Where("begin_time = ? AND end_time = ? AND profit > 0", beginTime, endTime)
 
 	if len(blacklist) > 0 {
 		query = query.Where("uid NOT IN (?)", blacklist)
@@ -119,6 +123,9 @@ func (r *Repo) GetUserAccumulatedProfitRankAndProfit(ctx context.Context, beginT
 		First(&record).Error
 	if err != nil {
 		return nil, 0, err
+	}
+	if record.Profit.Equal(decimal.Zero) {
+		return &record, 0, nil
 	}
 
 	var rank int64
