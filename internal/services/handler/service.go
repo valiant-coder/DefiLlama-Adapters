@@ -33,31 +33,32 @@ const (
 )
 
 type Service struct {
-	nsqChannel         string
-	ckhRepo            *ckhdb.ClickHouseRepo
-	repo               *db.Repo
-	consumer           *nsqutil.Consumer
-	poolCache          map[uint64]*db.Pool
-	eosCfg             config.EosConfig
-	cdexCfg            config.CdexConfig
-	oneDexCfg          config.OneDexConfig
-	exsatCfg           config.ExsatConfig
-	publisher          *NSQPublisher
-	redisCli           redis.Cmdable
-	instanceID         string
-	curInstance        int
-	klineCache         map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline
-	handlers           map[string]func(hyperion.Action) error
-	hyperionCli        *hyperion.Client
-	tradeCache         map[string][]*ckhdb.Trade
-	tradeBuffer        *ckhdb.TradeBuffer
-	historyOrderBuffer *ckhdb.OrderBuffer
-	depthBuffer        *DepthBuffer
-	openOrderBuffer    *db.OpenOrderBuffer
-	cleanDepthTicker   *time.Ticker
-	lastTrade          *ckhdb.Trade
-	mu                 sync.Mutex
-	stopChan           chan struct{}
+	nsqChannel            string
+	ckhRepo               *ckhdb.ClickHouseRepo
+	repo                  *db.Repo
+	consumer              *nsqutil.Consumer
+	poolCache             map[uint64]*db.Pool
+	eosCfg                config.EosConfig
+	cdexCfg               config.CdexConfig
+	oneDexCfg             config.OneDexConfig
+	exsatCfg              config.ExsatConfig
+	publisher             *NSQPublisher
+	redisCli              redis.Cmdable
+	instanceID            string
+	curInstance           int
+	klineCache            map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline
+	handlers              map[string]func(hyperion.Action) error
+	hyperionCli           *hyperion.Client
+	tradeCache            map[string][]*ckhdb.Trade
+	tradeBuffer           *ckhdb.TradeBuffer
+	historyOrderBuffer    *ckhdb.OrderBuffer
+	depthBuffer           *DepthBuffer
+	openOrderBuffer       *db.OpenOrderBuffer
+	cleanDepthTicker      *time.Ticker
+	cleanTradeCacheTicker *time.Ticker
+	lastTrade             *ckhdb.Trade
+	mu                    sync.Mutex
+	stopChan              chan struct{}
 }
 
 func NewService() (*Service, error) {
@@ -78,28 +79,29 @@ func NewService() (*Service, error) {
 	hyperionCli := hyperion.NewClient(cfg.Eos.Hyperion.Endpoint)
 
 	s := &Service{
-		nsqChannel:         uuid.New().String(),
-		ckhRepo:            ckhRepo,
-		repo:               repo,
-		poolCache:          make(map[uint64]*db.Pool),
-		eosCfg:             cfg.Eos,
-		cdexCfg:            cfg.Eos.CdexConfig,
-		oneDexCfg:          cfg.Eos.OneDex,
-		exsatCfg:           cfg.Eos.Exsat,
-		publisher:          publisher,
-		redisCli:           redisCli,
-		instanceID:         instanceID,
-		consumer:           consumer,
-		klineCache:         make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
-		handlers:           make(map[string]func(hyperion.Action) error),
-		hyperionCli:        hyperionCli,
-		tradeCache:         make(map[string][]*ckhdb.Trade),
-		tradeBuffer:        ckhdb.NewTradeBuffer(10000, ckhRepo),
-		historyOrderBuffer: ckhdb.NewOrderBuffer(10000, ckhRepo),
-		depthBuffer:        NewDepthBuffer(10000, repo, publisher),
-		openOrderBuffer:    db.NewOpenOrderBuffer(10000, repo),
-		cleanDepthTicker:   time.NewTicker(10 * time.Second),
-		stopChan:           make(chan struct{}),
+		nsqChannel:            uuid.New().String(),
+		ckhRepo:               ckhRepo,
+		repo:                  repo,
+		poolCache:             make(map[uint64]*db.Pool),
+		eosCfg:                cfg.Eos,
+		cdexCfg:               cfg.Eos.CdexConfig,
+		oneDexCfg:             cfg.Eos.OneDex,
+		exsatCfg:              cfg.Eos.Exsat,
+		publisher:             publisher,
+		redisCli:              redisCli,
+		instanceID:            instanceID,
+		consumer:              consumer,
+		klineCache:            make(map[uint64]map[ckhdb.KlineInterval]*ckhdb.Kline),
+		handlers:              make(map[string]func(hyperion.Action) error),
+		hyperionCli:           hyperionCli,
+		tradeCache:            make(map[string][]*ckhdb.Trade),
+		tradeBuffer:           ckhdb.NewTradeBuffer(10000, ckhRepo),
+		historyOrderBuffer:    ckhdb.NewOrderBuffer(10000, ckhRepo),
+		depthBuffer:           NewDepthBuffer(10000, repo, publisher),
+		openOrderBuffer:       db.NewOpenOrderBuffer(10000, repo),
+		cleanDepthTicker:      time.NewTicker(10 * time.Second),
+		cleanTradeCacheTicker: time.NewTicker(time.Minute),
+		stopChan:              make(chan struct{}),
 	}
 
 	// Register all handlers
@@ -114,7 +116,10 @@ func (s *Service) Start(ctx context.Context) error {
 	go s.heartbeat(ctx)
 
 	// Start depth cleaning goroutine
-	go s.startDepthCleaning(ctx)
+	go s.startDepthCleaning()
+
+	// Start trade cache cleaning goroutine
+	go s.startTradeCacheCleaning()
 
 	// Initialize kline cache
 	if err := s.initKlineCache(ctx); err != nil {
@@ -137,6 +142,9 @@ func (s *Service) Stop(ctx context.Context) error {
 
 	if s.cleanDepthTicker != nil {
 		s.cleanDepthTicker.Stop()
+	}
+	if s.cleanTradeCacheTicker != nil {
+		s.cleanTradeCacheTicker.Stop()
 	}
 	close(s.stopChan)
 
@@ -387,7 +395,7 @@ func (s *Service) initKlineCache(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) startDepthCleaning(ctx context.Context) {
+func (s *Service) startDepthCleaning() {
 	for {
 		select {
 		case <-s.cleanDepthTicker.C:
@@ -396,7 +404,7 @@ func (s *Service) startDepthCleaning(ctx context.Context) {
 			s.mu.Unlock()
 			log.Printf("nsqChannel: %s", s.nsqChannel)
 			if lastTrade != nil {
-				totalCleaned, err := s.repo.CleanInvalidDepth(ctx, lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
+				totalCleaned, err := s.repo.CleanInvalidDepth(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
 				if err != nil {
 					log.Printf("clean invalid depth failed: %v", err)
 				}
@@ -404,6 +412,34 @@ func (s *Service) startDepthCleaning(ctx context.Context) {
 					log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
 				}
 			}
+		case <-s.stopChan:
+			return
+		}
+	}
+}
+
+func (s *Service) startTradeCacheCleaning() {
+	for {
+		select {
+		case <-s.cleanTradeCacheTicker.C:
+			s.mu.Lock()
+			now := time.Now()
+			expiredTime := now.Add(-10 * time.Minute)
+
+			for orderTag, trades := range s.tradeCache {
+				var validTrades []*ckhdb.Trade
+				for _, trade := range trades {
+					if trade.Time.After(expiredTime) {
+						validTrades = append(validTrades, trade)
+					}
+				}
+				if len(validTrades) > 0 {
+					s.tradeCache[orderTag] = validTrades
+				} else {
+					delete(s.tradeCache, orderTag)
+				}
+			}
+			s.mu.Unlock()
 		case <-s.stopChan:
 			return
 		}

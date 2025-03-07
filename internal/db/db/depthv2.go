@@ -365,7 +365,8 @@ func (s *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
 	return s.redis.Del(ctx, keys...).Err()
 }
 
-func (r *Repo) CleanInvalidDepth(ctx context.Context, poolID uint64, lastPrice decimal.Decimal, isBuy bool) (int64, error) {
+func (r *Repo) CleanInvalidDepth(poolID uint64, lastPrice decimal.Decimal, isBuy bool) (int64, error) {
+	ctx := context.Background()
 	var totalCleaned int64
 
 	pipe := r.redis.Pipeline()
