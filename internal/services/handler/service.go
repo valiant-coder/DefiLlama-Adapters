@@ -101,7 +101,7 @@ func NewService() (*Service, error) {
 		depthBuffer:           NewDepthBuffer(10000, repo, publisher),
 		openOrderBuffer:       db.NewOpenOrderBuffer(10000, repo, ckhRepo),
 		cleanDepthTicker:      time.NewTicker(10 * time.Second),
-		cleanOpenOrderTicker:  time.NewTicker(time.Minute),
+		cleanOpenOrderTicker:  time.NewTicker(time.Second * 10),
 		cleanTradeCacheTicker: time.NewTicker(time.Minute),
 		stopChan:              make(chan struct{}),
 	}
@@ -150,6 +150,9 @@ func (s *Service) Stop(ctx context.Context) error {
 	}
 	if s.cleanTradeCacheTicker != nil {
 		s.cleanTradeCacheTicker.Stop()
+	}
+	if s.cleanOpenOrderTicker != nil {
+		s.cleanOpenOrderTicker.Stop()
 	}
 	close(s.stopChan)
 
@@ -432,6 +435,7 @@ func (s *Service) startOpenOrderCleaning() {
 			lastTrade := s.lastTrade
 			s.mu.Unlock()
 			if lastTrade != nil {
+				log.Printf("clean invalid orders for pool %d", lastTrade.PoolID)
 				totalCleanedOrders, err := s.openOrderBuffer.CleanInvalidOrders(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
 				if err != nil {
 					log.Printf("clean invalid orders failed: %v", err)
@@ -439,6 +443,7 @@ func (s *Service) startOpenOrderCleaning() {
 				if totalCleanedOrders > 0 {
 					log.Printf("Clean Orders: Cleaned %d invalid orders", totalCleanedOrders)
 				}
+				log.Printf("end clean invalid orders for pool %d", lastTrade.PoolID)
 			}
 		case <-s.stopChan:
 			return
@@ -450,6 +455,7 @@ func (s *Service) startTradeCacheCleaning() {
 	for {
 		select {
 		case <-s.cleanTradeCacheTicker.C:
+			log.Printf("begin clean trade cache")
 			s.mu.Lock()
 			now := time.Now()
 			expiredTime := now.Add(-10 * time.Minute)
@@ -468,6 +474,7 @@ func (s *Service) startTradeCacheCleaning() {
 				}
 			}
 			s.mu.Unlock()
+			log.Printf("end clean trade cache")
 		case <-s.stopChan:
 			return
 		}
