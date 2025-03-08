@@ -107,7 +107,7 @@ func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
 		AvgPrice:           order.AvgPrice.String(),
 		OrderAmount:        order.OriginalQuantity.String(),
 		ExecutedAmount:     order.ExecutedQuantity.String(),
-		FilledTotal:        order.ExecutedQuantity.Mul(order.AvgPrice).String(),
+		FilledTotal:        order.ExecutedQuantity.Mul(order.AvgPrice).Truncate(int32(order.QuoteCoinPrecision)).String(),
 		Status:             uint8(order.Status),
 		BaseCoinPrecision:  order.BaseCoinPrecision,
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
@@ -135,7 +135,7 @@ func OrderFormOpenDB(order db.OpenOrder) Order {
 		AvgPrice:       order.Price.String(),
 		OrderAmount:    order.OriginalQuantity.String(),
 		ExecutedAmount: order.ExecutedQuantity.String(),
-		FilledTotal:    order.ExecutedQuantity.Mul(order.Price).String(),
+		FilledTotal:    order.ExecutedQuantity.Mul(order.Price).Truncate(int32(order.QuoteCoinPrecision)).String(),
 		Status:         uint8(order.Status),
 	}
 }
