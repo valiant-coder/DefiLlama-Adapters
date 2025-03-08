@@ -20,6 +20,9 @@ const (
 	redisLatestKlineKeyPrefix = "latest_kline"
 )
 
+var klineCache *KlineCache
+var klineCacheOnce sync.Once
+
 // KlineCache defines the cache structure
 type KlineCache struct {
 	sync.RWMutex
@@ -35,12 +38,14 @@ type CacheItem struct {
 
 // NewKlineCache creates a new cache instance
 func NewKlineCache() *KlineCache {
-	cache := &KlineCache{
-		data: make(map[string]*CacheItem),
-	}
-	// Start a goroutine to periodically clean expired cache
-	go cache.cleanExpired()
-	return cache
+	klineCacheOnce.Do(func() {
+		klineCache = &KlineCache{
+			data: make(map[string]*CacheItem),
+		}
+		// Start a goroutine to periodically clean expired cache
+		go klineCache.cleanExpired()
+	})
+	return klineCache
 }
 
 // cleanExpired cleans expired cache data
@@ -152,14 +157,12 @@ func NewKlineService() *KlineService {
 	return &KlineService{
 		repo:    db.New(),
 		chkRepo: ckhdb.New(),
-		cache:   NewKlineCache(),
 	}
 }
 
 type KlineService struct {
 	repo    *db.Repo
 	chkRepo *ckhdb.ClickHouseRepo
-	cache   *KlineCache
 	sfGroup singleflight.Group // Prevent cache breakdown
 }
 
@@ -252,7 +255,7 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 	fmt.Printf("  - 缓存键: %s\n", cacheKey)
 
 	// 检查缓存状态
-	if item, exists := s.cache.data[cacheKey]; exists {
+	if item, exists := klineCache.data[cacheKey]; exists {
 		fmt.Printf("  - 缓存存在，但可能已过期。过期时间: %v, 是否已过期: %v\n",
 			item.ExpireTime, time.Now().After(item.ExpireTime))
 	} else {
@@ -265,7 +268,7 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 
 	// Try to get data from cache
 	cacheCheckTime := time.Now()
-	if klines, ok := s.cache.Get(cacheKey); ok {
+	if klines, ok := klineCache.Get(cacheKey); ok {
 		fmt.Printf("[GetLatestKlines] 缓存命中! 检查耗时: %v, 数据条数: %d\n",
 			time.Since(cacheCheckTime), len(klines))
 		if len(klines) >= count {
@@ -282,7 +285,7 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 						var latestKline ckhdb.Kline
 						if err := json.Unmarshal(latestKlineData, &latestKline); err == nil {
 							klines[len(klines)-1] = entity.DbKlineToEntity(&latestKline)
-							s.cache.Set(cacheKey, klines, s.getCacheExpiration(interval))
+							klineCache.Set(cacheKey, klines, s.getCacheExpiration(interval))
 							fmt.Printf("[GetLatestKlines] 更新最新K线数据完成, 耗时: %v\n", time.Since(updateStartTime))
 						}
 					} else {
@@ -366,7 +369,7 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 		// Set cache
 		cacheStartTime := time.Now()
 		expiration := s.getCacheExpiration(interval)
-		s.cache.Set(cacheKey, entityKlines, expiration)
+		klineCache.Set(cacheKey, entityKlines, expiration)
 		fmt.Printf("[GetLatestKlines] 设置缓存详情:\n")
 		fmt.Printf("  - 当前时间: %v\n", now)
 		fmt.Printf("  - 缓存键: %s\n", cacheKey)
@@ -417,7 +420,7 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 
 	// Try to get data from cache
 	cacheCheckTime := time.Now()
-	if klines, ok := s.cache.Get(cacheKey); ok {
+	if klines, ok := klineCache.Get(cacheKey); ok {
 		fmt.Printf("[GetKline] 缓存命中! 耗时: %v\n", time.Since(cacheCheckTime))
 		return klines, nil
 	}
@@ -490,7 +493,7 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 		// Set cache, historical data can be cached longer
 		cacheStartTime := time.Now()
 		expiration := s.getCacheExpiration(interval) * 2
-		s.cache.Set(cacheKey, entityKlines, expiration)
+		klineCache.Set(cacheKey, entityKlines, expiration)
 		fmt.Printf("[GetKline] 设置缓存完成, 耗时: %v\n", time.Since(cacheStartTime))
 
 		return entityKlines, nil
