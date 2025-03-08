@@ -209,50 +209,60 @@ func (b *OpenOrderBuffer) CleanInvalidOrders(poolID uint64, lastPrice decimal.De
 		return 0, nil
 	}
 
-	historyOrders := make([]*ckhdb.HistoryOrder, 0, len(orders))
-	deleteOrders := make([]*OpenOrder, 0, len(orders))
-
-	for _, order := range orders {
-		historyOrder := &ckhdb.HistoryOrder{
-			App:                order.App,
-			PoolID:             order.PoolID,
-			PoolSymbol:         order.PoolSymbol,
-			PoolBaseCoin:       order.PoolBaseCoin,
-			PoolQuoteCoin:      order.PoolQuoteCoin,
-			OrderID:            order.OrderID,
-			ClientOrderID:      order.ClientOrderID,
-			Trader:             order.Trader,
-			Price:              order.Price,
-			AvgPrice:           order.Price,
-			IsBid:              order.IsBid,
-			OriginalQuantity:   order.OriginalQuantity,
-			ExecutedQuantity:   order.OriginalQuantity,
-			Status:             ckhdb.OrderStatusFilled,
-			Type:               ckhdb.OrderType(order.Type),
-			IsMarket:           false,
-			CreateTxID:         order.TxID,
-			CreatedAt:          order.CreatedAt,
-			CreateBlockNum:     order.BlockNumber,
-			BaseCoinPrecision:  uint8(order.BaseCoinPrecision),
-			QuoteCoinPrecision: uint8(order.QuoteCoinPrecision),
+	batchSize := 50
+	for i := 0; i < len(orders); i += batchSize {
+		end := i + batchSize
+		if end > len(orders) {
+			end = len(orders)
 		}
-		historyOrders = append(historyOrders, historyOrder)
-		deleteOrders = append(deleteOrders, order)
 
-		key := b.getCacheKey(order.PoolID, order.OrderID, order.IsBid)
-		b.mu.Lock()
-		delete(b.cache, key)
-		b.mu.Unlock()
+		batch := orders[i:end]
+		historyOrders := make([]*ckhdb.HistoryOrder, 0, len(batch))
+		deleteOrders := make([]*OpenOrder, 0, len(batch))
+
+		for _, order := range batch {
+			historyOrder := &ckhdb.HistoryOrder{
+				App:                order.App,
+				PoolID:             order.PoolID,
+				PoolSymbol:         order.PoolSymbol,
+				PoolBaseCoin:       order.PoolBaseCoin,
+				PoolQuoteCoin:      order.PoolQuoteCoin,
+				OrderID:            order.OrderID,
+				ClientOrderID:      order.ClientOrderID,
+				Trader:             order.Trader,
+				Price:              order.Price,
+				AvgPrice:           order.Price,
+				IsBid:              order.IsBid,
+				OriginalQuantity:   order.OriginalQuantity,
+				ExecutedQuantity:   order.OriginalQuantity,
+				Status:             ckhdb.OrderStatusFilled,
+				Type:               ckhdb.OrderType(order.Type),
+				IsMarket:           false,
+				CreateTxID:         order.TxID,
+				CreatedAt:          order.CreatedAt,
+				CreateBlockNum:     order.BlockNumber,
+				BaseCoinPrecision:  uint8(order.BaseCoinPrecision),
+				QuoteCoinPrecision: uint8(order.QuoteCoinPrecision),
+			}
+			historyOrders = append(historyOrders, historyOrder)
+			deleteOrders = append(deleteOrders, order)
+
+			key := b.getCacheKey(order.PoolID, order.OrderID, order.IsBid)
+			b.mu.Lock()
+			delete(b.cache, key)
+			b.mu.Unlock()
+		}
+
+		if err := b.ckhRepo.BatchInsertOrders(ctx, historyOrders); err != nil {
+			return totalCleaned, fmt.Errorf("batch insert history orders error: %w", err)
+		}
+
+		if err := b.repo.BatchDeleteOpenOrders(ctx, deleteOrders); err != nil {
+			return totalCleaned, fmt.Errorf("batch delete open orders error: %w", err)
+		}
+
+		totalCleaned += int64(len(batch))
 	}
 
-	if err := b.ckhRepo.BatchInsertOrders(ctx, historyOrders); err != nil {
-		return 0, fmt.Errorf("batch insert history orders error: %w", err)
-	}
-
-	if err := b.repo.BatchDeleteOpenOrders(ctx, deleteOrders); err != nil {
-		return 0, fmt.Errorf("batch delete open orders error: %w", err)
-	}
-
-	totalCleaned = int64(len(orders))
 	return totalCleaned, nil
 }

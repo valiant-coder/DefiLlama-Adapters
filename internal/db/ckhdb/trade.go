@@ -49,7 +49,7 @@ func (Trade) TableName() string {
 
 
 func (r *ClickHouseRepo) BatchInsertTrades(ctx context.Context, trades []*Trade) error {
-	return r.DB.WithContext(ctx).CreateInBatches(trades, 500).Error
+	return r.DB.WithContext(ctx).CreateInBatches(trades, 100).Error
 }
 
 func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {

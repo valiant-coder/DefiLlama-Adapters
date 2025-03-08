@@ -62,7 +62,7 @@ func (HistoryOrder) TableName() string {
 }
 
 func (r *ClickHouseRepo) BatchInsertOrders(ctx context.Context, orders []*HistoryOrder) error {
-	return r.DB.WithContext(ctx).CreateInBatches(orders, 500).Error
+	return r.DB.WithContext(ctx).CreateInBatches(orders, 100).Error
 }
 
 func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]HistoryOrder, int64, error) {
