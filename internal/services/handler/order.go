@@ -162,10 +162,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 				}
 				log.Printf("[Performance Log] get trades time: %v", time.Since(tradeStart))
 			}
-			if len(trades) == 0 {
-				log.Printf("no trades found for executed order: %v", orderTag)
-				return s.publisher.DeferPublishCreateOrder(action)
-			}
 
 			var totalQuoteQuantity, totalBaseQuantity decimal.Decimal
 			for _, trade := range trades {
@@ -174,10 +170,6 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 			}
 			avgPrice = totalQuoteQuantity.Div(totalBaseQuantity).Round(int32(pool.PricePrecision))
 			price = decimal.New(cast.ToInt64(newOrder.EV.Price), -int32(pool.PricePrecision))
-			if newOrder.EV.IsMarket {
-				originalQuantity = totalBaseQuantity
-				executedQuantity = totalBaseQuantity
-			}
 		} else {
 			avgPrice = decimal.New(cast.ToInt64(newOrder.EV.Price), -int32(pool.PricePrecision))
 			price = avgPrice

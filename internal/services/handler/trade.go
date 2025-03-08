@@ -7,18 +7,10 @@ import (
 	"exapp-go/internal/entity"
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/shopspring/decimal"
 )
-
-// TradeBuffer is an object pool for caching trade data
-var tradeBufferPool = sync.Pool{
-	New: func() interface{} {
-		return make([]*ckhdb.Trade, 0, 128)
-	},
-}
 
 const (
 	redisLatestKlineKeyPrefix = "latest_kline"
@@ -38,21 +30,11 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 	}()
 
 	s.tradeBuffer.Add(trade)
-
-	// Pre-calculate orderTag to avoid calculation inside lock
 	orderTag := fmt.Sprintf("%d-%d-%d", trade.PoolID, trade.TakerOrderID, map[bool]int{true: 0, false: 1}[trade.TakerIsBid])
-
-	// Use function scope to limit lock range
-	func() {
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		if s.tradeCache == nil {
-			s.tradeCache = make(map[string][]*ckhdb.Trade, 1000)
-		}
-		trades := tradeBufferPool.Get().([]*ckhdb.Trade)
-		trades = append(trades, trade)
-		s.tradeCache[orderTag] = trades
-	}()
+	if s.tradeCache == nil {
+		s.tradeCache = make(map[string][]*ckhdb.Trade)
+	}
+	s.tradeCache[orderTag] = append(s.tradeCache[orderTag], trade)
 
 	// Pre-calculate buyer and seller info
 	var buyer, seller string
