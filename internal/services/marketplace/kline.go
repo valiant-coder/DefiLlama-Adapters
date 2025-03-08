@@ -368,6 +368,7 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 		expiration := s.getCacheExpiration(interval)
 		s.cache.Set(cacheKey, entityKlines, expiration)
 		fmt.Printf("[GetLatestKlines] 设置缓存详情:\n")
+		fmt.Printf("  - 当前时间: %v\n", now)
 		fmt.Printf("  - 缓存键: %s\n", cacheKey)
 		fmt.Printf("  - 过期时间: %v\n", time.Now().Add(expiration))
 		fmt.Printf("  - 数据条数: %d\n", len(entityKlines))
