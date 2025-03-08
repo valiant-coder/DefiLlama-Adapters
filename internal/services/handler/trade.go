@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/entity"
 	"fmt"
@@ -17,6 +18,14 @@ var tradeBufferPool = sync.Pool{
 	New: func() interface{} {
 		return make([]*ckhdb.Trade, 0, 128)
 	},
+}
+
+const (
+	redisLatestKlineKeyPrefix = "latest_kline"
+)
+
+func getLatestKlineRedisKey(poolID uint64, interval ckhdb.KlineInterval) string {
+	return fmt.Sprintf("{%s:%d}:%s", redisLatestKlineKeyPrefix, poolID, interval)
 }
 
 func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
@@ -121,6 +130,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 
 	// Batch process kline updates
 	updates := make([]entity.Kline, 0, len(intervals))
+	redisUpdates := make(map[string]*ckhdb.Kline, len(intervals))
 
 	for _, interval := range intervals {
 		latestKline, exists := klineMap[interval]
@@ -141,6 +151,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				UpdateTime:    tradeTime,
 			}
 			klineMap[interval] = latestKline
+			redisUpdates[string(interval)] = latestKline
 		} else {
 			var periodEnd time.Time
 			if interval == ckhdb.KlineInterval1M {
@@ -158,6 +169,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 				latestKline.QuoteVolume = latestKline.QuoteVolume.Add(trade.QuoteQuantity)
 				latestKline.Trades++
 				latestKline.UpdateTime = tradeTime
+				redisUpdates[string(interval)] = latestKline
 			} else {
 				// Create new kline period
 				intervalStart := s.getIntervalStart(tradeTime, interval)
@@ -175,12 +187,30 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 					UpdateTime:    tradeTime,
 				}
 				klineMap[interval] = newKline
+				redisUpdates[string(interval)] = newKline
 			}
 		}
 
 		// Collect kline updates
 		updates = append(updates, entity.DbKlineToEntity(klineMap[interval]))
 	}
+
+	for interval, kline := range redisUpdates {
+		interval, kline := interval, kline
+		go func() {
+			redisKey := getLatestKlineRedisKey(kline.PoolID, ckhdb.KlineInterval(interval))
+			klineData, err := json.Marshal(kline)
+			if err != nil {
+				log.Printf("marshal kline data failed: %v", err)
+				return
+			}
+			expiration := s.getIntervalDuration(ckhdb.KlineInterval(interval)) * 2
+			if err := s.repo.Redis().Set(context.Background(), redisKey, klineData, expiration).Err(); err != nil {
+				log.Printf("set redis kline data failed: %v", err)
+			}
+		}()
+	}
+
 	// Batch publish kline updates
 	for _, update := range updates {
 		update := update

@@ -2,8 +2,10 @@ package marketplace
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"exapp-go/internal/db/ckhdb"
+	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 	"fmt"
 	"sync"
@@ -12,6 +14,10 @@ import (
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/singleflight"
 	"gorm.io/gorm"
+)
+
+const (
+	redisLatestKlineKeyPrefix = "latest_kline"
 )
 
 // KlineCache defines the cache structure
@@ -138,15 +144,21 @@ func getIntervalDuration(interval string) time.Duration {
 	}
 }
 
+func getLatestKlineRedisKey(poolID uint64, interval string) string {
+	return fmt.Sprintf("{%s:%d}:%s", redisLatestKlineKeyPrefix, poolID, interval)
+}
+
 func NewKlineService() *KlineService {
 	return &KlineService{
-		repo:  ckhdb.New(),
-		cache: NewKlineCache(),
+		repo:    db.New(),
+		chkRepo: ckhdb.New(),
+		cache:   NewKlineCache(),
 	}
 }
 
 type KlineService struct {
-	repo    *ckhdb.ClickHouseRepo
+	repo    *db.Repo
+	chkRepo *ckhdb.ClickHouseRepo
 	cache   *KlineCache
 	sfGroup singleflight.Group // Prevent cache breakdown
 }
@@ -240,11 +252,13 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 				// Get the start time of the last kline
 				lastKlineTime := time.Time(lastKline.Timestamp)
 				if lastKlineTime.Equal(currentKlineStart) {
-					// Check last update time, if exceeds update threshold, fetch new data
-					if item, exists := s.cache.data[cacheKey]; exists {
-						updateThreshold := s.getUpdateThreshold(interval)
-						if time.Since(item.LastUpdateTime) > updateThreshold {
-							goto FetchNewData
+					redisKey := getLatestKlineRedisKey(poolID, interval)
+					latestKlineData, err := s.repo.Redis().Get(ctx, redisKey).Bytes()
+					if err == nil {
+						var latestKline ckhdb.Kline
+						if err := json.Unmarshal(latestKlineData, &latestKline); err == nil {
+							klines[len(klines)-1] = entity.DbKlineToEntity(&latestKline)
+							s.cache.Set(cacheKey, klines, s.getCacheExpiration(interval))
 						}
 					}
 				}
@@ -253,7 +267,6 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 		}
 	}
 
-FetchNewData:
 	// Calculate start time
 	start := normalizedNow.Add(-duration * time.Duration(count+5)) // Get 5 more to ensure data completeness
 	end := now
@@ -261,13 +274,13 @@ FetchNewData:
 	// Use singleflight to prevent cache breakdown
 	result, err, _ := s.sfGroup.Do(cacheKey, func() (interface{}, error) {
 		// Get kline data
-		klines, err := s.repo.GetKline(ctx, poolID, interval, start, end)
+		klines, err := s.chkRepo.GetKline(ctx, poolID, interval, start, end)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get kline data: %w", err)
 		}
 
 		// Get the last kline before start time
-		lastKline, err := s.repo.GetLastKlineBefore(ctx, poolID, interval, start)
+		lastKline, err := s.chkRepo.GetLastKlineBefore(ctx, poolID, interval, start)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to get previous kline data: %w", err)
 		}
@@ -360,13 +373,13 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	// Use singleflight to prevent cache breakdown
 	result, err, _ := s.sfGroup.Do(cacheKey, func() (interface{}, error) {
 		// Get kline data
-		klines, err := s.repo.GetKline(ctx, poolID, interval, normalizedStart, normalizedEnd)
+		klines, err := s.chkRepo.GetKline(ctx, poolID, interval, normalizedStart, normalizedEnd)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get kline data: %w", err)
 		}
 
 		// Get the last kline before start time
-		lastKline, err := s.repo.GetLastKlineBefore(ctx, poolID, interval, normalizedStart)
+		lastKline, err := s.chkRepo.GetLastKlineBefore(ctx, poolID, interval, normalizedStart)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to get previous kline data: %w", err)
 		}
@@ -450,31 +463,5 @@ func (s *KlineService) getCacheExpiration(interval string) time.Duration {
 		return 30 * 24 * time.Hour
 	default:
 		return 5 * time.Minute
-	}
-}
-
-// getUpdateThreshold gets update threshold
-func (s *KlineService) getUpdateThreshold(interval string) time.Duration {
-	switch interval {
-	case "1m":
-		return 5 * time.Second
-	case "5m":
-		return 15 * time.Second
-	case "15m":
-		return 30 * time.Second
-	case "30m":
-		return 1 * time.Minute
-	case "1h":
-		return 2 * time.Minute
-	case "4h":
-		return 5 * time.Minute
-	case "1d":
-		return 15 * time.Minute
-	case "1w":
-		return 1 * time.Hour
-	case "1M":
-		return 4 * time.Hour
-	default:
-		return 15 * time.Second
 	}
 }
