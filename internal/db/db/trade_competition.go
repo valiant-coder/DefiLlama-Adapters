@@ -17,10 +17,10 @@ func init() {
 
 type TradeCompetitionRecord struct {
 	gorm.Model
-	UID       string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid;index:idx_uid_begin_end_time"`
+	UID       string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid;uniqueIndex:idx_uid_begin_end_time"`
 	Points    int       `gorm:"column:points;type:int;not null;default:0"`
-	BeginTime time.Time `gorm:"column:begin_time;type:timestamp;not null;index:idx_begin_end_time;index:idx_uid_begin_end_time"`
-	EndTime   time.Time `gorm:"column:end_time;type:timestamp;not null;index:idx_begin_end_time;index:idx_uid_begin_end_time"`
+	BeginTime time.Time `gorm:"column:begin_time;type:timestamp;not null;index:idx_begin_end_time;uniqueIndex:idx_uid_begin_end_time"`
+	EndTime   time.Time `gorm:"column:end_time;type:timestamp;not null;index:idx_begin_end_time;uniqueIndex:idx_uid_begin_end_time"`
 }
 
 func (TradeCompetitionRecord) TableName() string {
