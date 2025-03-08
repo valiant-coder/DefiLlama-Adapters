@@ -54,6 +54,7 @@ type Service struct {
 	historyOrderBuffer    *ckhdb.OrderBuffer
 	depthBuffer           *DepthBuffer
 	openOrderBuffer       *db.OpenOrderBuffer
+	cleanOpenOrderTicker  *time.Ticker
 	cleanDepthTicker      *time.Ticker
 	cleanTradeCacheTicker *time.Ticker
 	lastTrade             *ckhdb.Trade
@@ -98,8 +99,9 @@ func NewService() (*Service, error) {
 		tradeBuffer:           ckhdb.NewTradeBuffer(10000, ckhRepo),
 		historyOrderBuffer:    ckhdb.NewOrderBuffer(10000, ckhRepo),
 		depthBuffer:           NewDepthBuffer(10000, repo, publisher),
-		openOrderBuffer:       db.NewOpenOrderBuffer(10000, repo),
+		openOrderBuffer:       db.NewOpenOrderBuffer(10000, repo, ckhRepo),
 		cleanDepthTicker:      time.NewTicker(10 * time.Second),
+		cleanOpenOrderTicker:  time.NewTicker(1 * time.Minute),
 		cleanTradeCacheTicker: time.NewTicker(time.Minute),
 		stopChan:              make(chan struct{}),
 	}
@@ -117,6 +119,9 @@ func (s *Service) Start(ctx context.Context) error {
 
 	// Start depth cleaning goroutine
 	go s.startDepthCleaning()
+
+	// Start open order cleaning goroutine
+	go s.startOpenOrderCleaning()
 
 	// Start trade cache cleaning goroutine
 	go s.startTradeCacheCleaning()
@@ -410,6 +415,29 @@ func (s *Service) startDepthCleaning() {
 				}
 				if totalCleaned > 0 {
 					log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
+				}
+
+			}
+		case <-s.stopChan:
+			return
+		}
+	}
+}
+
+func (s *Service) startOpenOrderCleaning() {
+	for {
+		select {
+		case <-s.cleanOpenOrderTicker.C:
+			s.mu.Lock()
+			lastTrade := s.lastTrade
+			s.mu.Unlock()
+			if lastTrade != nil {
+				totalCleanedOrders, err := s.openOrderBuffer.CleanInvalidOrders(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
+				if err != nil {
+					log.Printf("clean invalid orders failed: %v", err)
+				}
+				if totalCleanedOrders > 0 {
+					log.Printf("Clean Orders: Cleaned %d invalid orders", totalCleanedOrders)
 				}
 			}
 		case <-s.stopChan:

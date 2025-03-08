@@ -2,10 +2,13 @@ package db
 
 import (
 	"context"
+	"exapp-go/internal/db/ckhdb"
 	"fmt"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type OpenOrderBuffer struct {
@@ -16,9 +19,10 @@ type OpenOrderBuffer struct {
 	batchSize    int
 	mu           sync.RWMutex
 	repo         *Repo
+	ckhRepo      *ckhdb.ClickHouseRepo
 }
 
-func NewOpenOrderBuffer(batchSize int, repo *Repo) *OpenOrderBuffer {
+func NewOpenOrderBuffer(batchSize int, repo *Repo, ckhRepo *ckhdb.ClickHouseRepo) *OpenOrderBuffer {
 	buffer := &OpenOrderBuffer{
 		insertOrders: make([]*OpenOrder, 0, batchSize),
 		updateOrders: make([]*OpenOrder, 0, batchSize),
@@ -26,6 +30,7 @@ func NewOpenOrderBuffer(batchSize int, repo *Repo) *OpenOrderBuffer {
 		cache:        make(map[string]*OpenOrder),
 		batchSize:    batchSize,
 		repo:         repo,
+		ckhRepo:      ckhRepo,
 	}
 	go buffer.periodicFlush()
 	return buffer
@@ -164,7 +169,7 @@ func (b *OpenOrderBuffer) flush() {
 
 func (b *OpenOrderBuffer) periodicFlush() {
 	ticker := time.NewTicker(time.Millisecond * 50)
-	cleanTicker := time.NewTicker(time.Minute) 
+	cleanTicker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 	defer cleanTicker.Stop()
 
@@ -178,4 +183,75 @@ func (b *OpenOrderBuffer) periodicFlush() {
 			b.cleanExpiredOrders()
 		}
 	}
+}
+
+func (b *OpenOrderBuffer) CleanInvalidOrders(poolID uint64, lastPrice decimal.Decimal, isBuy bool) (int64, error) {
+	if lastPrice.LessThanOrEqual(decimal.Zero) {
+		return 0, fmt.Errorf("invalid last price: %s", lastPrice)
+	}
+
+	ctx := context.Background()
+
+	var totalCleaned int64
+	var orders []*OpenOrder
+	var err error
+	if isBuy {
+		orders, err = b.repo.GetOpenOrdersByPriceRange(ctx, poolID, false, decimal.Zero, lastPrice)
+	} else {
+		orders, err = b.repo.GetOpenOrdersByPriceRange(ctx, poolID, true, lastPrice, decimal.NewFromInt(999999999))
+	}
+	if err != nil {
+		return 0, fmt.Errorf("get orders by price range error: %w", err)
+	}
+
+	if len(orders) == 0 {
+		return 0, nil
+	}
+
+	historyOrders := make([]*ckhdb.HistoryOrder, 0, len(orders))
+	deleteOrders := make([]*OpenOrder, 0, len(orders))
+
+	for _, order := range orders {
+		historyOrder := &ckhdb.HistoryOrder{
+			App:                order.App,
+			PoolID:             order.PoolID,
+			PoolSymbol:         order.PoolSymbol,
+			PoolBaseCoin:       order.PoolBaseCoin,
+			PoolQuoteCoin:      order.PoolQuoteCoin,
+			OrderID:            order.OrderID,
+			ClientOrderID:      order.ClientOrderID,
+			Trader:             order.Trader,
+			Price:              order.Price,
+			AvgPrice:           order.Price,
+			IsBid:              order.IsBid,
+			OriginalQuantity:   order.OriginalQuantity,
+			ExecutedQuantity:   order.OriginalQuantity,
+			Status:             ckhdb.OrderStatusFilled,
+			Type:               ckhdb.OrderType(order.Type),
+			IsMarket:           false,
+			CreateTxID:         order.TxID,
+			CreatedAt:          order.CreatedAt,
+			CreateBlockNum:     order.BlockNumber,
+			BaseCoinPrecision:  uint8(order.BaseCoinPrecision),
+			QuoteCoinPrecision: uint8(order.QuoteCoinPrecision),
+		}
+		historyOrders = append(historyOrders, historyOrder)
+		deleteOrders = append(deleteOrders, order)
+
+		key := b.getCacheKey(order.PoolID, order.OrderID, order.IsBid)
+		b.mu.Lock()
+		delete(b.cache, key)
+		b.mu.Unlock()
+	}
+
+	if err := b.ckhRepo.BatchInsertOrders(ctx, historyOrders); err != nil {
+		return 0, fmt.Errorf("batch insert history orders error: %w", err)
+	}
+
+	if err := b.repo.BatchDeleteOpenOrders(ctx, deleteOrders); err != nil {
+		return 0, fmt.Errorf("batch delete open orders error: %w", err)
+	}
+
+	totalCleaned = int64(len(orders))
+	return totalCleaned, nil
 }

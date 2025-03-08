@@ -40,7 +40,7 @@ type OpenOrder struct {
 	CreatedAt          time.Time       `gorm:"column:created_at;type:timestamp;index:idx_created_at;index:idx_pool_created_at"`
 	BlockNumber        uint64          `gorm:"column:block_number;type:bigint(20);index:idx_block_number"`
 	OrderID            uint64          `gorm:"uniqueIndex:idx_order_id_pool_id_is_bid;column:order_id;type:bigint(20)"`
-	PoolID             uint64          `gorm:"uniqueIndex:idx_order_id_pool_id_is_bid;column:pool_id;type:bigint(20);index:idx_pool_created_at"`
+	PoolID             uint64          `gorm:"uniqueIndex:idx_order_id_pool_id_is_bid;index:idx_pool_id_is_bid;column:pool_id;type:bigint(20);index:idx_pool_created_at"`
 	PoolSymbol         string          `gorm:"column:pool_symbol;type:varchar(255)"`
 	PoolBaseCoin       string          `gorm:"column:pool_base_coin;type:varchar(255)"`
 	PoolQuoteCoin      string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
@@ -48,7 +48,7 @@ type OpenOrder struct {
 	Trader             string          `gorm:"index:idx_trader;type:varchar(255)"`
 	Type               OrderType       `gorm:"column:type;type:tinyint(4)"`
 	Price              decimal.Decimal `gorm:"type:Decimal(36,18)"`
-	IsBid              bool            `gorm:"column:is_bid;type:tinyint(1);uniqueIndex:idx_order_id_pool_id_is_bid"`
+	IsBid              bool            `gorm:"column:is_bid;type:tinyint(1);uniqueIndex:idx_order_id_pool_id_is_bid;index:idx_pool_id_is_bid"`
 	OriginalQuantity   decimal.Decimal `gorm:"type:Decimal(36,18)"`
 	ExecutedQuantity   decimal.Decimal `gorm:"type:Decimal(36,18)"`
 	QuoteCoinPrecision uint8           `gorm:"column:quote_coin_precision;type:tinyint(4)"`
@@ -126,6 +126,19 @@ func (r *Repo) GetOpenOrderMaxBlockNumber(ctx context.Context) (uint64, error) {
 		return 0, nil
 	}
 	return *blockNumber, nil
+}
+
+func (r *Repo) GetOpenOrdersByPriceRange(ctx context.Context, poolID uint64, isBid bool, minPrice, maxPrice decimal.Decimal) ([]*OpenOrder, error) {
+	var orders []*OpenOrder
+	result := r.DB.WithContext(ctx).Where(
+		"pool_id = ? AND is_bid = ? AND price > ? AND price < ?",
+		poolID, isBid, minPrice.String(), maxPrice.String(),
+	).Find(&orders)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("select open orders error: %w", result.Error)
+	}
+	return orders, nil
 }
 
 type OrderBook struct {
