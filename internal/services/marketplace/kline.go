@@ -245,6 +245,20 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 	normalizedNow := normalizeTimeByInterval(now, interval)
 	cacheKey := generateCacheKey(poolID, interval, normalizedNow)
 
+	// 添加详细的调试信息
+	fmt.Printf("[GetLatestKlines] 缓存键详情:\n")
+	fmt.Printf("  - 当前时间: %v\n", now)
+	fmt.Printf("  - 规整后时间: %v\n", normalizedNow)
+	fmt.Printf("  - 缓存键: %s\n", cacheKey)
+
+	// 检查缓存状态
+	if item, exists := s.cache.data[cacheKey]; exists {
+		fmt.Printf("  - 缓存存在，但可能已过期。过期时间: %v, 是否已过期: %v\n",
+			item.ExpireTime, time.Now().After(item.ExpireTime))
+	} else {
+		fmt.Printf("  - 缓存键不存在\n")
+	}
+
 	// Get current kline start time
 	currentKlineStart := normalizeTimeByInterval(now, interval)
 	duration := getIntervalDuration(interval)
@@ -252,7 +266,8 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 	// Try to get data from cache
 	cacheCheckTime := time.Now()
 	if klines, ok := s.cache.Get(cacheKey); ok {
-		fmt.Printf("[GetLatestKlines] 缓存命中! 检查耗时: %v\n", time.Since(cacheCheckTime))
+		fmt.Printf("[GetLatestKlines] 缓存命中! 检查耗时: %v, 数据条数: %d\n",
+			time.Since(cacheCheckTime), len(klines))
 		if len(klines) >= count {
 			// If the last kline is the current ongoing kline, need to update it
 			if len(klines) > 0 {
@@ -352,7 +367,11 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 		cacheStartTime := time.Now()
 		expiration := s.getCacheExpiration(interval)
 		s.cache.Set(cacheKey, entityKlines, expiration)
-		fmt.Printf("[GetLatestKlines] 设置缓存完成, 耗时: %v\n", time.Since(cacheStartTime))
+		fmt.Printf("[GetLatestKlines] 设置缓存详情:\n")
+		fmt.Printf("  - 缓存键: %s\n", cacheKey)
+		fmt.Printf("  - 过期时间: %v\n", time.Now().Add(expiration))
+		fmt.Printf("  - 数据条数: %d\n", len(entityKlines))
+		fmt.Printf("  - 设置耗时: %v\n", time.Since(cacheStartTime))
 
 		return entityKlines, nil
 	})
