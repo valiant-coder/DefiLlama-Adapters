@@ -101,7 +101,7 @@ func NewService() (*Service, error) {
 		depthBuffer:           NewDepthBuffer(10000, repo, publisher),
 		openOrderBuffer:       db.NewOpenOrderBuffer(10000, repo, ckhRepo),
 		cleanDepthTicker:      time.NewTicker(10 * time.Second),
-		cleanOpenOrderTicker:  time.NewTicker(1 * time.Minute),
+		cleanOpenOrderTicker:  time.NewTicker(time.Minute),
 		cleanTradeCacheTicker: time.NewTicker(time.Minute),
 		stopChan:              make(chan struct{}),
 	}

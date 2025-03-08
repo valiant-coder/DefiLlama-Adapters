@@ -132,7 +132,7 @@ func (r *Repo) GetOpenOrdersByPriceRange(ctx context.Context, poolID uint64, isB
 	var orders []*OpenOrder
 	result := r.DB.WithContext(ctx).Where(
 		"pool_id = ? AND is_bid = ? AND price > ? AND price < ?",
-		poolID, isBid, minPrice.String(), maxPrice.String(),
+		poolID, isBid, minPrice, maxPrice,
 	).Find(&orders)
 
 	if result.Error != nil {

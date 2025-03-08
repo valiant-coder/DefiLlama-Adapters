@@ -205,6 +205,7 @@ func (b *OpenOrderBuffer) CleanInvalidOrders(poolID uint64, lastPrice decimal.De
 	}
 
 	if len(orders) == 0 {
+		log.Printf("no orders to clean")
 		return 0, nil
 	}
 
