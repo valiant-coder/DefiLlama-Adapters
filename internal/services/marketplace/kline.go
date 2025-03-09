@@ -237,12 +237,6 @@ func (s *KlineService) fillMissingKlines(
 
 // GetLatestKlines gets the latest kline data
 func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, interval string, count int) ([]entity.Kline, error) {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("[GetLatestKlines] 总执行时间: %v, poolID: %d, interval: %s, count: %d\n",
-			time.Since(startTime), poolID, interval, count)
-	}()
-
 	if err := s.validateKlineParams(interval, time.Now().Add(-24*time.Hour), time.Now()); err != nil {
 		return nil, fmt.Errorf("parameter validation failed: %w", err)
 	}
@@ -251,29 +245,12 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 	normalizedNow := normalizeTimeByInterval(now, interval)
 	cacheKey := generateCacheKey(poolID, interval, normalizedNow)
 
-	// 添加详细的调试信息
-	fmt.Printf("[GetLatestKlines] 缓存键详情:\n")
-	fmt.Printf("  - 当前时间: %v\n", now)
-	fmt.Printf("  - 规整后时间: %v\n", normalizedNow)
-	fmt.Printf("  - 缓存键: %s\n", cacheKey)
-
-	// 检查缓存状态
-	if item, exists := s.klineCache.data[cacheKey]; exists {
-		fmt.Printf("  - 缓存存在，但可能已过期。过期时间: %v, 是否已过期: %v\n",
-			item.ExpireTime, time.Now().After(item.ExpireTime))
-	} else {
-		fmt.Printf("  - 缓存键不存在\n")
-	}
-
 	// Get current kline start time
 	currentKlineStart := normalizeTimeByInterval(now, interval)
 	duration := getIntervalDuration(interval)
 
 	// Try to get data from cache
-	cacheCheckTime := time.Now()
 	if klines, ok := s.klineCache.Get(cacheKey); ok {
-		fmt.Printf("[GetLatestKlines] 缓存命中! 检查耗时: %v, 数据条数: %d\n",
-			time.Since(cacheCheckTime), len(klines))
 		if len(klines) >= count {
 			// If the last kline is the current ongoing kline, need to update it
 			if len(klines) > 0 {
@@ -281,7 +258,6 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 				// Get the start time of the last kline
 				lastKlineTime := time.Time(lastKline.Timestamp)
 				if lastKlineTime.Equal(currentKlineStart) {
-					updateStartTime := time.Now()
 					redisKey := getLatestKlineRedisKey(poolID, interval)
 					latestKlineData, err := s.repo.Redis().Get(ctx, redisKey).Bytes()
 					if err == nil {
@@ -289,17 +265,13 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 						if err := json.Unmarshal(latestKlineData, &latestKline); err == nil {
 							klines[len(klines)-1] = entity.DbKlineToEntity(&latestKline)
 							s.klineCache.Set(cacheKey, klines, s.getCacheExpiration(interval))
-							fmt.Printf("[GetLatestKlines] 更新最新K线数据完成, 耗时: %v\n", time.Since(updateStartTime))
 						}
-					} else {
-						fmt.Printf("[GetLatestKlines] 从Redis获取最新K线失败: %v\n", err)
 					}
 				}
 			}
 			return klines[len(klines)-count:], nil
 		}
 	}
-	fmt.Printf("[GetLatestKlines] 缓存未命中, 检查耗时: %v\n", time.Since(cacheCheckTime))
 
 	// Calculate start time
 	start := normalizedNow.Add(-duration * time.Duration(count+5)) // Get 5 more to ensure data completeness
@@ -307,24 +279,18 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 
 	// Use singleflight to prevent cache breakdown
 	result, err, _ := s.sfGroup.Do(cacheKey, func() (interface{}, error) {
-		dbStartTime := time.Now()
 		// Get kline data
 		klines, err := s.chkRepo.GetKline(ctx, poolID, interval, start, end)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get kline data: %w", err)
 		}
-		fmt.Printf("[GetLatestKlines] 数据库查询K线数据完成, 耗时: %v, 获取到 %d 条记录\n",
-			time.Since(dbStartTime), len(klines))
 
 		// Get the last kline before start time
-		lastKlineStartTime := time.Now()
 		lastKline, err := s.chkRepo.GetLastKlineBefore(ctx, poolID, interval, start)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to get previous kline data: %w", err)
 		}
-		fmt.Printf("[GetLatestKlines] 查询上一条K线数据完成, 耗时: %v\n", time.Since(lastKlineStartTime))
 
-		processStartTime := time.Now()
 		// Create kline data mapping
 		klineMap := make(map[int64]*ckhdb.Kline, len(klines))
 		for _, k := range klines {
@@ -366,19 +332,10 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 		for _, kline := range completeKlines {
 			entityKlines = append(entityKlines, entity.DbKlineToEntity(kline))
 		}
-		fmt.Printf("[GetLatestKlines] 数据处理完成, 耗时: %v, 处理后数据条数: %d\n",
-			time.Since(processStartTime), len(entityKlines))
 
 		// Set cache
-		cacheStartTime := time.Now()
 		expiration := s.getCacheExpiration(interval)
 		s.klineCache.Set(cacheKey, entityKlines, expiration)
-		fmt.Printf("[GetLatestKlines] 设置缓存详情:\n")
-		fmt.Printf("  - 当前时间: %v\n", now)
-		fmt.Printf("  - 缓存键: %s\n", cacheKey)
-		fmt.Printf("  - 过期时间: %v\n", time.Now().Add(expiration))
-		fmt.Printf("  - 数据条数: %d\n", len(entityKlines))
-		fmt.Printf("  - 设置耗时: %v\n", time.Since(cacheStartTime))
 
 		return entityKlines, nil
 	})
@@ -395,12 +352,6 @@ func (s *KlineService) GetLatestKlines(ctx context.Context, poolID uint64, inter
 }
 
 func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval string, start time.Time, end time.Time) ([]entity.Kline, error) {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("[GetKline] 总执行时间: %v, poolID: %d, interval: %s, start: %v, end: %v\n",
-			time.Since(startTime), poolID, interval, start, end)
-	}()
-
 	// Validate input parameters
 	if err := s.validateKlineParams(interval, start, end); err != nil {
 		return nil, fmt.Errorf("parameter validation failed: %w", err)
@@ -409,7 +360,6 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	// If requesting recent kline data, use optimized method
 	duration := getIntervalDuration(interval)
 	if end.Sub(start) <= duration*150 && time.Since(end) < duration {
-		fmt.Printf("[GetKline] 使用优化方法获取最近K线数据\n")
 		count := int(end.Sub(start)/duration) + 1
 		return s.GetLatestKlines(ctx, poolID, interval, count)
 	}
@@ -422,33 +372,24 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 	cacheKey := fmt.Sprintf("kline_history:%d:%s:%d:%d", poolID, interval, normalizedStart.Unix(), normalizedEnd.Unix())
 
 	// Try to get data from cache
-	cacheCheckTime := time.Now()
 	if klines, ok := s.klineCache.Get(cacheKey); ok {
-		fmt.Printf("[GetKline] 缓存命中! 耗时: %v\n", time.Since(cacheCheckTime))
 		return klines, nil
 	}
-	fmt.Printf("[GetKline] 缓存未命中, 检查耗时: %v\n", time.Since(cacheCheckTime))
 
 	// Use singleflight to prevent cache breakdown
 	result, err, _ := s.sfGroup.Do(cacheKey, func() (interface{}, error) {
-		dbStartTime := time.Now()
 		// Get kline data
 		klines, err := s.chkRepo.GetKline(ctx, poolID, interval, normalizedStart, normalizedEnd)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get kline data: %w", err)
 		}
-		fmt.Printf("[GetKline] 数据库查询K线数据完成, 耗时: %v, 获取到 %d 条记录\n",
-			time.Since(dbStartTime), len(klines))
 
 		// Get the last kline before start time
-		lastKlineStartTime := time.Now()
 		lastKline, err := s.chkRepo.GetLastKlineBefore(ctx, poolID, interval, normalizedStart)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to get previous kline data: %w", err)
 		}
-		fmt.Printf("[GetKline] 查询上一条K线数据完成, 耗时: %v\n", time.Since(lastKlineStartTime))
 
-		processStartTime := time.Now()
 		// Create kline data mapping
 		klineMap := make(map[int64]*ckhdb.Kline, len(klines))
 		for _, k := range klines {
@@ -490,14 +431,10 @@ func (s *KlineService) GetKline(ctx context.Context, poolID uint64, interval str
 		for _, kline := range completeKlines {
 			entityKlines = append(entityKlines, entity.DbKlineToEntity(kline))
 		}
-		fmt.Printf("[GetKline] 数据处理完成, 耗时: %v, 处理后数据条数: %d\n",
-			time.Since(processStartTime), len(entityKlines))
 
-		// Set cache, historical data can be cached longer
-		cacheStartTime := time.Now()
+		// Set cache
 		expiration := s.getCacheExpiration(interval) * 2
 		s.klineCache.Set(cacheKey, entityKlines, expiration)
-		fmt.Printf("[GetKline] 设置缓存完成, 耗时: %v\n", time.Since(cacheStartTime))
 
 		return entityKlines, nil
 	})
