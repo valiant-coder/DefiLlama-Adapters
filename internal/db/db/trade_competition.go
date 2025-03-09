@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -83,6 +84,9 @@ func (r *Repo) GetUserDayProfitRankAndProfit(ctx context.Context, dayTime time.T
 		Where("uid = ? and time = ?", uid, dayTime).
 		First(&record).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, 0, nil
+		}
 		return nil, 0, err
 	}
 	if record.Profit.Equal(decimal.Zero) {
@@ -122,6 +126,9 @@ func (r *Repo) GetUserAccumulatedProfitRankAndProfit(ctx context.Context, beginT
 		Where("begin_time = ? AND end_time = ? AND uid = ?", beginTime, endTime, uid).
 		First(&record).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, 0, nil
+		}
 		return nil, 0, err
 	}
 	if record.Profit.Equal(decimal.Zero) {
