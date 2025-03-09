@@ -1,7 +1,6 @@
 package marketplace
 
 import (
-	"errors"
 	"exapp-go/api"
 	"exapp-go/config"
 	"exapp-go/internal/errno"
@@ -29,11 +28,13 @@ func getDayProfitRanking(c *gin.Context) {
 	}
 
 	dayTimestamp := c.Query("timestamp")
+	var dayTime time.Time
 	if dayTimestamp == "" {
-		api.Error(c, errors.New("timestamp is empty"))
-		return
+		now := time.Now()
+		dayTime = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	} else {
+		dayTime = time.Unix(cast.ToInt64(dayTimestamp), 0)
 	}
-	dayTime := time.Unix(cast.ToInt64(dayTimestamp), 0)
 	if dayTime.Before(config.Conf().TradingCompetition.BeginTime) {
 		api.Error(c, errno.DefaultParamsError("timestamp is before trading competition begin time"))
 		return
