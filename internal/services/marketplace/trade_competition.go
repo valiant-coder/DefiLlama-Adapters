@@ -256,7 +256,6 @@ func (s *TradeCompetitionService) GetTotalTradeStats(ctx context.Context, uid st
 	_, tradeVolume, err := s.ckhRepo.GetTradeCountAndVolume(ctx)
 	if err != nil {
 		fmt.Printf("[GetTotalTradeStats] Error getting trade volume: %v\n", err)
-		return nil, err
 	}
 	fmt.Printf("[GetTotalTradeStats] Get trade volume completed in: %v\n", time.Since(tradeVolumeStart))
 
