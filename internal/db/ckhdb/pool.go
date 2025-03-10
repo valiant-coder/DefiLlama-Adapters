@@ -3,6 +3,7 @@ package ckhdb
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
+	"strings"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -30,7 +31,7 @@ func (PoolStats) TableName() string {
 
 func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryparams.QueryParams) ([]*PoolStats, int64, error) {
 	queryParams.TableName = "pool_stats"
-	queryParams.Order = "pool_id desc"
+	queryParams.Order = strings.ReplaceAll(queryParams.Order, "turnover", "quote_volume")
 	pools := []*PoolStats{}
 	total, err := r.Query(ctx, &pools, queryParams, "base_coin", "quote_coin", "pool_id")
 	if err != nil {
@@ -142,7 +143,6 @@ func (r *ClickHouseRepo) ListPoolStats(ctx context.Context) ([]*PoolStats, error
 	err := r.DB.WithContext(ctx).Find(&pools).Error
 	return pools, err
 }
-
 
 func (r *ClickHouseRepo) GetPoolStatusByBaseCoin(ctx context.Context, baseCoin []string) ([]*PoolStats, error) {
 	var stats []*PoolStats
