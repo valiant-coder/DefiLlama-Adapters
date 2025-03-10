@@ -31,6 +31,9 @@ func (PoolStats) TableName() string {
 
 func (r *ClickHouseRepo) QueryPoolStats(ctx context.Context, queryParams *queryparams.QueryParams) ([]*PoolStats, int64, error) {
 	queryParams.TableName = "pool_stats"
+	if queryParams.Order == "" {
+		queryParams.Order = "quote_volume desc"
+	}
 	queryParams.Order = strings.ReplaceAll(queryParams.Order, "turnover", "quote_volume")
 	pools := []*PoolStats{}
 	total, err := r.Query(ctx, &pools, queryParams, "base_coin", "quote_coin", "pool_id")
