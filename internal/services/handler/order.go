@@ -384,9 +384,12 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	makerOrder.ExecutedQuantity = makerOrder.ExecutedQuantity.Add(baseQuantity)
 	makerOrder.Status = db.OrderStatus(data.EV.MakerStatus)
 	if makerOrder.ExecutedQuantity.GreaterThan(makerOrder.OriginalQuantity) {
-		log.Printf("trade executed quantity greater than original quantity: %v,%v", trade.TxID, makerOrder.TxID)
-		log.Panicf("marker order original quantity: %v, executed quantity: %v", makerOrder.OriginalQuantity, makerOrder.ExecutedQuantity)
-		log.Printf("current trade base quantity: %v", trade.BaseQuantity)
+		errMsg := fmt.Sprintf("Invalid order execution: TxID=%v, OrderTxID=%v, Original=%v, Executed=%v",
+			trade.TxID,
+			makerOrder.TxID,
+			makerOrder.OriginalQuantity,
+			makerOrder.ExecutedQuantity)
+		log.Printf(errMsg)
 		makerOrder.ExecutedQuantity = makerOrder.OriginalQuantity
 	}
 
@@ -465,7 +468,7 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 		return nil
 	}
 
-		poolID := cast.ToUint64(data.EV.PoolID)
+	poolID := cast.ToUint64(data.EV.PoolID)
 	pool, ok := s.poolCache[poolID]
 	if !ok {
 		pool, err = s.repo.GetPoolByID(ctx, poolID)

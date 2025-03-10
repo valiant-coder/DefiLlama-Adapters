@@ -262,7 +262,11 @@ func (s *Service) registerHandlers() {
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
-
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Message handler recovered from panic: %v,msg:%s", r, string(msg.Body))
+		}
+	}()
 	var action hyperion.Action
 	if err := json.Unmarshal(msg.Body, &action); err != nil {
 		log.Printf("Unmarshal action failed: %v", err)
