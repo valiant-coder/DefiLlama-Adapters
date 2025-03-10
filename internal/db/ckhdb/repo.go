@@ -3,8 +3,11 @@ package ckhdb
 import (
 	"context"
 	"exapp-go/config"
+	"exapp-go/internal/db/plugins"
+	"exapp-go/pkg/cache"
 	"exapp-go/pkg/queryparams"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -30,6 +33,12 @@ func ckhDB() *gorm.DB {
 		})
 		if err != nil {
 			panic("failed to connect clickhouse database")
+		}
+		cachePlugin := plugins.NewCachePlugin(cache.DefaultStore())
+		err = clickhouseDB.Use(cachePlugin)
+		if err != nil {
+			fmt.Printf("db use cache plugin err: %v\n", err)
+			os.Exit(1)
 		}
 
 		sqlDB, err := clickhouseDB.DB()
@@ -110,4 +119,17 @@ func (c *ClickHouseRepo) Query(ctx context.Context, models interface{}, params *
 	}
 
 	return
+}
+
+func (r *ClickHouseRepo) WithCache(key string, expire time.Duration) *ClickHouseRepo {
+	return r.Clone(r.DB.Set(plugins.CacheParamKey, plugins.CacheParam{
+		Key:     key,
+		Expires: expire,
+	}))
+}
+
+func (r *ClickHouseRepo) Clone(db *gorm.DB) *ClickHouseRepo {
+	return &ClickHouseRepo{
+		DB: db,
+	}
 }

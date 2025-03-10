@@ -45,9 +45,6 @@ func (Trade) TableName() string {
 	return "trades"
 }
 
-
-
-
 func (r *ClickHouseRepo) BatchInsertTrades(ctx context.Context, trades []*Trade) error {
 	return r.DB.WithContext(ctx).CreateInBatches(trades, 100).Error
 }
@@ -107,7 +104,7 @@ func (r *ClickHouseRepo) GetTradeCountAndVolume(ctx context.Context) (uint64, fl
 	FROM trades
 	FINAL;
 	`, tokenContract, tokenContract, tokenContract)
-	err := r.DB.WithContext(ctx).Raw(query).Scan(&tradeInfo).Error
+	err := r.WithCache("trade_count_and_volume", time.Minute*10).WithContext(ctx).Raw(query).Scan(&tradeInfo).Error
 	if err != nil {
 		return 0, 0, err
 	}
