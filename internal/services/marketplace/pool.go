@@ -9,25 +9,59 @@ import (
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/queryparams"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
 
+var poolCache *PoolCache
+var poolCacheOnce sync.Once
+
+type PoolCache struct {
+	pools     []*entity.PoolStats
+	total     int64
+	timestamp time.Time
+}
+
+func getPoolCache() *PoolCache {
+	poolCacheOnce.Do(func() {
+		poolCache = &PoolCache{
+			pools:     make([]*entity.PoolStats, 0),
+			total:     0,
+			timestamp: time.Now(),
+		}
+	})
+	return poolCache
+}
+
 type PoolService struct {
-	repo    *db.Repo
-	ckhRepo *ckhdb.ClickHouseRepo
+	repo       *db.Repo
+	ckhRepo    *ckhdb.ClickHouseRepo
+	cache      *PoolCache
+	cacheMutex sync.RWMutex
 }
 
 func NewPoolService() *PoolService {
 	return &PoolService{
 		repo:    db.New(),
 		ckhRepo: ckhdb.New(),
+		cache:   getPoolCache(),
 	}
 }
 
 func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.QueryParams) ([]*entity.PoolStats, int64, error) {
+	s.cacheMutex.RLock()
+	if !s.cache.timestamp.IsZero() && time.Since(s.cache.timestamp) < 5*time.Second {
+		result := make([]*entity.PoolStats, len(s.cache.pools))
+		copy(result, s.cache.pools)
+		total := s.cache.total
+		s.cacheMutex.RUnlock()
+		return result, total, nil
+	}
+	s.cacheMutex.RUnlock()
+
 	visiblePools, err := s.repo.GetVisiblePools(ctx)
 	if err != nil {
 		return make([]*entity.PoolStats, 0), 0, err
@@ -50,6 +84,14 @@ func (s *PoolService) GetPools(ctx context.Context, queryParams *queryparams.Que
 		poolsMap[pool.PoolID] = true
 		result = append(result, entity.PoolStatusFromDB(pool))
 	}
+
+	s.cacheMutex.Lock()
+	s.cache.pools = make([]*entity.PoolStats, len(result))
+	copy(s.cache.pools, result)
+	s.cache.total = total
+	s.cache.timestamp = time.Now()
+	s.cacheMutex.Unlock()
+
 	return result, total, nil
 }
 
