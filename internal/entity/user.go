@@ -3,9 +3,20 @@ package entity
 import "exapp-go/internal/db/db"
 
 type ReqUserLogin struct {
-	// google,apple
-	Method  string `json:"method"`
-	IdToken string `json:"id_token"`
+	// google,apple,telegram
+	Method       string       `json:"method"`
+	IdToken      string       `json:"id_token"`
+	TelegramData TelegramData `json:"telegram_data,omitempty"`
+}
+
+type TelegramData struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Username  string `json:"username"`
+	PhotoURL  string `json:"photo_url"`
+	Hash      string `json:"hash"`
+	AuthDate  string `json:"auth_date"`
 }
 
 type RespUserInfo struct {
@@ -62,5 +73,3 @@ type LockBalance struct {
 	PoolSymbol string `json:"pool_symbol"`
 	Balance    string `json:"balance"`
 }
-
-

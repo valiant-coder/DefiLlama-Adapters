@@ -70,6 +70,9 @@ type Config struct {
 		Apple struct {
 			ClientID string `yaml:"client_id"`
 		} `yaml:"apple"`
+		Telegram struct {
+			BotToken string `yaml:"bot_token"`
+		} `yaml:"telegram"`
 	} `yaml:"oauth2"`
 
 	Eos EosConfig `yaml:"eos"`

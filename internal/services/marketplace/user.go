@@ -10,6 +10,8 @@ import (
 	"exapp-go/pkg/log"
 	"exapp-go/pkg/nsqutil"
 	"exapp-go/pkg/oauth2"
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -58,6 +60,30 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 			Username:    userInfo.Name.FirstName + " " + userInfo.Name.LastName,
 			OauthID:     userInfo.UserID,
 			LoginMethod: db.LoginMethodApple,
+		}
+	case "telegram":
+		userInfo, err := oauth2.VerifyTelegramLogin(cfg.Oauth2.Telegram.BotToken, oauth2.TelegramData{
+			ID:        req.TelegramData.ID,
+			FirstName: req.TelegramData.FirstName,
+			LastName:  req.TelegramData.LastName,
+			Username:  req.TelegramData.Username,
+			PhotoURL:  req.TelegramData.PhotoURL,
+			Hash:      req.TelegramData.Hash,
+			AuthDate:  req.TelegramData.AuthDate,
+		})
+		if err != nil {
+			log.Logger().Errorf("verify telegram data error: %v", err)
+			return "", err
+		}
+		username := userInfo.Username
+		if username == "" {
+			username = fmt.Sprintf("%s %s", userInfo.FirstName, userInfo.LastName)
+		}
+		user = &db.User{
+			Username:    username,
+			OauthID:     strconv.FormatInt(userInfo.ID, 10),
+			LoginMethod: db.LoginMethodTelegram,
+			Avatar:      userInfo.PhotoURL,
 		}
 	default:
 		return "", errors.New("invalid login method")

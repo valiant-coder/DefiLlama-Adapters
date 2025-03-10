@@ -21,8 +21,9 @@ func init() {
 type LoginMethod string
 
 const (
-	LoginMethodGoogle LoginMethod = "google"
-	LoginMethodApple  LoginMethod = "apple"
+	LoginMethodGoogle   LoginMethod = "google"
+	LoginMethodApple    LoginMethod = "apple"
+	LoginMethodTelegram LoginMethod = "telegram"
 )
 
 type User struct {

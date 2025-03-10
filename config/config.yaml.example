@@ -60,6 +60,8 @@ oauth2:
     client_id: your_google_client_id
   apple:
     client_id: your_apple_client_id
+  telegram:
+    bot_token: "1234567890"
 
 eos:
   node_url: https://eos.greymass.com

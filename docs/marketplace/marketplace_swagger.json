@@ -1491,8 +1491,11 @@
                     "type": "string"
                 },
                 "method": {
-                    "description": "google,apple",
+                    "description": "google,apple,telegram",
                     "type": "string"
+                },
+                "telegram_data": {
+                    "$ref": "#/definitions/entity.TelegramData"
                 }
             }
         },
@@ -1694,6 +1697,32 @@
                     "type": "string"
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TelegramData": {
+            "type": "object",
+            "properties": {
+                "auth_date": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "photo_url": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
