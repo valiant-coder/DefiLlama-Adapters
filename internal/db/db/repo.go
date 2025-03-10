@@ -9,6 +9,7 @@ import (
 	"exapp-go/pkg/cache"
 	"exapp-go/pkg/queryparams"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"sync"
@@ -27,6 +28,7 @@ type Repo struct {
 	*gorm.DB
 	redis        redis.Cmdable
 	redisCluster bool
+	mu           sync.Mutex
 }
 
 var repo *Repo
@@ -97,7 +99,9 @@ func New() *Repo {
 		}
 
 		fmt.Println("db connect success")
+		go repo.ensureConnection(context.Background())
 	})
+
 	return repo
 
 }
@@ -123,7 +127,17 @@ func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetConnMaxIdleTime(time.Minute * 10)
 
 	err = db.AutoMigrate()
 
@@ -133,6 +147,45 @@ func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
 
 	return db, nil
 }
+
+func (r *Repo) ensureConnection(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := r.checkAndReconnect(); err != nil {
+				log.Printf("Database reconnection failed: %v", err)
+			}
+		}
+	}
+}
+
+func (r *Repo) checkAndReconnect() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	sqlDB, err := r.DB.DB()
+	if err != nil {
+		return fmt.Errorf("Failed to get database instance: %w", err)
+	}
+
+	if err := sqlDB.PingContext(context.Background()); err != nil {
+		_ = sqlDB.Close()
+
+		mysqlCfg := config.Conf().Mysql
+		newDB, err := dbConnect(mysqlCfg.User, mysqlCfg.Pass, mysqlCfg.Host, mysqlCfg.Port, mysqlCfg.Database, mysqlCfg.Loc)
+		if err != nil {
+			return fmt.Errorf("Database reconnection failed: %w", err)
+		}
+		r.DB = newDB
+	}
+	return nil
+}
+
 func (r *Repo) Update(ctx context.Context, model interface{}) (err error) {
 	return r.DB.WithContext(ctx).Updates(model).Error
 }
