@@ -87,23 +87,24 @@ func (r *ClickHouseRepo) GetTradeCountAndVolume(ctx context.Context) (uint64, fl
 		Select(fmt.Sprintf(`
             COUNT(*) as total_trades,
             (
-                WITH (
-                    SELECT CAST(quote_quantity / base_quantity AS Float64) as btc_usdt_price
-                    FROM trades 
-                    FINAL
-                    WHERE base_coin = '%s-BTC' 
-                    AND quote_coin = '%s-USDT'
-                    ORDER BY time DESC 
-                    LIMIT 1
-                ) as btc_price
                 SELECT toDecimal64(
                     SUM(
                         CASE 
-                            WHEN quote_coin = '%s-BTC' THEN CAST(quote_quantity AS Float64) * btc_price
-                            ELSE CAST(quote_quantity AS Float64)
+                            WHEN t.quote_coin = '%s-BTC' THEN 
+                                CAST(t.quote_quantity AS Float64) * (
+                                    SELECT CAST(quote_quantity / base_quantity AS Float64)
+                                    FROM trades 
+                                    FINAL
+                                    WHERE base_coin = '%s-BTC' 
+                                    AND quote_coin = '%s-USDT'
+                                    ORDER BY time DESC 
+                                    LIMIT 1
+                                )
+                            ELSE CAST(t.quote_quantity AS Float64)
                         END 
                     ), 8
                 )
+                FROM trades t
             ) as total_volume_usdt
         `, tokenContract, tokenContract, tokenContract)).
 		Find(&tradeInfo).Error
