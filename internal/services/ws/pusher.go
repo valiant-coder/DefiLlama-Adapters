@@ -81,7 +81,7 @@ func (p *Pusher) PushBalanceUpdate(account string) {
 }
 
 // Push order update
-func (p *Pusher) PushOrderUpdate(account string, update OrderUpdate) {
+func (p *Pusher) PushOrderUpdate(account string, update entity.Order) {
 	// Push order update to specific user
 	p.pushToUser(account, PushEventOrderUpdate, update)
 }

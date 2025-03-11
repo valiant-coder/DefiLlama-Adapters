@@ -39,14 +39,13 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 
 	switch nsqMsg.Type {
 	case MsgTypeOrderUpdate:
-		var orderUpdate OrderUpdate
-		if err := json.Unmarshal(nsqMsg.Data, &orderUpdate); err != nil {
+		var order entity.Order
+		if err := json.Unmarshal(nsqMsg.Data, &order); err != nil {
 			log.Printf("Failed to unmarshal order update: %v", err)
 			return nil
 		}
-		log.Printf("receive order update: %v", orderUpdate)
 		// Push order update to specific user
-		s.pusher.PushOrderUpdate(orderUpdate.Account, orderUpdate)
+		s.pusher.PushOrderUpdate(order.Trader, order)
 
 	case MsgTypeBalanceUpdate:
 		var account string

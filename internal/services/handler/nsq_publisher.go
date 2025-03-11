@@ -34,7 +34,7 @@ type OrderUpdate struct {
 type NSQPublisher struct {
 	publisher *nsqutil.Publisher
 	lastKline map[string]entity.Kline // key: symbol
-	lastOrder map[string]OrderUpdate  // key: account-id
+	lastOrder map[string]entity.Order // key: account-id
 	mutex     sync.RWMutex
 	stopChan  chan struct{} // Channel to stop cleanup goroutine
 }
@@ -45,7 +45,7 @@ func NewNSQPublisher(nsqdAddrs []string) (*NSQPublisher, error) {
 	p := &NSQPublisher{
 		publisher: publisher,
 		lastKline: make(map[string]entity.Kline),
-		lastOrder: make(map[string]OrderUpdate),
+		lastOrder: make(map[string]entity.Order),
 		mutex:     sync.RWMutex{},
 		stopChan:  make(chan struct{}),
 	}
@@ -84,24 +84,20 @@ func (p *NSQPublisher) cleanup() {
 
 	// Clean lastKline and lastOrder maps
 	p.lastKline = make(map[string]entity.Kline)
-	p.lastOrder = make(map[string]OrderUpdate)
+	p.lastOrder = make(map[string]entity.Order)
 
 	log.Printf("NSQPublisher cache cleaned up")
 }
 
 // PublishOrderUpdate publishes an order update message
-func (p *NSQPublisher) PublishOrderUpdate(account string, id string) error {
-	orderUpdate := OrderUpdate{
-		Account: account,
-		ID:      id,
-	}
+func (p *NSQPublisher) PublishOrderUpdate(account string, order entity.Order) error {
 
 	p.mutex.RLock()
-	key := fmt.Sprintf("%s-%s", account, id)
+	key := fmt.Sprintf("%s-%s", account, order.ClientOrderID)
 	lastOrder, exists := p.lastOrder[key]
 	p.mutex.RUnlock()
 
-	if exists && lastOrder == orderUpdate {
+	if exists && lastOrder == order {
 		return nil
 	}
 
@@ -110,13 +106,13 @@ func (p *NSQPublisher) PublishOrderUpdate(account string, id string) error {
 		Data interface{} `json:"data"`
 	}{
 		Type: MsgTypeOrderUpdate,
-		Data: orderUpdate,
+		Data: order,
 	}
 
 	err := p.publisher.Publish(TopicCdexUpdates, msg)
 	if err == nil {
 		p.mutex.Lock()
-		p.lastOrder[key] = orderUpdate
+		p.lastOrder[key] = order
 		p.mutex.Unlock()
 	}
 	return err

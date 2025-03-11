@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
+	"exapp-go/internal/entity"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"fmt"
@@ -117,6 +118,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		}
 		s.openOrderBuffer.Add(&order)
 		log.Printf("[Performance Log] openOrderBuffer add time: %v", time.Since(bufferStart))
+		go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, entity.OrderFormOpenDB(order))
 
 		depthStart := time.Now()
 		s.depthBuffer.Add(db.UpdateDepthParams{
@@ -203,11 +205,11 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		bufferStart := time.Now()
 		s.historyOrderBuffer.Add(&order)
 		log.Printf("[Performance Log] orderBuffer add time: %v", time.Since(bufferStart))
+		go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, entity.OrderFromHistoryDB(order))
 
 	}
 
 	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
-	go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[newOrder.EV.IsBid]))
 	return nil
 }
 
@@ -395,6 +397,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 
 	if !data.EV.MakerRemoved {
 		s.openOrderBuffer.Update(makerOrder)
+		go s.publisher.PublishOrderUpdate(makerOrder.Trader, entity.OrderFormOpenDB(*makerOrder))
 	} else {
 		s.openOrderBuffer.Delete(poolID, cast.ToUint64(data.EV.MakerOrderID), makerOrder.IsBid)
 
@@ -421,11 +424,9 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
 		s.historyOrderBuffer.Add(&historyOrder)
+		go s.publisher.PublishOrderUpdate(makerOrder.Trader, entity.OrderFromHistoryDB(historyOrder))
 
 	}
-
-	go s.publisher.PublishOrderUpdate(data.EV.Maker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.MakerOrderID), map[bool]string{true: "0", false: "1"}[!data.EV.TakerIsBid]))
-	go s.publisher.PublishOrderUpdate(data.EV.Taker.Actor, fmt.Sprintf("%d-%d-%s", poolID, cast.ToUint64(data.EV.TakerOrderID), map[bool]string{true: "0", false: "1"}[data.EV.TakerIsBid]))
 
 	return nil
 }
@@ -555,8 +556,8 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	}
 	s.historyOrderBuffer.Add(&historyOrder)
 	log.Printf("[Performance Log] add history order time: %v", time.Since(historyStart))
+	go s.publisher.PublishOrderUpdate(data.EV.Trader.Actor, entity.OrderFromHistoryDB(historyOrder))
 
 	go s.updateUserTokenBalance(data.EV.Trader.Actor)
-	go s.publisher.PublishOrderUpdate(data.EV.Trader.Actor, fmt.Sprintf("%d-%d-%s", poolID, orderID, map[bool]string{true: "0", false: "1"}[data.EV.IsBid]))
 	return nil
 }
