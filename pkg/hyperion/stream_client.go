@@ -11,8 +11,10 @@ import (
 )
 
 type StreamClient struct {
-	endpoint string
-	client   *socketio_client.Socket
+	endpoint          string
+	client            *socketio_client.Socket
+	subscribedActions []ActionStreamRequest
+	subscribedDeltas  []DeltaStreamRequest
 }
 
 func NewStreamClient(endpoint string) (*StreamClient, error) {
@@ -46,10 +48,17 @@ func NewStreamClient(endpoint string) (*StreamClient, error) {
 		return nil, fmt.Errorf("open namespace error: %w", err)
 	}
 
-	return &StreamClient{
-		endpoint: endpoint,
-		client:   client,
-	}, nil
+	streamClient := &StreamClient{
+		endpoint:          endpoint,
+		client:            client,
+		subscribedActions: []ActionStreamRequest{},
+		subscribedDeltas:  []DeltaStreamRequest{},
+	}
+
+	streamClient.OnReconnect()
+
+	return streamClient, nil
+
 }
 
 type ActionStreamRequest struct {
@@ -72,6 +81,23 @@ type ActionStreamResponse struct {
 	Message []Action `json:"message"`
 }
 
+func (c *StreamClient) OnReconnect() {
+
+	c.client.OnConnect(func(s *socketio_client.Socket, namespace string) {
+		if len(c.subscribedActions) > 0 {
+			for _, req := range c.subscribedActions {
+				c.client.EmitWithAck("action_stream_request", req)
+			}
+		}
+		if len(c.subscribedDeltas) > 0 {
+			for _, req := range c.subscribedDeltas {
+				c.client.EmitWithAck("delta_stream_request", req)
+			}
+		}
+	})
+
+}
+
 func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Action, error) {
 	actionCh := make(chan Action, 20000)
 
@@ -80,13 +106,13 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 		if err != nil {
 			return nil, fmt.Errorf("send subscribe request to hyperion failed: %w, req: %+v", err, req)
 		}
+		c.subscribedActions = append(c.subscribedActions, req)
 	}
 
 	actions := make(map[string]bool)
 	for _, req := range reqs {
 		actions[req.Contract+"::"+req.Action] = true
 	}
-
 
 	c.client.OnMessage(func(event string, args []any) {
 		if event != "message" {
@@ -114,11 +140,9 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 			return
 		}
 
-
 		if !actions[action.Act.Account+"::"+action.Act.Name] {
 			return
 		}
-
 
 		select {
 		case actionCh <- action:
@@ -131,22 +155,18 @@ func (c *StreamClient) SubscribeAction(reqs []ActionStreamRequest) (<-chan Actio
 	return actionCh, nil
 }
 
-
-
-
 type DeltaStreamRequest struct {
-	Code string `json:"code"`
-	Table string `json:"table"`
-	Scope string `json:"scope"`
-	Payer string `json:"payer"`
-	StartFrom int64 `json:"start_from"`
-	ReadUntil int64 `json:"read_until"`
+	Code      string `json:"code"`
+	Table     string `json:"table"`
+	Scope     string `json:"scope"`
+	Payer     string `json:"payer"`
+	StartFrom int64  `json:"start_from"`
+	ReadUntil int64  `json:"read_until"`
 }
 
-
 type DeltaStreamResponse struct {
-	Type string `json:"type"`
-	Mode string `json:"mode"`
+	Type    string  `json:"type"`
+	Mode    string  `json:"mode"`
 	Message []Delta `json:"message"`
 }
 
@@ -158,6 +178,7 @@ func (c *StreamClient) SubscribeDeltas(reqs []DeltaStreamRequest) (<-chan Delta,
 		if err != nil {
 			return nil, fmt.Errorf("send subscribe request to hyperion failed: %w, req: %+v", err, req)
 		}
+		c.subscribedDeltas = append(c.subscribedDeltas, req)
 	}
 
 	c.client.OnMessage(func(event string, args []any) {
@@ -189,9 +210,6 @@ func (c *StreamClient) SubscribeDeltas(reqs []DeltaStreamRequest) (<-chan Delta,
 
 	return deltaCh, nil
 }
-
-
-
 
 func (c *StreamClient) Close() error {
 	return c.client.Close()
