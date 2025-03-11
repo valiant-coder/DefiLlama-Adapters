@@ -201,8 +201,25 @@ socket.on('trade', (data) => {
 socket.on('order_update', (data) => {
     // data:
     // {
-    //     "account": "account1",
-    //     "id": "1-1000-0"  // poolId-orderId-side
+    //     "order_time": 1234567890,
+    //     "id": "1-1000-0",
+    //     "order_id": 1,
+    //     "pool_id": 1,
+    //     "pool_symbol": "BTC/USDT",
+    //     "pool_base_coin": "BTC",
+    //     "pool_quote_coin": "USDT",
+    //     "client_order_id": "1000",
+    //     "trader": "account1",
+    //     "side": 0,
+    //     "type": 1,
+    //     "order_price": "100.5",
+    //     "avg_price": "100.5",
+    //     "order_amount": "10.5",
+    //     "executed_amount": "10.5",
+    //     "filled_total": "100.5",
+    //     "status": 0,
+    //     "base_coin_precision": 8,
+    //     "quote_coin_precision": 8
     // }
 });
 ```
