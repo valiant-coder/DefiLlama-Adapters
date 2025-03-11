@@ -6,6 +6,8 @@ type ReqUserLogin struct {
 	// google,apple,telegram
 	Method       string       `json:"method"`
 	IdToken      string       `json:"id_token"`
+	// for apple
+	UserName     string       `json:"user_name"`
 	TelegramData TelegramData `json:"telegram_data,omitempty"`
 }
 

@@ -58,7 +58,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 			return "", err
 		}
 		user = &db.User{
-			Username:    userInfo.Name.FirstName + " " + userInfo.Name.LastName,
+			Username:    req.UserName,
 			OauthID:     userInfo.UserID,
 			LoginMethod: db.LoginMethodApple,
 			Email:       userInfo.Email,

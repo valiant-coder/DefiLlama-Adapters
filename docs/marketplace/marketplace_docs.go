@@ -1499,6 +1499,10 @@ const docTemplatemarketplace = `{
                 },
                 "telegram_data": {
                     "$ref": "#/definitions/entity.TelegramData"
+                },
+                "user_name": {
+                    "description": "for apple",
+                    "type": "string"
                 }
             }
         },
