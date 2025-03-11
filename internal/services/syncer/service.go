@@ -45,18 +45,19 @@ func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, err
 	}
 
 	return &Service{
-		repo:             db.New(),
-		ckhRepo:          ckhdb.New(),
-		hyperionClient:   hyperionClient,
-		streamClient:     streamClient,
-		publisher:        nsqutil.NewPublisher(nsqCfg.Nsqds),
-		hyperionCfg:      hyperionCfg,
-		nsqCfg:           nsqCfg,
-		eosCfg:           eosCfg,
-		cdexCfg:          eosCfg.CdexConfig,
-		oneDexCfg:        eosCfg.OneDex,
-		exsatCfg:         eosCfg.Exsat,
-		syncTradeHistory: eosCfg.Hyperion.SyncTradeHistory,
+		repo:              db.New(),
+		ckhRepo:           ckhdb.New(),
+		hyperionClient:    hyperionClient,
+		streamClient:      streamClient,
+		publisher:         nsqutil.NewPublisher(nsqCfg.Nsqds),
+		hyperionCfg:       hyperionCfg,
+		nsqCfg:            nsqCfg,
+		eosCfg:            eosCfg,
+		cdexCfg:           eosCfg.CdexConfig,
+		oneDexCfg:         eosCfg.OneDex,
+		exsatCfg:          eosCfg.Exsat,
+		syncTradeHistory:  eosCfg.Hyperion.SyncTradeHistory,
+		tradeLastBlockNum: -1,
 	}, nil
 }
 
