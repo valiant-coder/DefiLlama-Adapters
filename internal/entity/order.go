@@ -77,6 +77,7 @@ type Order struct {
 	FilledTotal    string `json:"filled_total"`
 	// 0 open 1partially_filled 2full_filled 3.canceled
 	Status             uint8 `json:"status"`
+	History            bool  `json:"history"`
 	BaseCoinPrecision  uint8 `json:"base_coin_precision"`
 	QuoteCoinPrecision uint8 `json:"quote_coin_precision"`
 }
@@ -111,6 +112,7 @@ func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
 		Status:             uint8(order.Status),
 		BaseCoinPrecision:  order.BaseCoinPrecision,
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
+		History:            true,
 	}
 }
 
@@ -137,6 +139,7 @@ func OrderFormOpenDB(order db.OpenOrder) Order {
 		ExecutedAmount: order.ExecutedQuantity.String(),
 		FilledTotal:    order.ExecutedQuantity.Mul(order.Price).Truncate(int32(order.QuoteCoinPrecision)).String(),
 		Status:         uint8(order.Status),
+		History:        false,
 	}
 }
 

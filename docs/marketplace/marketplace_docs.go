@@ -1196,6 +1196,9 @@ const docTemplatemarketplace = `{
                 "filled_total": {
                     "type": "string"
                 },
+                "history": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1260,6 +1263,9 @@ const docTemplatemarketplace = `{
                 },
                 "filled_total": {
                     "type": "string"
+                },
+                "history": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"

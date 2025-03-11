@@ -1193,6 +1193,9 @@
                 "filled_total": {
                     "type": "string"
                 },
+                "history": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1257,6 +1260,9 @@
                 },
                 "filled_total": {
                     "type": "string"
+                },
+                "history": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
