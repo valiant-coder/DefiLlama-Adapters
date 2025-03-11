@@ -1,15 +1,19 @@
 package oauth2
 
 import (
+	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"net/http"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
 type AppleUserInfo struct {
-	UserID string `json:"sub"`   
+	UserID string `json:"sub"`
 	Email  string `json:"email"`
 	Name   struct {
 		FirstName string `json:"firstName"`
@@ -33,7 +37,23 @@ func ParseAppleIDToken(idToken, clientID string) (*AppleUserInfo, error) {
 		kid := token.Header["kid"].(string)
 		for _, key := range appleKeys.Keys {
 			if key.Kid == kid {
-				return jwt.ParseRSAPublicKeyFromPEM([]byte(key.PublicKey))
+				nBytes, err := base64.RawURLEncoding.DecodeString(key.N)
+				if err != nil {
+					return nil, fmt.Errorf("failed to decode modulus: %v", err)
+				}
+				eBytes, err := base64.RawURLEncoding.DecodeString(key.E)
+				if err != nil {
+					return nil, fmt.Errorf("failed to decode exponent: %v", err)
+				}
+
+				n := new(big.Int).SetBytes(nBytes)
+				e := new(big.Int).SetBytes(eBytes)
+
+				pub := &rsa.PublicKey{
+					N: n,
+					E: int(e.Int64()),
+				}
+				return pub, nil
 			}
 		}
 		return nil, fmt.Errorf("matching public key not found")
@@ -73,8 +93,17 @@ func ParseAppleIDToken(idToken, clientID string) (*AppleUserInfo, error) {
 	return userInfo, nil
 }
 
+var (
+	appleKeysCache     *ApplePublicKeys
+	appleKeysCacheTime time.Time
+	appleKeysCacheTTL  = 24 * time.Hour
+)
 
 func getApplePublicKeys() (*ApplePublicKeys, error) {
+	if appleKeysCache != nil && time.Since(appleKeysCacheTime) < appleKeysCacheTTL {
+		return appleKeysCache, nil
+	}
+
 	resp, err := http.Get("https://appleid.apple.com/auth/keys")
 	if err != nil {
 		return nil, err
@@ -86,12 +115,16 @@ func getApplePublicKeys() (*ApplePublicKeys, error) {
 		return nil, err
 	}
 
+	appleKeysCache = &keys
+	appleKeysCacheTime = time.Now()
+
 	return &keys, nil
 }
 
 type ApplePublicKeys struct {
 	Keys []struct {
-		Kid       string `json:"kid"`
-		PublicKey string `json:"n"`
+		Kid string `json:"kid"`
+		N   string `json:"n"`
+		E   string `json:"e"`
 	} `json:"keys"`
 }
