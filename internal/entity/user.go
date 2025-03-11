@@ -23,6 +23,7 @@ type RespUserInfo struct {
 	UID      string               `json:"uid"`
 	UserName string               `json:"user_name"`
 	Passkeys []RespUserCredential `json:"passkeys"`
+	Email    string               `json:"email"`
 }
 
 type UserCredential struct {

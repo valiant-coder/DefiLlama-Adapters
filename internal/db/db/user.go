@@ -33,6 +33,7 @@ type User struct {
 	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
 	Avatar      string      `gorm:"column:avatar;type:varchar(255);not null;default:''"`
 	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
+	Email       string      `gorm:"column:email;type:varchar(255);default:null"`
 }
 
 func (User) TableName() string {
@@ -56,6 +57,7 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 	if err == nil {
 		existingUser.Avatar = user.Avatar
 		existingUser.Username = user.Username
+		existingUser.Email = user.Email
 		*user = existingUser
 		return r.DB.WithContext(ctx).Save(user).Error
 	}

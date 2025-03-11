@@ -1611,6 +1611,9 @@ const docTemplatemarketplace = `{
         "entity.RespUserInfo": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "passkeys": {
                     "type": "array",
                     "items": {

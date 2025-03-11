@@ -49,6 +49,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 			OauthID:     userInfo.GoogleID,
 			LoginMethod: db.LoginMethodGoogle,
 			Avatar:      userInfo.Picture,
+			Email:       userInfo.Email,
 		}
 	case "apple":
 		userInfo, err := oauth2.ParseAppleIDToken(req.IdToken, cfg.Oauth2.Apple.ClientID)
@@ -60,6 +61,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 			Username:    userInfo.Name.FirstName + " " + userInfo.Name.LastName,
 			OauthID:     userInfo.UserID,
 			LoginMethod: db.LoginMethodApple,
+			Email:       userInfo.Email,
 		}
 	case "telegram":
 		userInfo, err := oauth2.VerifyTelegramLogin(cfg.Oauth2.Telegram.BotToken, oauth2.TelegramData{
@@ -136,6 +138,7 @@ func (s *UserService) GetUserInfo(ctx context.Context, uid string) (entity.RespU
 		UID:      user.UID,
 		UserName: user.Username,
 		Passkeys: credentials,
+		Email:    user.Email,
 	}, nil
 }
 
