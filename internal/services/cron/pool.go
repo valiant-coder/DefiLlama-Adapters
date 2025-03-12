@@ -20,6 +20,8 @@ func (s *Service) SyncPoolStats() {
 	log.Println("sync pool stats done")
 }
 
+var poolStatsMap = make(map[uint64]entity.PoolStats)
+
 func (s *Service) SyncAndBroadcastPoolStats() {
 	log.Println("begin sync and broadcast pool stats...")
 	ctx := context.Background()
@@ -29,9 +31,8 @@ func (s *Service) SyncAndBroadcastPoolStats() {
 		log.Printf("failed to list pool stats: %v\n", err)
 		return
 	}
-	poolStatsMap := make(map[uint64]entity.PoolStats)
+	
 	for _, stat := range stats {
-
 		poolStats := entity.PoolStatusFromDB(stat)
 		if oldPoolStats, ok := poolStatsMap[poolStats.PoolID]; ok {
 			if oldPoolStats.Turnover == poolStats.Turnover {
