@@ -1217,6 +1217,9 @@ const docTemplatemarketplace = `{
                 "order_time": {
                     "type": "string"
                 },
+                "order_total": {
+                    "type": "string"
+                },
                 "pool_base_coin": {
                     "type": "string"
                 },
@@ -1283,6 +1286,9 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "order_time": {
+                    "type": "string"
+                },
+                "order_total": {
                     "type": "string"
                 },
                 "pool_base_coin": {
