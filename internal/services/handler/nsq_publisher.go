@@ -4,9 +4,6 @@ import (
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
-	"fmt"
-	"log"
-	"sync"
 	"time"
 )
 
@@ -33,10 +30,6 @@ type OrderUpdate struct {
 // NSQPublisher handles publishing messages to NSQ
 type NSQPublisher struct {
 	publisher *nsqutil.Publisher
-	lastKline map[string]entity.Kline // key: symbol
-	lastOrder map[string]entity.Order // key: account-id
-	mutex     sync.RWMutex
-	stopChan  chan struct{} // Channel to stop cleanup goroutine
 }
 
 // NewNSQPublisher creates a new NSQ publisher
@@ -44,63 +37,18 @@ func NewNSQPublisher(nsqdAddrs []string) (*NSQPublisher, error) {
 	publisher := nsqutil.NewPublisher(nsqdAddrs)
 	p := &NSQPublisher{
 		publisher: publisher,
-		lastKline: make(map[string]entity.Kline),
-		lastOrder: make(map[string]entity.Order),
-		mutex:     sync.RWMutex{},
-		stopChan:  make(chan struct{}),
 	}
-
-	// Start cleanup goroutine
-	go p.startCleanupRoutine()
 
 	return p, nil
 }
 
 // Close closes the publisher connection
 func (p *NSQPublisher) Close() {
-	close(p.stopChan) // Send stop signal
 	p.publisher.Stop()
-}
-
-// startCleanupRoutine starts periodic cleanup routine
-func (p *NSQPublisher) startCleanupRoutine() {
-	ticker := time.NewTicker(cleanupInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			p.cleanup()
-		case <-p.stopChan:
-			return
-		}
-	}
-}
-
-// cleanup cleans expired cache data
-func (p *NSQPublisher) cleanup() {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-
-	// Clean lastKline and lastOrder maps
-	p.lastKline = make(map[string]entity.Kline)
-	p.lastOrder = make(map[string]entity.Order)
-
-	log.Printf("NSQPublisher cache cleaned up")
 }
 
 // PublishOrderUpdate publishes an order update message
 func (p *NSQPublisher) PublishOrderUpdate(account string, order entity.Order) error {
-
-	p.mutex.RLock()
-	key := fmt.Sprintf("%s-%s", account, order.ClientOrderID)
-	lastOrder, exists := p.lastOrder[key]
-	p.mutex.RUnlock()
-
-	if exists && lastOrder == order {
-		return nil
-	}
-
 	msg := struct {
 		Type string      `json:"type"`
 		Data interface{} `json:"data"`
@@ -108,14 +56,8 @@ func (p *NSQPublisher) PublishOrderUpdate(account string, order entity.Order) er
 		Type: MsgTypeOrderUpdate,
 		Data: order,
 	}
+	return p.publisher.Publish(TopicCdexUpdates, msg)
 
-	err := p.publisher.Publish(TopicCdexUpdates, msg)
-	if err == nil {
-		p.mutex.Lock()
-		p.lastOrder[key] = order
-		p.mutex.Unlock()
-	}
-	return err
 }
 
 // PublishBalanceUpdate publishes a balance update message
