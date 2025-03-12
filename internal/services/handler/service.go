@@ -101,7 +101,7 @@ func NewService() (*Service, error) {
 		depthBuffer:           NewDepthBuffer(10000, repo, publisher),
 		openOrderBuffer:       db.NewOpenOrderBuffer(10000, repo, ckhRepo),
 		cleanDepthTicker:      time.NewTicker(10 * time.Second),
-		cleanOpenOrderTicker:  time.NewTicker(time.Second * 10),
+		cleanOpenOrderTicker:  time.NewTicker(time.Second * 30),
 		cleanTradeCacheTicker: time.NewTicker(time.Minute),
 		stopChan:              make(chan struct{}),
 	}
@@ -439,6 +439,10 @@ func (s *Service) startOpenOrderCleaning() {
 			lastTrade := s.lastTrade
 			s.mu.Unlock()
 			if lastTrade != nil {
+				if time.Since(lastTrade.Time) > 2*time.Second {
+					log.Printf("last trade time is too old, skip cleaning")
+					continue
+				}
 				log.Printf("clean invalid orders for pool %d", lastTrade.PoolID)
 				totalCleanedOrders, err := s.openOrderBuffer.CleanInvalidOrders(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
 				if err != nil {
