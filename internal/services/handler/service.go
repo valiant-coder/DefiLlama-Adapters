@@ -416,6 +416,10 @@ func (s *Service) startDepthCleaning() {
 			s.mu.Unlock()
 			log.Printf("nsqChannel: %s", s.nsqChannel)
 			if lastTrade != nil {
+				if time.Since(lastTrade.Time) > 2*time.Second {
+					log.Printf("last trade time is too old, skip cleaning")
+					continue
+				}
 				totalCleaned, err := s.repo.CleanInvalidDepth(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
 				if err != nil {
 					log.Printf("clean invalid depth failed: %v", err)
