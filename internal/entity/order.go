@@ -81,6 +81,7 @@ type Order struct {
 	History            bool  `json:"history"`
 	BaseCoinPrecision  uint8 `json:"base_coin_precision"`
 	QuoteCoinPrecision uint8 `json:"quote_coin_precision"`
+	Unread             bool  `json:"unread"`
 }
 
 func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
@@ -115,6 +116,7 @@ func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
 		BaseCoinPrecision:  order.BaseCoinPrecision,
 		QuoteCoinPrecision: order.QuoteCoinPrecision,
 		History:            true,
+		Unread:             false,
 	}
 }
 
@@ -173,4 +175,13 @@ func TradeDetailFromDB(trades []ckhdb.Trade) []TradeDetail {
 		})
 	}
 	return result
+}
+
+type ReqMakeOrderAsRead struct {
+	Trader string `json:"trader"`
+	ID     string `json:"id"`
+}
+
+type RespUnreadOrder struct {
+	HasUnread bool `json:"has_unread"`
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 )
 
@@ -226,4 +227,46 @@ func (r *Repo) BatchDeleteOpenOrders(ctx context.Context, orders []*OpenOrder) e
 		}
 	}
 	return tx.Commit().Error
+}
+
+// Get Redis key for unread orders
+func getUnreadOrdersKey(trader string) string {
+	return fmt.Sprintf("unread_filled_orders:%s", trader)
+}
+
+// Add unread order
+func (r *Repo) AddUnreadOrder(ctx context.Context, trader string, orderID string) error {
+	key := getUnreadOrdersKey(trader)
+	return r.Redis().SAdd(ctx, key, orderID).Err()
+}
+
+// Mark order as read
+func (r *Repo) MarkOrderAsRead(ctx context.Context, trader string, orderID string) error {
+	key := getUnreadOrdersKey(trader)
+	return r.Redis().SRem(ctx, key, orderID).Err()
+}
+
+// Check if order is unread
+func (r *Repo) IsOrderUnread(ctx context.Context, trader string, orderID string) (bool, error) {
+	key := getUnreadOrdersKey(trader)
+	return r.Redis().SIsMember(ctx, key, orderID).Result()
+}
+
+// Check if user has any unread orders
+func (r *Repo) HasUnreadOrders(ctx context.Context, trader string) (bool, error) {
+	key := getUnreadOrdersKey(trader)
+	count, err := r.Redis().SCard(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return false, nil
+		}
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// ClearUnreadOrders clears all unread orders for a trader
+func (r *Repo) ClearUnreadOrders(ctx context.Context, trader string) error {
+	key := getUnreadOrdersKey(trader)
+	return r.Redis().Del(ctx, key).Err()
 }

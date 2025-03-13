@@ -205,8 +205,17 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		bufferStart := time.Now()
 		s.historyOrderBuffer.Add(&order)
 		log.Printf("[Performance Log] orderBuffer add time: %v", time.Since(bufferStart))
-		go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, entity.OrderFromHistoryDB(order))
 
+		entityOrder := entity.OrderFromHistoryDB(order)
+		if order.Status == ckhdb.OrderStatusFilled {
+			err := s.repo.AddUnreadOrder(ctx, order.Trader, entityOrder.ID)
+			if err != nil {
+				log.Printf("add unread order failed: %v", err)
+			}
+			entityOrder.Unread = true
+		}
+
+		go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, entityOrder)
 	}
 
 	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
@@ -424,7 +433,15 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 			QuoteCoinPrecision: pool.QuoteCoinPrecision,
 		}
 		s.historyOrderBuffer.Add(&historyOrder)
-		go s.publisher.PublishOrderUpdate(makerOrder.Trader, entity.OrderFromHistoryDB(historyOrder))
+		entityOrder := entity.OrderFromHistoryDB(historyOrder)
+		if historyOrder.Status == ckhdb.OrderStatusFilled {
+			err := s.repo.AddUnreadOrder(ctx, makerOrder.Trader, entityOrder.ID)
+			if err != nil {
+				log.Printf("add unread order failed: %v", err)
+			}
+			entityOrder.Unread = true
+		}
+		go s.publisher.PublishOrderUpdate(makerOrder.Trader, entityOrder)
 
 	}
 

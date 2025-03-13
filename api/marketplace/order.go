@@ -2,9 +2,12 @@ package marketplace
 
 import (
 	"exapp-go/api"
+	"exapp-go/internal/entity"
 	"exapp-go/internal/services/marketplace"
 
 	"exapp-go/pkg/queryparams"
+
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
@@ -92,4 +95,79 @@ func getDepth(c *gin.Context) {
 		return
 	}
 	api.OK(c, depth)
+}
+
+// @Summary Mark order as read
+// @Description Mark order as read and remove notification dot
+// @Tags order
+// @Accept json
+// @Produce json
+// @Param req body entity.ReqMakeOrderAsRead true "Request to mark order as read"
+// @Success 200
+// @Router /api/v1/orders/{id}/read [post]
+func markOrderAsRead(c *gin.Context) {
+	var req entity.ReqMakeOrderAsRead
+	if err := c.ShouldBindJSON(&req); err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	orderService := marketplace.NewOrderService()
+	err := orderService.MarkOrderAsRead(c.Request.Context(), req.Trader, req.ID)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, nil)
+}
+
+// @Summary Check for unread orders
+// @Description Check if user has any unread completed orders
+// @Tags order
+// @Accept json
+// @Produce json
+// @Param trader query string true "trader eos account name"
+// @Success 200 {object} entity.RespUnreadOrder "Response for unread status"
+// @Router /api/v1/unread-orders [get]
+func checkUnreadOrders(c *gin.Context) {
+	trader := c.Query("trader")
+
+	if trader == "" {
+		api.Error(c, fmt.Errorf("trader is required"))
+		return
+	}
+
+	hasUnread, err := marketplace.NewOrderService().CheckUnreadFilledOrders(c.Request.Context(), trader)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, entity.RespUnreadOrder{HasUnread: hasUnread})
+}
+
+// @Summary Clear all unread orders
+// @Description Clear all unread orders for a trader
+// @Tags order
+// @Accept json
+// @Produce json
+// @Param trader query string true "trader eos account name"
+// @Success 200
+// @Router /api/v1/orders/clear-unread [post]
+func clearAllUnreadOrders(c *gin.Context) {
+	trader := c.Query("trader")
+
+	if trader == "" {
+		api.Error(c, fmt.Errorf("trader is required"))
+		return
+	}
+
+	err := marketplace.NewOrderService().ClearAllUnreadOrders(c.Request.Context(), trader)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, nil)
 }

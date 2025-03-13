@@ -308,6 +308,35 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/api/v1/orders/clear-unread": {
+            "post": {
+                "description": "Clear all unread orders for a trader",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Clear all unread orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "trader eos account name",
+                        "name": "trader",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/v1/orders/{id}": {
             "get": {
                 "description": "Get history order detail",
@@ -336,6 +365,37 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "$ref": "#/definitions/entity.OrderDetail"
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/{id}/read": {
+            "post": {
+                "description": "Mark order as read and remove notification dot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Mark order as read",
+                "parameters": [
+                    {
+                        "description": "Request to mark order as read",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqMakeOrderAsRead"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -407,6 +467,38 @@ const docTemplatemarketplace = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.Pool"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/unread-orders": {
+            "get": {
+                "description": "Check if user has any unread completed orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Check for unread orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "trader eos account name",
+                        "name": "trader",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Response for unread status",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespUnreadOrder"
                         }
                     }
                 }
@@ -1249,6 +1341,9 @@ const docTemplatemarketplace = `{
                 "type": {
                     "description": "0 market 1 limit",
                     "type": "integer"
+                },
+                "unread": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1326,6 +1421,9 @@ const docTemplatemarketplace = `{
                 "type": {
                     "description": "0 market 1 limit",
                     "type": "integer"
+                },
+                "unread": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1485,6 +1583,17 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.ReqMakeOrderAsRead": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "trader": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.ReqPayCPU": {
             "type": "object",
             "required": [
@@ -1577,6 +1686,14 @@ const docTemplatemarketplace = `{
             "properties": {
                 "transaction_id": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.RespUnreadOrder": {
+            "type": "object",
+            "properties": {
+                "has_unread": {
+                    "type": "boolean"
                 }
             }
         },

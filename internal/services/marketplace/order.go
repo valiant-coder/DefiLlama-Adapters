@@ -43,9 +43,22 @@ func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryp
 	if err != nil {
 		return make([]entity.Order, 0), 0, err
 	}
+
 	result := make([]entity.Order, 0, len(orders))
+
+	trader := queryParams.Get("trader")
+
 	for _, order := range orders {
-		result = append(result, entity.OrderFromHistoryDB(order))
+		orderEntity := entity.OrderFromHistoryDB(order)
+
+		if orderEntity.Status == 2 && trader != "" {
+			unread, err := s.repo.IsOrderUnread(ctx, trader, orderEntity.ID)
+			if err == nil {
+				orderEntity.Unread = unread
+			}
+		}
+
+		result = append(result, orderEntity)
 	}
 	return result, total, nil
 }
@@ -73,7 +86,13 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 		}
 	} else {
 		orderDetail.Order = entity.OrderFromHistoryDB(*order)
+
+		if orderDetail.Status == 2 && orderDetail.Trader != "" {
+			_ = s.repo.MarkOrderAsRead(ctx, orderDetail.Trader, id)
+			orderDetail.Order.Unread = false
+		}
 	}
+
 	if orderDetail.Status == 3 || orderDetail.Status == 0 {
 		orderDetail.Trades = []entity.TradeDetail{}
 		return orderDetail, nil
@@ -85,4 +104,16 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 	}
 	orderDetail.Trades = entity.TradeDetailFromDB(trades)
 	return orderDetail, nil
+}
+
+func (s *OrderService) CheckUnreadFilledOrders(ctx context.Context, trader string) (bool, error) {
+	return s.repo.HasUnreadOrders(ctx, trader)
+}
+
+func (s *OrderService) MarkOrderAsRead(ctx context.Context, trader string, orderID string) error {
+	return s.repo.MarkOrderAsRead(ctx, trader, orderID)
+}
+
+func (s *OrderService) ClearAllUnreadOrders(ctx context.Context, trader string) error {
+	return s.repo.ClearUnreadOrders(ctx, trader)
 }
