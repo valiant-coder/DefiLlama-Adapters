@@ -86,7 +86,7 @@ func Run(addr string, release bool) error {
 	v1.GET("/open-orders", getOpenOrders)
 	v1.GET("/history-orders", getHistoryOrders)
 	v1.GET("/orders/:id", getOrderDetail)
-	v1.POST("/orders/:id/read", markOrderAsRead)
+	v1.POST("/orders/read", markOrderAsRead)
 	v1.GET("/unread-orders", checkUnreadOrders)
 	v1.POST("/orders/clear-unread", clearAllUnreadOrders)
 

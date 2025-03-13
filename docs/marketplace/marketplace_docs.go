@@ -337,6 +337,37 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/api/v1/orders/read": {
+            "post": {
+                "description": "Mark order as read and remove notification dot",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Mark order as read",
+                "parameters": [
+                    {
+                        "description": "Request to mark order as read",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqMakeOrderAsRead"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/v1/orders/{id}": {
             "get": {
                 "description": "Get history order detail",
@@ -365,37 +396,6 @@ const docTemplatemarketplace = `{
                         "schema": {
                             "$ref": "#/definitions/entity.OrderDetail"
                         }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/{id}/read": {
-            "post": {
-                "description": "Mark order as read and remove notification dot",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Mark order as read",
-                "parameters": [
-                    {
-                        "description": "Request to mark order as read",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqMakeOrderAsRead"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
                     }
                 }
             }

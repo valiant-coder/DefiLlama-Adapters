@@ -104,7 +104,7 @@ func getDepth(c *gin.Context) {
 // @Produce json
 // @Param req body entity.ReqMakeOrderAsRead true "Request to mark order as read"
 // @Success 200
-// @Router /api/v1/orders/{id}/read [post]
+// @Router /api/v1/orders/read [post]
 func markOrderAsRead(c *gin.Context) {
 	var req entity.ReqMakeOrderAsRead
 	if err := c.ShouldBindJSON(&req); err != nil {
