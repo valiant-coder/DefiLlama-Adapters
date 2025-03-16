@@ -148,21 +148,25 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 	var chainInfos []db.ChainInfo
 	for _, chain := range chains {
 		permissionID := chain.PermissionID
+		depositByBTCBridge := false
 		if tokenSymbol == "BTC" && chain.ChainName != "exsat" {
 			permissionID = 21000000
+			depositByBTCBridge = true
 		}
 		exsatTokenAddress := data.Address
 		if !strings.HasPrefix(exsatTokenAddress, "0x") {
 			exsatTokenAddress = "0x" + exsatTokenAddress
 		}
-		chainInfos = append(chainInfos, db.ChainInfo{
-			ChainID:      chain.ChainID,
-			ChainName:    chain.ChainName,
-			PermissionID: permissionID,
 
-			WithdrawalFee:     token.WithdrawFee,
-			MinWithdrawAmount: token.WithdrawFee,
-			MinDepositAmount:  token.WithdrawFee,
+		chainInfos = append(chainInfos, db.ChainInfo{
+			ChainID:            chain.ChainID,
+			ChainName:          chain.ChainName,
+			PermissionID:       permissionID,
+			DepositByBTCBridge: depositByBTCBridge,
+			
+			WithdrawalFee:      token.WithdrawFee,
+			MinWithdrawAmount:  token.WithdrawFee,
+			MinDepositAmount:   token.WithdrawFee,
 
 			ExsatWithdrawFee:      decimal.Zero,
 			ExsatMinDepositAmount: token.WithdrawFee,
