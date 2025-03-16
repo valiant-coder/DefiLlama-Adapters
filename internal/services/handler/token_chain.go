@@ -163,10 +163,10 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 			ChainName:          chain.ChainName,
 			PermissionID:       permissionID,
 			DepositByBTCBridge: depositByBTCBridge,
-			
-			WithdrawalFee:      token.WithdrawFee,
-			MinWithdrawAmount:  token.WithdrawFee,
-			MinDepositAmount:   token.WithdrawFee,
+
+			WithdrawalFee:     token.WithdrawFee,
+			MinWithdrawAmount: token.WithdrawFee,
+			MinDepositAmount:  token.WithdrawFee,
 
 			ExsatWithdrawFee:      decimal.Zero,
 			ExsatMinDepositAmount: token.WithdrawFee,
@@ -176,6 +176,7 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 	}
 
 	token.Chains = chainInfos
+	token.BlockNum = action.BlockNum
 	if err := s.repo.UpsertToken(ctx, token); err != nil {
 		log.Printf("failed to upsert token: %v", err)
 		return nil
