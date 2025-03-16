@@ -42,7 +42,7 @@ func (s *Service) syncTokenChainHistories(ctx context.Context) error {
 			Filter: fmt.Sprintf(
 				"%s:%s,%s:%s",
 				s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken,
-				s.exsatCfg.BridgeContract, s.eosCfg.Events.AddXSATChain),
+				s.oneDexCfg.BridgeContract, s.eosCfg.Events.AddXSATChain),
 			Limit: s.hyperionCfg.BatchSize,
 			Sort:  "asc",
 			After: strconv.FormatUint(s.tokenChainLastBlockNum, 10),
@@ -83,7 +83,7 @@ func (s *Service) SyncTokenChain(ctx context.Context) (<-chan hyperion.Action, e
 			Filters:   []hyperion.RequestFilter{},
 		},
 		{
-			Contract:  s.exsatCfg.BridgeContract,
+			Contract:  s.oneDexCfg.BridgeContract,
 			Action:    s.eosCfg.Events.AddXSATChain,
 			Account:   "",
 			StartFrom: int64(s.tokenChainLastBlockNum) + 1,
