@@ -162,6 +162,6 @@ func (r *Repo) GetChainMaxBlockNum(ctx context.Context) (uint64, error) {
 
 func (r *Repo) GetChains(ctx context.Context, chainIDs []uint8) ([]Chain, error) {
 	var chains []Chain
-	err := r.WithContext(ctx).Where("chain_id IN ?", chainIDs).Find(&chains).Error
+	err := r.WithContext(ctx).Where("chain_id IN (?)", chainIDs).Find(&chains).Error
 	return chains, err
 }
