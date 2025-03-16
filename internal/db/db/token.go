@@ -85,7 +85,7 @@ func (t *Token) TableName() string {
 func (r *Repo) UpsertToken(ctx context.Context, token *Token) error {
 	return r.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "symbol"}},
-		DoUpdates: clause.AssignmentColumns([]string{"block_num", "max_supply", "withdraw_fee"}),
+		DoUpdates: clause.AssignmentColumns([]string{"block_num", "max_supply", "withdraw_fee", "chains"}),
 	}).Create(token).Error
 }
 
@@ -158,4 +158,10 @@ func (r *Repo) GetChainMaxBlockNum(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 	return *blockNum, nil
+}
+
+func (r *Repo) GetChains(ctx context.Context, chainIDs []uint8) ([]Chain, error) {
+	var chains []Chain
+	err := r.WithContext(ctx).Where("chain_id IN ?", chainIDs).Find(&chains).Error
+	return chains, err
 }

@@ -261,6 +261,7 @@ func (s *Service) registerHandlers() {
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
@@ -345,7 +346,7 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return "eos-account-update"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
-	case s.eosCfg.Events.CreateToken, s.eosCfg.Events.AddXSATChain:
+	case s.eosCfg.Events.CreateToken, s.eosCfg.Events.AddXSATChain, s.eosCfg.Events.MapXSAT:
 		return "token-chain-action"
 	default:
 		return ""
