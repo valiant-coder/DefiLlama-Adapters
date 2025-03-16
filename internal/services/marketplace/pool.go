@@ -7,6 +7,7 @@ import (
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/errno"
 	"exapp-go/pkg/queryparams"
 	"strconv"
 	"sync"
@@ -112,6 +113,9 @@ func (s *PoolService) GetPool(ctx context.Context, poolSymbolOrID string) (entit
 			return entity.Pool{}, nil
 		}
 		return entity.Pool{}, err
+	}
+	if !pool.Visible {
+		return entity.Pool{}, errno.DefaultParamsError("not found")
 	}
 	poolStats, err := s.ckhRepo.GetPoolStats(ctx, pool.PoolID)
 	if err != nil {
