@@ -45,8 +45,6 @@ func (s *Service) handleCreateToken(action hyperion.Action) error {
 	return nil
 }
 
-
-
 func (s *Service) handleAddXSATChain(action hyperion.Action) error {
 	ctx := context.Background()
 	var data struct {
@@ -63,6 +61,7 @@ func (s *Service) handleAddXSATChain(action hyperion.Action) error {
 		ChainID:      cast.ToUint8(data.ChainID),
 		PermissionID: cast.ToUint64(data.PermissionID),
 		ChainName:    data.ChainName,
+		BlockNum:     action.BlockNum,
 	}
 
 	if err := s.repo.UpsertChain(ctx, chain); err != nil {
@@ -71,4 +70,3 @@ func (s *Service) handleAddXSATChain(action hyperion.Action) error {
 	}
 	return nil
 }
-
