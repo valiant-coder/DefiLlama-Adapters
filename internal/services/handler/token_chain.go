@@ -12,6 +12,7 @@ import (
 )
 
 func (s *Service) handleCreateToken(action hyperion.Action) error {
+	log.Printf("handleCreateToken: %v", string(action.TrxID))
 	ctx := context.Background()
 
 	var data struct {
@@ -46,6 +47,7 @@ func (s *Service) handleCreateToken(action hyperion.Action) error {
 }
 
 func (s *Service) handleAddXSATChain(action hyperion.Action) error {
+	log.Printf("handleAddXSATChain: %v", string(action.TrxID))
 	ctx := context.Background()
 	var data struct {
 		ChainID      string `json:"chain_id"`
