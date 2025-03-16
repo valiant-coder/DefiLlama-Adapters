@@ -112,6 +112,8 @@ eos:
     set_min_amt: setminamt
     set_pool_fee_rate: setpfeerate
     create_token: "createtoken"
+    add_xsat_chain: addxsatchain
+
 
 
 faucet:

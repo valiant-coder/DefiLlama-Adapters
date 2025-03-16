@@ -17,24 +17,24 @@ const (
 )
 
 type Service struct {
-	repo                 *db.Repo
-	ckhRepo              *ckhdb.ClickHouseRepo
-	hyperionClient       *hyperion.Client
-	streamClient         *hyperion.StreamClient
-	publisher            *nsqutil.Publisher
-	tradeLastBlockNum    int64
-	depositLastBlockNum  uint64
-	withdrawLastBlockNum uint64
-	accountLastBlockNum  uint64
-	poolLastBlockNum     uint64
-	tokenLastBlockNum    uint64
-	hyperionCfg          config.HyperionConfig
-	nsqCfg               config.NsqConfig
-	eosCfg               config.EosConfig
-	cdexCfg              config.CdexConfig
-	oneDexCfg            config.OneDexConfig
-	exsatCfg             config.ExsatConfig
-	syncTradeHistory     bool
+	repo                   *db.Repo
+	ckhRepo                *ckhdb.ClickHouseRepo
+	hyperionClient         *hyperion.Client
+	streamClient           *hyperion.StreamClient
+	publisher              *nsqutil.Publisher
+	tradeLastBlockNum      int64
+	depositLastBlockNum    uint64
+	withdrawLastBlockNum   uint64
+	accountLastBlockNum    uint64
+	poolLastBlockNum       uint64
+	tokenChainLastBlockNum uint64
+	hyperionCfg            config.HyperionConfig
+	nsqCfg                 config.NsqConfig
+	eosCfg                 config.EosConfig
+	cdexCfg                config.CdexConfig
+	oneDexCfg              config.OneDexConfig
+	exsatCfg               config.ExsatConfig
+	syncTradeHistory       bool
 }
 
 func NewService(eosCfg config.EosConfig, nsqCfg config.NsqConfig) (*Service, error) {
@@ -83,7 +83,7 @@ func (s *Service) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("sync pool failed: %w", err)
 	}
-	tokenActionsCh, err := s.SyncToken(ctx)
+	tokenChainActionsCh, err := s.SyncTokenChain(ctx)
 	if err != nil {
 		return fmt.Errorf("sync token failed: %w", err)
 	}
@@ -142,16 +142,16 @@ func (s *Service) Start(ctx context.Context) error {
 				continue
 			}
 			s.poolLastBlockNum = action.BlockNum
-		case action, ok := <-tokenActionsCh:
+		case action, ok := <-tokenChainActionsCh:
 			if !ok {
-				return fmt.Errorf("token action channel closed")
+				return fmt.Errorf("token chain action channel closed")
 			}
-			log.Printf("new token action: %v", string(action.TrxID))
+			log.Printf("new token chain action: %v", string(action.TrxID))
 			if err := s.publishAction(action); err != nil {
-				log.Printf("Publish token action failed: %v", err)
+				log.Printf("Publish token chain action failed: %v", err)
 				continue
 			}
-			s.tokenLastBlockNum = action.BlockNum
+			s.tokenChainLastBlockNum = action.BlockNum
 		}
 	}
 }

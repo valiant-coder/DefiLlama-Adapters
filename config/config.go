@@ -228,8 +228,9 @@ type EventConfig struct {
 
 	SetPoolFeeRate string `yaml:"set_pool_fee_rate"`
 
-	// token events
+	// token-chain events
 	CreateToken string `yaml:"create_token"`
+	AddXSATChain string `yaml:"add_xsat_chain"`
 
 }
 
@@ -248,5 +249,6 @@ func DefaultEventConfig() EventConfig {
 		SetMinAmt:      "setminamt",
 		SetPoolFeeRate: "setpfeerate",
 		CreateToken:    "createtoken",
+		AddXSATChain:   "addxsatchain",
 	}
 }

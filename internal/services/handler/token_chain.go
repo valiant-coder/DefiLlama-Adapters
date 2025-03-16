@@ -8,6 +8,7 @@ import (
 	"log"
 
 	eosgo "github.com/eoscanada/eos-go"
+	"github.com/spf13/cast"
 )
 
 func (s *Service) handleCreateToken(action hyperion.Action) error {
@@ -43,3 +44,31 @@ func (s *Service) handleCreateToken(action hyperion.Action) error {
 	}
 	return nil
 }
+
+
+
+func (s *Service) handleAddXSATChain(action hyperion.Action) error {
+	ctx := context.Background()
+	var data struct {
+		ChainID      string `json:"chain_id"`
+		PermissionID string `json:"permission_id"`
+		ChainName    string `json:"chain_name"`
+	}
+	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+		log.Printf("failed to unmarshal add xsat chain data: %v", err)
+		return nil
+	}
+
+	chain := &db.Chain{
+		ChainID:      cast.ToUint8(data.ChainID),
+		PermissionID: cast.ToUint64(data.PermissionID),
+		ChainName:    data.ChainName,
+	}
+
+	if err := s.repo.UpsertChain(ctx, chain); err != nil {
+		log.Printf("failed to upsert chain: %v", err)
+		return nil
+	}
+	return nil
+}
+

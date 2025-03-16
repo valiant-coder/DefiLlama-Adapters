@@ -14,6 +14,7 @@ func init() {
 	addMigrateFunc(func(repo *Repo) error {
 		return repo.AutoMigrate(
 			&Token{},
+			&Chain{},
 		)
 	})
 }
@@ -84,7 +85,6 @@ func (r *Repo) UpsertToken(ctx context.Context, token *Token) error {
 	}).Create(token).Error
 }
 
-
 func (r *Repo) GetToken(ctx context.Context, symbol string) (*Token, error) {
 	var token Token
 	err := r.WithContext(ctx).Where("symbol = ?", symbol).First(&token).Error
@@ -116,6 +116,40 @@ func (r *Repo) InsertToken(ctx context.Context, token *Token) error {
 func (r *Repo) GetTokenMaxBlockNum(ctx context.Context) (uint64, error) {
 	var blockNum *uint64
 	err := r.WithContext(ctx).Model(&Token{}).Select("COALESCE(MAX(block_num), 0)").Scan(&blockNum).Error
+	if err != nil {
+		return 0, err
+	}
+	return *blockNum, nil
+}
+
+type Chain struct {
+	gorm.Model
+	ChainName    string `gorm:"column:chain_name;type:varchar(255);not null"`
+	ChainID      uint8  `gorm:"column:chain_id;type:tinyint(3);not null;uniqueIndex:idx_chain_id"`
+	PermissionID uint64 `gorm:"column:permission_id;type:bigint(20);not null"`
+	BlockNum     uint64 `gorm:"column:block_num;type:bigint(20);default:0"`
+}
+
+func (c *Chain) TableName() string {
+	return "chains"
+}
+
+func (r *Repo) UpsertChain(ctx context.Context, chain *Chain) error {
+	return r.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "chain_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"block_num"}),
+	}).Create(chain).Error
+}
+
+func (r *Repo) GetChain(ctx context.Context, chainID uint8) (*Chain, error) {
+	var chain Chain
+	err := r.WithContext(ctx).Where("chain_id = ?", chainID).First(&chain).Error
+	return &chain, err
+}
+
+func (r *Repo) GetChainMaxBlockNum(ctx context.Context) (uint64, error) {
+	var blockNum *uint64
+	err := r.WithContext(ctx).Model(&Chain{}).Select("COALESCE(MAX(block_num), 0)").Scan(&blockNum).Error
 	if err != nil {
 		return 0, err
 	}
