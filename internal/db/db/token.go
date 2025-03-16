@@ -67,6 +67,10 @@ type Token struct {
 	Decimals           uint8  `gorm:"column:decimals;type:tinyint(3);not null"`
 	IconUrl            string `gorm:"column:icon_url;type:varchar(255);default:null"`
 
+	MaxSupply decimal.Decimal `gorm:"column:max_supply;type:decimal(24,8);default:0"`
+
+	WithdrawFee decimal.Decimal `gorm:"column:withdraw_fee;type:decimal(18,8);default:0"`
+
 	BlockNum uint64 `gorm:"column:block_num;type:bigint(20);default:0"`
 
 	Chains datatypes.JSONSlice[ChainInfo] `gorm:"column:chains;type:json;not null"`
@@ -81,7 +85,7 @@ func (t *Token) TableName() string {
 func (r *Repo) UpsertToken(ctx context.Context, token *Token) error {
 	return r.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "symbol"}},
-		DoUpdates: clause.AssignmentColumns([]string{"block_num"}),
+		DoUpdates: clause.AssignmentColumns([]string{"block_num", "max_supply", "withdraw_fee"}),
 	}).Create(token).Error
 }
 

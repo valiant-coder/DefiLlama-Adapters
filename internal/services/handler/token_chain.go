@@ -8,11 +8,11 @@ import (
 	"log"
 
 	eosgo "github.com/eoscanada/eos-go"
+	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
 )
 
 func (s *Service) handleCreateToken(action hyperion.Action) error {
-	log.Printf("handleCreateToken: %v", string(action.TrxID))
 	ctx := context.Background()
 
 	var data struct {
@@ -25,18 +25,26 @@ func (s *Service) handleCreateToken(action hyperion.Action) error {
 		return nil
 	}
 
-	asset, err := eosgo.NewAssetFromString(data.MaximumSupply)
+	maxSupplyAsset, err := eosgo.NewAssetFromString(data.MaximumSupply)
 	if err != nil {
 		log.Printf("failed to parse maximum supply: %v", err)
 		return nil
 	}
 
+	withdrawFeeAsset, err := eosgo.NewAssetFromString(data.WithdrawFee)
+	if err != nil {
+		log.Printf("failed to parse withdraw fee: %v", err)
+		return nil
+	}
+
 	token := &db.Token{
 		EOSContractAddress: data.Contract,
-		Symbol:             asset.Symbol.Symbol,
-		Name:               asset.Symbol.Symbol,
+		Symbol:             maxSupplyAsset.Symbol.Symbol,
+		Name:               maxSupplyAsset.Symbol.Symbol,
 		BlockNum:           action.BlockNum,
-		Decimals:           asset.Symbol.Precision,
+		Decimals:           maxSupplyAsset.Symbol.Precision,
+		MaxSupply:          decimal.New(int64(maxSupplyAsset.Amount), -int32(maxSupplyAsset.Symbol.Precision)),
+		WithdrawFee:        decimal.New(int64(withdrawFeeAsset.Amount), -int32(withdrawFeeAsset.Symbol.Precision)),
 	}
 
 	if err := s.repo.UpsertToken(ctx, token); err != nil {
@@ -47,7 +55,6 @@ func (s *Service) handleCreateToken(action hyperion.Action) error {
 }
 
 func (s *Service) handleAddXSATChain(action hyperion.Action) error {
-	log.Printf("handleAddXSATChain: %v", string(action.TrxID))
 	ctx := context.Background()
 	var data struct {
 		ChainID      string `json:"chain_id"`
