@@ -260,7 +260,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
-	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
