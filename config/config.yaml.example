@@ -111,6 +111,8 @@ eos:
     log_send: logsend
     set_min_amt: setminamt
     set_pool_fee_rate: setpfeerate
+    create_token: "createtoken"
+
 
 faucet:
   enabled: false

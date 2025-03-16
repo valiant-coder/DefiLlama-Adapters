@@ -259,6 +259,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
@@ -343,6 +344,8 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return "eos-account-update"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
+	case s.eosCfg.Events.CreateToken:
+		return "token-action"
 	default:
 		return ""
 	}

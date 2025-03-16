@@ -27,6 +27,7 @@ type Service struct {
 	withdrawLastBlockNum uint64
 	accountLastBlockNum  uint64
 	poolLastBlockNum     uint64
+	tokenLastBlockNum    uint64
 	hyperionCfg          config.HyperionConfig
 	nsqCfg               config.NsqConfig
 	eosCfg               config.EosConfig
@@ -81,6 +82,10 @@ func (s *Service) Start(ctx context.Context) error {
 	poolActionsCh, err := s.SyncPool(ctx)
 	if err != nil {
 		return fmt.Errorf("sync pool failed: %w", err)
+	}
+	tokenActionsCh, err := s.SyncToken(ctx)
+	if err != nil {
+		return fmt.Errorf("sync token failed: %w", err)
 	}
 	for {
 		select {
@@ -137,6 +142,16 @@ func (s *Service) Start(ctx context.Context) error {
 				continue
 			}
 			s.poolLastBlockNum = action.BlockNum
+		case action, ok := <-tokenActionsCh:
+			if !ok {
+				return fmt.Errorf("token action channel closed")
+			}
+			log.Printf("new token action: %v", string(action.TrxID))
+			if err := s.publishAction(action); err != nil {
+				log.Printf("Publish token action failed: %v", err)
+				continue
+			}
+			s.tokenLastBlockNum = action.BlockNum
 		}
 	}
 }

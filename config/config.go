@@ -227,6 +227,10 @@ type EventConfig struct {
 	SetMinAmt string `yaml:"set_min_amt"`
 
 	SetPoolFeeRate string `yaml:"set_pool_fee_rate"`
+
+	// token events
+	CreateToken string `yaml:"create_token"`
+
 }
 
 func DefaultEventConfig() EventConfig {
@@ -243,5 +247,6 @@ func DefaultEventConfig() EventConfig {
 		LogSend:        "logsend",
 		SetMinAmt:      "setminamt",
 		SetPoolFeeRate: "setpfeerate",
+		CreateToken:    "createtoken",
 	}
 }

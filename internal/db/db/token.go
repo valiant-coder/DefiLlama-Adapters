@@ -7,6 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func init() {
@@ -65,6 +66,8 @@ type Token struct {
 	Decimals           uint8  `gorm:"column:decimals;type:tinyint(3);not null"`
 	IconUrl            string `gorm:"column:icon_url;type:varchar(255);default:null"`
 
+	BlockNum uint64 `gorm:"column:block_num;type:bigint(20);default:0"`
+
 	Chains datatypes.JSONSlice[ChainInfo] `gorm:"column:chains;type:json;not null"`
 
 	TokenInfo datatypes.JSONType[TokenInfo] `gorm:"column:token_info;type:json;default:null"`
@@ -73,6 +76,14 @@ type Token struct {
 func (t *Token) TableName() string {
 	return "tokens"
 }
+
+func (r *Repo) UpsertToken(ctx context.Context, token *Token) error {
+	return r.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "symbol"}},
+		DoUpdates: clause.AssignmentColumns([]string{"block_num"}),
+	}).Create(token).Error
+}
+
 
 func (r *Repo) GetToken(ctx context.Context, symbol string) (*Token, error) {
 	var token Token
@@ -100,4 +111,13 @@ func (r *Repo) GetAllTokens(ctx context.Context) (map[string]string, error) {
 
 func (r *Repo) InsertToken(ctx context.Context, token *Token) error {
 	return r.WithContext(ctx).Create(token).Error
+}
+
+func (r *Repo) GetTokenMaxBlockNum(ctx context.Context) (uint64, error) {
+	var blockNum *uint64
+	err := r.WithContext(ctx).Model(&Token{}).Select("COALESCE(MAX(block_num), 0)").Scan(&blockNum).Error
+	if err != nil {
+		return 0, err
+	}
+	return *blockNum, nil
 }
