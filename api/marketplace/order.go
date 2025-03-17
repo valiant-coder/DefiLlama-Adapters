@@ -152,18 +152,22 @@ func checkUnreadOrders(c *gin.Context) {
 // @Tags order
 // @Accept json
 // @Produce json
-// @Param trader query string true "trader eos account name"
+// @Param req body entity.ReqClearAllUnreadOrders true "Request to clear all unread orders"
 // @Success 200
 // @Router /api/v1/orders/clear-unread [post]
 func clearAllUnreadOrders(c *gin.Context) {
-	trader := c.Query("trader")
+	var req entity.ReqClearAllUnreadOrders
+	if err := c.ShouldBindJSON(&req); err != nil {
+		api.Error(c, err)
+		return
+	}
 
-	if trader == "" {
+	if req.Trader == "" {
 		api.Error(c, fmt.Errorf("trader is required"))
 		return
 	}
 
-	err := marketplace.NewOrderService().ClearAllUnreadOrders(c.Request.Context(), trader)
+	err := marketplace.NewOrderService().ClearAllUnreadOrders(c.Request.Context(), req.Trader)
 	if err != nil {
 		api.Error(c, err)
 		return

@@ -185,3 +185,8 @@ type ReqMakeOrderAsRead struct {
 type RespUnreadOrder struct {
 	HasUnread bool `json:"has_unread"`
 }
+
+
+type ReqClearAllUnreadOrders struct {
+	Trader string `json:"trader"`
+}

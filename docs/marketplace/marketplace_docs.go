@@ -323,11 +323,13 @@ const docTemplatemarketplace = `{
                 "summary": "Clear all unread orders",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "trader eos account name",
-                        "name": "trader",
-                        "in": "query",
-                        "required": true
+                        "description": "Request to clear all unread orders",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqClearAllUnreadOrders"
+                        }
                     }
                 ],
                 "responses": {
@@ -1545,6 +1547,14 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "deposit_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ReqClearAllUnreadOrders": {
+            "type": "object",
+            "properties": {
+                "trader": {
                     "type": "string"
                 }
             }
