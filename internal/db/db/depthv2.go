@@ -260,6 +260,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 					log.Printf("unexpected result type: %T", resultList[resultIdx])
 					continue
 				}
+				log.Printf("resultList[%d]: %v", resultIdx, resultList[resultIdx])
 				newTotal := decimal.RequireFromString(resultList[resultIdx].(string)).Truncate(8)
 				if newTotal.LessThan(decimal.Zero) {
 					newTotal = decimal.Zero
