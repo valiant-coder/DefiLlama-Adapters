@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
@@ -106,26 +105,26 @@ func getRelevantPrecisions(price decimal.Decimal) []string {
 }
 
 // Calculate price slots for all precisions
-func calculateAllSlots(price decimal.Decimal, isBid bool) map[string]string {
-	slots := make(map[string]string)
+func calculateAllSlots(price decimal.Decimal, isBid bool) ([]string, []string) {
+	slots := []string{}
 
 	// Get relevant precision levels
-	relevantPrecisions := getRelevantPrecisions(price)
-	if !contains(relevantPrecisions, "0.000000001") {
-		relevantPrecisions = append(relevantPrecisions, "0.000000001")
+	precisions := getRelevantPrecisions(price)
+	if !contains(precisions, "0.000000001") {
+		precisions = append(precisions, "0.000000001")
 	}
 
-	for _, p := range relevantPrecisions {
+	for _, p := range precisions {
 		precision, _ := decimal.NewFromString(p)
 		if isBid {
 			slot := price.Div(precision).Floor().Mul(precision)
-			slots[p] = slot.String()
+			slots = append(slots, slot.String())
 		} else {
 			slot := price.Div(precision).Ceil().Mul(precision)
-			slots[p] = slot.String()
+			slots = append(slots, slot.String())
 		}
 	}
-	return slots
+	return precisions, slots
 }
 
 // Update order (automatically updates all precision levels)
@@ -225,8 +224,9 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 			}
 
 			// Calculate slots for all precisions
-			slots := calculateAllSlots(param.Price, param.IsBuy)
-			for precision, slot := range slots {
+			precisions, slots := calculateAllSlots(param.Price, param.IsBuy)
+			for i, precision := range precisions {
+				slot := slots[i]
 				hashKey := fmt.Sprintf("{depth:%d}:%s:%s:hash", param.PoolID, side, precision)
 				sortedSetKey := fmt.Sprintf("{depth:%d}:%s:%s:sorted_set", param.PoolID, side, precision)
 
@@ -250,17 +250,13 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 		// Record changes
 		resultIdx := 0
 		for _, param := range batchParams {
-			slots := calculateAllSlots(param.Price, param.IsBuy)
-			for precision, slot := range slots {
+			precisions, slots := calculateAllSlots(param.Price, param.IsBuy)
+			for i, precision := range precisions {
+				slot := slots[i]
 				if resultIdx >= len(resultList) {
 					continue
 				}
 
-				if _, ok := resultList[resultIdx].(string); !ok {
-					log.Printf("unexpected result type: %T", resultList[resultIdx])
-					continue
-				}
-				log.Printf("resultList[%d]: %v", resultIdx, resultList[resultIdx])
 				newTotal := decimal.RequireFromString(resultList[resultIdx].(string)).Truncate(8)
 				if newTotal.LessThan(decimal.Zero) {
 					newTotal = decimal.Zero

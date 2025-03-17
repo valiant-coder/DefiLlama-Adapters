@@ -105,8 +105,9 @@ func (m *MemoryDepth) UpdateDepthV3(ctx context.Context, params []UpdateDepthPar
 			side = "buy"
 		}
 
-		slots := calculateAllSlots(param.Price, param.IsBuy)
-		for precision, slot := range slots {
+		precisions, slots := calculateAllSlots(param.Price, param.IsBuy)
+		for i, precision := range precisions {
+			slot := slots[i]
 			m.ensurePoolAndSideMaps(param.PoolID, side)
 			m.ensurePrecisionMap(param.PoolID, side, precision)
 

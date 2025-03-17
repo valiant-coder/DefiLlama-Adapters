@@ -84,7 +84,6 @@ func (b *DepthBuffer) flush() {
 	}
 	for _, depth := range depthByPrecision {
 		d := *depth
-		log.Printf("publish depth update: %v", d)
 		go b.publisher.PublishDepthUpdate(d)
 	}
 }
