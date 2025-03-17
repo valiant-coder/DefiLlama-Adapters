@@ -47,6 +47,7 @@ type OpenOrder struct {
 	PoolQuoteCoin      string          `gorm:"column:pool_quote_coin;type:varchar(255)"`
 	ClientOrderID      string          `gorm:"column:order_cid;type:varchar(255)"`
 	Trader             string          `gorm:"index:idx_trader;type:varchar(255)"`
+	Permission         string          `gorm:"column:permission;type:varchar(255);default:'active'"`
 	Type               OrderType       `gorm:"column:type;type:tinyint(4)"`
 	Price              decimal.Decimal `gorm:"type:Decimal(36,18)"`
 	IsBid              bool            `gorm:"column:is_bid;type:tinyint(1);uniqueIndex:idx_order_id_pool_id_is_bid;index:idx_pool_id_is_bid"`

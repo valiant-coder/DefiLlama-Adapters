@@ -42,6 +42,7 @@ type HistoryOrder struct {
 	OrderID            uint64          `gorm:"column:order_id;type:bigint(20)"`
 	ClientOrderID      string          `gorm:"column:order_cid;type:varchar(255)"`
 	Trader             string          `gorm:"column:trader;type:varchar(255)"`
+	Permission         string          `gorm:"column:permission;type:varchar(255);default:'active'"`
 	Type               OrderType       `gorm:"column:type;type:tinyint(4)"`
 	Price              decimal.Decimal `gorm:"type:Decimal(36,18)"`
 	AvgPrice           decimal.Decimal `gorm:"type:Decimal(36,18)"`

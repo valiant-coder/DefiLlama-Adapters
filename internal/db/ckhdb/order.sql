@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS history_orders (
     order_id UInt64,
     order_cid String,
     trader String,
+    permission String,
     type UInt8,
     price Decimal(36,18),
     avg_price Decimal(36,18),
