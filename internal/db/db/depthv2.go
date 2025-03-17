@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
@@ -255,7 +256,11 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 					continue
 				}
 
-				newTotal := decimal.RequireFromString(fmt.Sprint(resultList[resultIdx])).Truncate(8)
+				if _, ok := resultList[resultIdx].(string); !ok {
+					log.Printf("unexpected result type: %T", resultList[resultIdx])
+					continue
+				}
+				newTotal := decimal.RequireFromString(resultList[resultIdx].(string)).Truncate(8)
 				if newTotal.LessThan(decimal.Zero) {
 					newTotal = decimal.Zero
 				}
