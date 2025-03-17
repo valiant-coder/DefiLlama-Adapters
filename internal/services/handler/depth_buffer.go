@@ -83,7 +83,8 @@ func (b *DepthBuffer) flush() {
 		}
 	}
 	for _, depth := range depthByPrecision {
-		go b.publisher.PublishDepthUpdate(*depth)
+		d := *depth
+		go b.publisher.PublishDepthUpdate(d)
 	}
 }
 
