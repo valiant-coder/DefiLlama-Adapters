@@ -8,14 +8,12 @@ import (
 	"os"
 	"time"
 
-	"exapp-go/docs/marketplace"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "exapp-go/docs/v1"
+	v1 "exapp-go/docs/v1"
 )
 
 // @title exapp api v1
@@ -40,7 +38,7 @@ func Run(addr string, release bool) error {
 		}))
 		swaggerHost := os.Getenv("SWAGGER_HOST")
 		if swaggerHost != "" {
-			marketplace.SwaggerInfomarketplace.Host = swaggerHost
+			v1.SwaggerInfoapi_v1.Host = swaggerHost
 		}
 	}
 
