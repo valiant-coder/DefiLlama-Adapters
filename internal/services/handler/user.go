@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"gorm.io/datatypes"
 )
 
 func (s *Service) handleNewAccount(action hyperion.Action) error {
@@ -64,6 +66,24 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 		return nil
 	}
 
+	// handle sub account
+	if data.Permission != "active" && data.Permission != "owner" {
+		subAccount, err := s.repo.GetUserSubAccountByEOSAccountAndPermission(ctx, data.Account, data.Permission)
+		if err != nil {
+			return nil
+		}
+		keys := make([]string, 0)
+		for _, key := range subAccount.PublicKeys {
+			keys = append(keys, key)
+		}
+		subAccount.PublicKeys = datatypes.JSONSlice[string](keys)
+		err = s.repo.UpdateUserSubAccount(ctx, subAccount)
+		if err != nil {
+			log.Printf("Update user sub account failed: %v", err)
+			return nil
+		}
+		return nil
+	}
 
 	keys := make([]string, 0)
 	for _, key := range data.Auth.Keys {
@@ -74,6 +94,7 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 		log.Printf("Get user credentials by keys failed: %v", err)
 		return nil
 	}
+
 	for _, keyCredential := range keysCredentials {
 		if keyCredential.EOSPermissions == "" {
 			keyCredential.EOSPermissions = data.Permission
@@ -98,7 +119,6 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 		log.Printf("No user credentials found for account: %v", data.Account)
 		return nil
 	}
-
 
 	keysMap := make(map[string]int)
 	for _, key := range data.Auth.Keys {

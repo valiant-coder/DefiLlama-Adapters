@@ -18,9 +18,9 @@ func init() {
 type UserSubAccount struct {
 	gorm.Model
 	UID        string                      `gorm:"column:uid;type:varchar(255);not null;index:idx_uid_name"`
-	EOSAccount string                      `gorm:"column:eos_account;type:varchar(255);not null;index:idx_eos_account"`
+	EOSAccount string                      `gorm:"column:eos_account;type:varchar(255);not null;index:idx_eos_account;uniqueIndex:idx_eos_account_permission"`
 	Name       string                      `gorm:"column:name;type:varchar(255);not null;index:idx_uid_name"`
-	Permission string                      `gorm:"column:permission;type:varchar(255);not null"`
+	Permission string                      `gorm:"column:permission;type:varchar(255);not null;uniqueIndex:idx_eos_account_permission"`
 	APIKey     string                      `gorm:"column:api_key;type:varchar(255);not null;index:idx_api_key"`
 	PublicKeys datatypes.JSONSlice[string] `gorm:"column:public_keys;type:json;not null"`
 }
@@ -57,4 +57,14 @@ func (r *Repo) GetUserSubAccount(ctx context.Context, uid string, name string) (
 // DeleteUserSubAccount deletes a sub-account by UID and name
 func (r *Repo) DeleteUserSubAccount(ctx context.Context, uid string, name string) error {
 	return r.WithContext(ctx).Where("uid = ? AND name = ?", uid, name).Delete(&UserSubAccount{}).Error
+}
+
+func (r *Repo) GetUserSubAccountByEOSAccountAndPermission(ctx context.Context, eosAccount string, permission string) (*UserSubAccount, error) {
+	var subAccount UserSubAccount
+	err := r.WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&subAccount).Error
+	return &subAccount, err
+}
+
+func (r *Repo) UpdateUserSubAccount(ctx context.Context, subAccount *UserSubAccount) error {
+	return r.WithContext(ctx).Model(&UserSubAccount{}).Where("id = ?", subAccount.ID).Updates(subAccount).Error
 }
