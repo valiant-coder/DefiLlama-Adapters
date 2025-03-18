@@ -17,7 +17,7 @@ import (
 // @Produce json
 // @Param req body entity.ReqAddSubAccount true "add sub-account params"
 // @Success 200 {object} entity.RespAddSubAccount
-// @Router /api/v1/sub-accounts [post]
+// @Router /sub-accounts [post]
 func addSubAccount(c *gin.Context) {
 	var req entity.ReqAddSubAccount
 	if err := c.ShouldBind(&req); err != nil {
@@ -48,7 +48,7 @@ func addSubAccount(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} entity.RespGetSubAccounts
-// @Router /api/v1/sub-accounts [get]
+// @Router /sub-accounts [get]
 func getSubAccounts(c *gin.Context) {
 	uid := c.GetString("uid")
 	if uid == "" {
@@ -74,7 +74,7 @@ func getSubAccounts(c *gin.Context) {
 // @Produce json
 // @Param req body entity.ReqDeleteSubAccount true "delete sub-account params"
 // @Success 200 {object} entity.RespDeleteSubAccount
-// @Router /api/v1/sub-accounts [delete]
+// @Router /sub-accounts [delete]
 func deleteSubAccount(c *gin.Context) {
 	var req entity.ReqDeleteSubAccount
 	if err := c.ShouldBind(&req); err != nil {
