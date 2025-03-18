@@ -474,6 +474,108 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/api/v1/sub-accounts": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get all sub-accounts for the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get sub-accounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespGetSubAccounts"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Add a new sub-account for the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Add sub-account",
+                "parameters": [
+                    {
+                        "description": "add sub-account params",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqAddSubAccount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespAddSubAccount"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a sub-account by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete sub-account",
+                "parameters": [
+                    {
+                        "description": "delete sub-account params",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ReqDeleteSubAccount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespDeleteSubAccount"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/unread-orders": {
             "get": {
                 "description": "Check if user has any unread completed orders",
@@ -1543,6 +1645,19 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.ReqAddSubAccount": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "sub account name",
+                    "type": "string"
+                },
+                "permission": {
+                    "description": "eos permission",
+                    "type": "string"
+                }
+            }
+        },
         "entity.ReqClaimFaucet": {
             "type": "object",
             "properties": {
@@ -1555,6 +1670,14 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "trader": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ReqDeleteSubAccount": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }
@@ -1637,11 +1760,27 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.RespAddSubAccount": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.RespClaimFaucet": {
             "type": "object",
             "properties": {
                 "tx_hash": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.RespDeleteSubAccount": {
+            "type": "object",
+            "properties": {
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1688,6 +1827,17 @@ const docTemplatemarketplace = `{
             "properties": {
                 "address": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.RespGetSubAccounts": {
+            "type": "object",
+            "properties": {
+                "sub_accounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.SubAccountInfo"
+                    }
                 }
             }
         },
@@ -1804,6 +1954,29 @@ const docTemplatemarketplace = `{
                 },
                 "withdraw_at": {
                     "type": "string"
+                }
+            }
+        },
+        "entity.SubAccountInfo": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "eos_account": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permission": {
+                    "type": "string"
+                },
+                "public_keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
