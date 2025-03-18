@@ -115,6 +115,11 @@ func Run(addr string, release bool) error {
 
 	auth.GET("/user-info", getUserInfo)
 
+	// sub-account routes
+	auth.POST("/api/v1/sub-accounts", addSubAccount)
+	auth.GET("/api/v1/sub-accounts", getSubAccounts)
+	auth.DELETE("/api/v1/sub-accounts", deleteSubAccount)
+
 	auth.POST("/first-deposit", firstDeposit)
 	auth.POST("/deposit", deposit)
 	auth.POST("/withdrawal", withdrawal)
