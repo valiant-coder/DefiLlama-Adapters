@@ -102,7 +102,7 @@ func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.Query
 	}
 	queryParams.Del("side")
 	var orders []OpenOrder
-	total, err := r.Query(ctx, &orders, queryParams, "is_bid", "trader", "pool_id")
+	total, err := r.Query(ctx, &orders, queryParams, "is_bid", "trader", "pool_id", "permission")
 	if err != nil {
 		return nil, 0, err
 	}

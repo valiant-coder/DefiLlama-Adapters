@@ -5,7 +5,6 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/entity"
 	"exapp-go/internal/errno"
-	"exapp-go/internal/services/marketplace"
 	"strings"
 
 	pkeos "exapp-go/pkg/eos"
@@ -15,30 +14,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// payCPU Pay CPU
-// @Summary pay cpu
-// @Description pay cpu for user tx
-// @Tags eos
+// @Summary send tx
+// @Description send  tx
+// @Tags tx
 // @Accept json
 // @Produce json
-// @Param request body entity.ReqPayCPU true "signed tx"
-// @Success 200 {object} entity.RespPayCPU "txid"
-// @Router /eos/pay-cpu [post]
-func payCPU(c *gin.Context) {
-	request := entity.ReqPayCPU{}
+// @Security ApiKeyAuth
+// @Param request body entity.ReqSendTx true "signed tx"
+// @Success 200 {object} entity.RespSendTx "txid"
+// @Router /api/v1/tx [post]
+func sendTx(c *gin.Context) {
+	request := entity.ReqSendTx{}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		api.Error(c, err)
 		return
 	}
 
-	if request.PublicKey != "" {
-		userService := marketplace.NewUserService()
-		if err := userService.UpdateUserCredentialUsage(c.Request.Context(), request.PublicKey, c.ClientIP()); err != nil {
-			api.Error(c, err)
-			return
-		}
+	subAccount := GetSubAccountFromContext(c)
+	isLegit := pkeos.CheckIsLegitTransaction(request.SingleSignedTransaction, config.Conf().Eos.PayerAccount, subAccount.EOSAccount, subAccount.Permission)
+	if !isLegit {
+		api.Error(c, errno.DefaultParamsError("transaction is not legit"))
+		return
 	}
-
 	response, err := pkeos.SignAndBroadcastByPayer(
 		c.Request.Context(),
 		eos.New(config.Conf().Eos.NodeURL),
@@ -66,7 +63,7 @@ func payCPU(c *gin.Context) {
 		api.Error(c, err)
 		return
 	}
-	api.OK(c, entity.RespPayCPU{
+	api.OK(c, entity.RespSendTx{
 		TransactionID: response.TransactionID,
 	})
 }

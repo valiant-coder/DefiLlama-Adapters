@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -43,7 +45,7 @@ func (r *Repo) GetUserSubAccounts(ctx context.Context, uid string) ([]UserSubAcc
 // GetUserSubAccountByAPIKey retrieves a sub-account by its API key
 func (r *Repo) GetUserSubAccountByAPIKey(ctx context.Context, apiKey string) (*UserSubAccount, error) {
 	var subAccount UserSubAccount
-	err := r.WithContext(ctx).Where("api_key = ?", apiKey).First(&subAccount).Error
+	err := r.WithCache(fmt.Sprintf("subaccount:%s", apiKey), 1*time.Hour).WithContext(ctx).Where("api_key = ?", apiKey).First(&subAccount).Error
 	return &subAccount, err
 }
 

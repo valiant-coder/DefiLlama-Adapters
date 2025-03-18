@@ -10,9 +10,9 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var V1Api = &cli.Command{
-	Name:  "v1",
-	Usage: "exapp v1 api",
+var ApiV1 = &cli.Command{
+	Name:  "api-v1",
+	Usage: "exapp api v1",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "addr",

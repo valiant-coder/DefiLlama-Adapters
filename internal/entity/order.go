@@ -66,6 +66,7 @@ type Order struct {
 	PoolQuoteCoin string `json:"pool_quote_coin"`
 	ClientOrderID string `json:"order_cid"`
 	Trader        string `json:"trader"`
+	Permission    string `json:"permission"`
 	// 0 buy 1 sell
 	Side uint8 `json:"side"`
 	// 0 market 1 limit
@@ -104,6 +105,7 @@ func OrderFromHistoryDB(order ckhdb.HistoryOrder) Order {
 		PoolQuoteCoin:      order.PoolQuoteCoin,
 		ClientOrderID:      order.ClientOrderID,
 		Trader:             order.Trader,
+		Permission:         order.Permission,
 		Side:               side,
 		Type:               orderType,
 		OrderPrice:         order.Price.String(),
@@ -135,6 +137,7 @@ func OrderFormOpenDB(order db.OpenOrder) Order {
 		PoolQuoteCoin:  order.PoolQuoteCoin,
 		ClientOrderID:  order.ClientOrderID,
 		Trader:         order.Trader,
+		Permission:     order.Permission,
 		Side:           side,
 		Type:           1,
 		OrderPrice:     order.Price.String(),

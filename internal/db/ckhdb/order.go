@@ -86,7 +86,7 @@ func (r *ClickHouseRepo) QueryHistoryOrders(ctx context.Context, queryParams *qu
 	queryParams.Del("type")
 
 	orders := []HistoryOrder{}
-	total, err := r.Query(ctx, &orders, queryParams, "pool_id", "trader", "status", "is_bid")
+	total, err := r.Query(ctx, &orders, queryParams, "pool_id", "trader", "status", "is_bid", "permission")
 	if err != nil {
 		return nil, 0, err
 	}

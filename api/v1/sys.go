@@ -2,62 +2,39 @@ package v1
 
 import (
 	"exapp-go/api"
+	"time"
 
 	"exapp-go/internal/entity"
-	"exapp-go/internal/services/marketplace"
 
 	"exapp-go/config"
 
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Ping
+// @Description Ping
+// @Tags system
+// @Accept json
+// @Produce json
+// @Success 200
+// @Router /api/v1/ping [get]
+func ping(c *gin.Context) {
+	api.OK(c, map[string]uint64{"timestamp": uint64(time.Now().Unix())})
+}
+
 // @Summary Get system information
 // @Description Get system information
 // @Tags system
 // @Accept json
 // @Produce json
-// @Success 200 {object} entity.SystemInfo
-// @Router /system-info [get]
+// @Success 200 {object} entity.RespSystemInfo
+// @Router /api/v1/system-info [get]
 func getSystemInfo(c *gin.Context) {
-	sysInfo := entity.SystemInfo{
-		Version: "1.0.0",
-		PayCPU: entity.PayCPU{
-			Account: config.Conf().Eos.PayerAccount,
-		},
-		VaultEVMAddress: config.Conf().Eos.OneDex.VaultEVMAddress,
-		VaultEOSAddress: config.Conf().Eos.OneDex.BridgeContract,
-		TokenContract:   config.Conf().Eos.OneDex.TokenContract,
-		DexContract:     config.Conf().Eos.CdexConfig.OneDexContract,
-		ExsatNetwork: entity.ExsatNetwork{
-			CurrencySymbol:   config.Conf().ExsatNetwork.CurrencySymbol,
-			NetworkUrl:       config.Conf().ExsatNetwork.NetworkUrl,
-			ChainId:          config.Conf().ExsatNetwork.ChainId,
-			NetworkName:      config.Conf().ExsatNetwork.NetworkName,
-			BlockExplorerUrl: config.Conf().ExsatNetwork.BlockExplorerUrl,
-		},
-		TradingCompetition: entity.TradingCompetition{
-			BeginTime:         entity.Time(config.Conf().TradingCompetition.BeginTime),
-			EndTime:           entity.Time(config.Conf().TradingCompetition.EndTime),
-			DailyPoints:       config.Conf().TradingCompetition.DailyPoints,
-			AccumulatedPoints: config.Conf().TradingCompetition.AccumulatedPoints,
-		},
+	sysInfo := entity.RespSystemInfo{
+		Version:        "1.0.0",
+		PayEOSAccount:  config.Conf().Eos.PayerAccount,
+		TokenContract:  config.Conf().Eos.OneDex.TokenContract,
+		OneDexContract: config.Conf().Eos.CdexConfig.OneDexContract,
 	}
 	api.OK(c, sysInfo)
-}
-
-// @Summary Get system trade information
-// @Description Get system trade information
-// @Tags system
-// @Accept json
-// @Produce json
-// @Success 200 {object} entity.SysTradeInfo
-// @Router /sys-trade-info [get]
-func getSysTradeInfo(c *gin.Context) {
-	tradeService := marketplace.NewTradeService()
-	tradeInfo, err := tradeService.GetTradeCountAndVolume(c.Request.Context())
-	if err != nil {
-		api.Error(c, err)
-		return
-	}
-	api.OK(c, tradeInfo)
 }

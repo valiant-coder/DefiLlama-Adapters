@@ -27,7 +27,7 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			cmd.MarketplaceApi,
-			cmd.V1Api,
+			cmd.ApiV1,
 			cmd.SyncCmd,
 			cmd.HandlerCmd,
 			cmd.CronCmd,

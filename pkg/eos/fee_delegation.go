@@ -74,6 +74,51 @@ func CreateUserSignedTransaction(
 	return signedTx, nil
 }
 
+func decodeSignedTransaction(signedTx string) (*eos.SignedTransaction, error) {
+	txBytes, err := hex.DecodeString(signedTx)
+	if err != nil {
+		return nil, err
+	}
+	tx := &eos.SignedTransaction{}
+	err = eos.UnmarshalBinary(txBytes, tx)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func CheckIsLegitTransaction(signedTx string, payEosAccount, eosAccount string, permission string) bool {
+	tx, err := decodeSignedTransaction(signedTx)
+	if err != nil {
+		log.Printf("decode signed transaction failed: %v", err)
+		return false
+	}
+
+	if len(tx.Actions) == 0 {
+		log.Printf("transaction actions is empty")
+		return false
+	}
+
+	if tx.Actions[0].Authorization[0].Actor != eos.AN(payEosAccount) {
+		log.Printf("transaction account is not payer account")
+		return false
+	}
+
+	for _, action := range tx.Actions {
+		for _, authorization := range action.Authorization {
+			if authorization.Actor == eos.AN(payEosAccount) {
+				continue
+			}
+			if authorization.Actor != eos.AN(eosAccount) || authorization.Permission != eos.PN(permission) {
+				log.Printf("transaction authorization is not legit, actor: %s, permission: %s", authorization.Actor, authorization.Permission)
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 // Sign and broadcast transaction by payer account
 func SignAndBroadcastByPayer(
 	ctx context.Context,
@@ -82,12 +127,7 @@ func SignAndBroadcastByPayer(
 	payerPrivateKey string,
 ) (*eos.PushTransactionFullResp, error) {
 
-	txBytes, err := hex.DecodeString(singleSignedTx)
-	if err != nil {
-		return nil, err
-	}
-	tx := &eos.SignedTransaction{}
-	err = eos.UnmarshalBinary(txBytes, tx)
+	tx, err := decodeSignedTransaction(singleSignedTx)
 	if err != nil {
 		return nil, err
 	}

@@ -14,9 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "exapp-go/docs/v1"
 )
 
-// @title exapp v1 api
+// @title exapp api v1
 // @version 1.0
 // @host 127.0.0.1:8080
 // @BasePath /
@@ -34,7 +36,7 @@ func Run(addr string, release bool) error {
 	// ginSwagger
 	if !release {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, func(config *ginSwagger.Config) {
-			config.InstanceName = "v1-api"
+			config.InstanceName = "api_v1"
 		}))
 		swaggerHost := os.Getenv("SWAGGER_HOST")
 		if swaggerHost != "" {
@@ -55,30 +57,35 @@ func Run(addr string, release bool) error {
 	r.Use(
 		cors.New(corsConfig),
 		api.Logger(),
-		api.Trace("marketplace"),
+		api.Trace("api-v1"),
 		gin.CustomRecovery(handleRecovery),
 	)
 
 	v1 := r.Group("/api/v1")
 
-	// Pool routes
+	v1.GET("/ping", ping)
 	v1.GET("/pools", pools)
 	v1.GET("/pools/:symbolOrId", getPoolDetail)
-
 	v1.GET("/klines", klines)
 	v1.GET("/depth", getDepth)
 	v1.GET("/latest-trades", getLatestTrades)
-	v1.GET("/open-orders", getOpenOrders)
-	v1.GET("/history-orders", getHistoryOrders)
-	v1.GET("/orders/:id", getOrderDetail)
 
-	v1.GET("/balances", getUserBalances)
+	v1.GET("/system-info", getSystemInfo)
 
-	r.GET("/system-info", getSystemInfo)
-	r.POST("/eos/pay-cpu", payCPU)
-	r.GET("/support-tokens", getSupportTokens)
-	r.GET("/token/:symbol", getToken)
-	// register middleware
+	v1.GET("/tokens", getSupportTokens)
+	v1.GET("/token/:symbol", getToken)
+
+	// Protected routes requiring API key authentication
+	auth := v1.Group("/")
+	auth.Use(AuthMiddleware())
+	{
+		auth.POST("/tx", sendTx)
+		auth.GET("/info", getUserInfo)
+		auth.GET("/open-orders", getOpenOrders)
+		auth.GET("/history-orders", getHistoryOrders)
+		auth.GET("/orders/:id", getOrderDetail)
+		auth.GET("/balances", getUserBalances)
+	}
 
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,

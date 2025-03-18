@@ -14,7 +14,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {array} entity.Token "token list"
-// @Router /support-tokens [get]
+// @Router /api/v1/tokens [get]
 func getSupportTokens(c *gin.Context) {
 	tokenService := marketplace.NewTokenService()
 	resp, err := tokenService.GetSupportTokens(c.Request.Context())
@@ -32,7 +32,7 @@ func getSupportTokens(c *gin.Context) {
 // @Produce json
 // @Param symbol path string true "coin symbol,ps BTC"
 // @Success 200 {object} entity.Token "token info"
-// @Router /token/{symbol} [get]
+// @Router /api/v1/token/{symbol} [get]
 func getToken(c *gin.Context) {
 	symbol := c.Param("symbol")
 	tokenService := marketplace.NewTokenService()
