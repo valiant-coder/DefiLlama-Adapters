@@ -13,5 +13,5 @@ func TestService_updateUserTokenBalance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewService failed: %v", err)
 	}
-	service.updateUserTokenBalance("abcabcabcabc")
+	service.updateUserTokenBalance("abcabcabcabc", "active")
 }

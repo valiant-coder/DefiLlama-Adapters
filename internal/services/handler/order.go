@@ -220,7 +220,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 		go s.publisher.PublishOrderUpdate(newOrder.EV.Trader.Actor, entityOrder)
 	}
 
-	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor)
+	go s.updateUserTokenBalance(newOrder.EV.Trader.Actor, newOrder.EV.Trader.Permission)
 	return nil
 }
 
@@ -581,6 +581,6 @@ func (s *Service) handleCancelOrder(action hyperion.Action) error {
 	log.Printf("[Performance Log] add history order time: %v", time.Since(historyStart))
 	go s.publisher.PublishOrderUpdate(data.EV.Trader.Actor, entity.OrderFromHistoryDB(historyOrder))
 
-	go s.updateUserTokenBalance(data.EV.Trader.Actor)
+	go s.updateUserTokenBalance(data.EV.Trader.Actor, data.EV.Trader.Permission)
 	return nil
 }

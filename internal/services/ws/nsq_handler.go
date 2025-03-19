@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"exapp-go/internal/entity"
+	"fmt"
 	"log"
 
 	"github.com/nsqio/go-nsq"
@@ -44,8 +45,14 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 			log.Printf("Failed to unmarshal order update: %v", err)
 			return nil
 		}
+		var trader string
+		if order.Permission != "active" {
+			trader = fmt.Sprintf("%s@%s", order.Trader, order.Permission)
+		} else {
+			trader = order.Trader
+		}
 		// Push order update to specific user
-		s.pusher.PushOrderUpdate(order.Trader, order)
+		s.pusher.PushOrderUpdate(trader, order)
 
 	case MsgTypeBalanceUpdate:
 		var account string

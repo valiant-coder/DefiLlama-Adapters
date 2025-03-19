@@ -205,7 +205,7 @@ func (s *Service) handleWithdraw(action hyperion.Action) error {
 		return nil
 	}
 
-	go s.updateUserTokenBalance(data.Account)
+	go s.updateUserTokenBalance(data.Account, "active")
 
 	return nil
 }

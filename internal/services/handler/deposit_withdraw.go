@@ -33,7 +33,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		log.Printf("Unmarshal deposit failed: %v", err)
 		return nil
 	}
-	go s.updateUserTokenBalance(data.Account)
+	go s.updateUserTokenBalance(data.Account, "active")
 
 	if data.AssetType == 2 || data.AssetType == 3 {
 		log.Printf("Asset type is exsat, skip")
