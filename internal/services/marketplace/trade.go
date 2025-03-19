@@ -17,7 +17,7 @@ type TradeService struct {
 }
 
 func (s *TradeService) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]entity.Trade, error) {
-	trades, err := s.ckhRepo.GetLatestTrades(ctx, poolID, limit)
+	trades, err := s.ckhRepo.GetLatestTradesByPool(ctx, poolID, limit)
 	if err != nil {
 		return make([]entity.Trade, 0), err
 	}

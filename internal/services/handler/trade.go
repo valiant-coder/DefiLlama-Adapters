@@ -26,7 +26,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 	func() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
-		s.lastTrade = trade
+		s.lastTrades[trade.PoolID] = trade
 	}()
 
 	s.tradeBuffer.Add(trade)

@@ -57,7 +57,7 @@ type Service struct {
 	cleanOpenOrderTicker  *time.Ticker
 	cleanDepthTicker      *time.Ticker
 	cleanTradeCacheTicker *time.Ticker
-	lastTrade             *ckhdb.Trade
+	lastTrades            map[uint64]*ckhdb.Trade
 	mu                    sync.Mutex
 	stopChan              chan struct{}
 }
@@ -104,6 +104,15 @@ func NewService() (*Service, error) {
 		cleanOpenOrderTicker:  time.NewTicker(time.Second * 30),
 		cleanTradeCacheTicker: time.NewTicker(time.Minute),
 		stopChan:              make(chan struct{}),
+		lastTrades:            make(map[uint64]*ckhdb.Trade),
+	}
+
+	trades, err := ckhRepo.GetLatestTrades(context.Background())
+	if err != nil {
+		log.Printf("get latest trades failed: %v", err)
+	}
+	for _, trade := range trades {
+		s.lastTrades[trade.PoolID] = trade
 	}
 
 	// Register all handlers
@@ -417,22 +426,23 @@ func (s *Service) startDepthCleaning() {
 		select {
 		case <-s.cleanDepthTicker.C:
 			s.mu.Lock()
-			lastTrade := s.lastTrade
+			lastTrade := s.lastTrades
 			s.mu.Unlock()
 			log.Printf("nsqChannel: %s", s.nsqChannel)
 			if lastTrade != nil {
-				if time.Since(lastTrade.Time) > 2*time.Second {
-					log.Printf("last trade time is too old, skip cleaning")
-					continue
+				for poolID, trade := range lastTrade {
+					if time.Since(trade.Time) > 2*time.Second {
+						log.Printf("last trade time is too old, skip cleaning")
+						continue
+					}
+					totalCleaned, err := s.repo.CleanInvalidDepth(poolID, trade.Price, trade.TakerIsBid)
+					if err != nil {
+						log.Printf("clean invalid depth failed: %v", err)
+					}
+					if totalCleaned > 0 {
+						log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
+					}
 				}
-				totalCleaned, err := s.repo.CleanInvalidDepth(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
-				if err != nil {
-					log.Printf("clean invalid depth failed: %v", err)
-				}
-				if totalCleaned > 0 {
-					log.Printf("Clean Depth Data: Cleaned %d invalid depths", totalCleaned)
-				}
-
 			}
 		case <-s.stopChan:
 			return
@@ -445,22 +455,24 @@ func (s *Service) startOpenOrderCleaning() {
 		select {
 		case <-s.cleanOpenOrderTicker.C:
 			s.mu.Lock()
-			lastTrade := s.lastTrade
+			lastTrade := s.lastTrades
 			s.mu.Unlock()
 			if lastTrade != nil {
-				if time.Since(lastTrade.Time) > 2*time.Second {
-					log.Printf("last trade time is too old, skip cleaning")
-					continue
+				for poolID, trade := range lastTrade {
+					if time.Since(trade.Time) > 2*time.Second {
+						log.Printf("last trade time is too old, skip cleaning")
+						continue
+					}
+					log.Printf("clean invalid orders for pool %d", poolID)
+					totalCleanedOrders, err := s.openOrderBuffer.CleanInvalidOrders(poolID, trade.Price, trade.TakerIsBid)
+					if err != nil {
+						log.Printf("clean invalid orders failed: %v", err)
+					}
+					if totalCleanedOrders > 0 {
+						log.Printf("Clean Orders: Cleaned %d invalid orders", totalCleanedOrders)
+					}
+					log.Printf("end clean invalid orders for pool %d", poolID)
 				}
-				log.Printf("clean invalid orders for pool %d", lastTrade.PoolID)
-				totalCleanedOrders, err := s.openOrderBuffer.CleanInvalidOrders(lastTrade.PoolID, lastTrade.Price, lastTrade.TakerIsBid)
-				if err != nil {
-					log.Printf("clean invalid orders failed: %v", err)
-				}
-				if totalCleanedOrders > 0 {
-					log.Printf("Clean Orders: Cleaned %d invalid orders", totalCleanedOrders)
-				}
-				log.Printf("end clean invalid orders for pool %d", lastTrade.PoolID)
 			}
 		case <-s.stopChan:
 			return

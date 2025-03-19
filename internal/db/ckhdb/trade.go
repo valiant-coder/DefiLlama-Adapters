@@ -51,7 +51,7 @@ func (r *ClickHouseRepo) BatchInsertTrades(ctx context.Context, trades []*Trade)
 	return r.DB.WithContext(ctx).CreateInBatches(trades, 100).Error
 }
 
-func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {
+func (r *ClickHouseRepo) GetLatestTradesByPool(ctx context.Context, poolID uint64, limit int) ([]Trade, error) {
 	trades := []Trade{}
 	err := r.DB.WithContext(ctx).Where("pool_id = ?", poolID).Order("global_sequence desc").Limit(limit).Find(&trades).Error
 	return trades, err
@@ -119,4 +119,22 @@ func (r *ClickHouseRepo) GetTradeCountAndVolume(ctx context.Context) (uint64, fl
 		return 0, 0, err
 	}
 	return tradeInfo.TotalTrades, tradeInfo.TotalVolume, nil
+}
+
+func (r *ClickHouseRepo) GetLatestTrades(ctx context.Context) ([]*Trade, error) {
+	trades := []*Trade{}
+	query := `
+		SELECT  *
+		FROM trades 
+		WHERE (pool_id, global_sequence) IN (
+			SELECT pool_id, MAX(global_sequence) 
+			FROM trades 
+			GROUP BY pool_id
+		)
+	`
+	err := r.DB.WithContext(ctx).Raw(query).Scan(&trades).Error
+	if err != nil {
+		return nil, err
+	}
+	return trades, nil
 }
