@@ -96,6 +96,11 @@ type Config struct {
 		FaucetPoint       int       `yaml:"faucet_points"`
 		Blacklist         []string  `yaml:"blacklist"`
 	} `yaml:"trading_competition"`
+
+	TelegramBot struct {
+		Token string `yaml:"token"`
+		ChatID string `yaml:"chat_id"`
+	} `yaml:"telegram_bot"`
 }
 
 type ExsatNetworkConfig struct {

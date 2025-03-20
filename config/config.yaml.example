@@ -115,7 +115,12 @@ eos:
     add_xsat_chain: addxsatchain
     map_xsat: "mapxsat"
 
-
+exsat_network:
+  currency_symbol: ""
+  network_url: ""
+  chain_id: 
+  network_name: "exSat"
+  block_explorer_url: ""
 
 faucet:
   enabled: false
@@ -125,13 +130,16 @@ faucet:
   token_owner_private_key: ""
   amount:  0
 
-accumulated_profit:
-  begin_time: "2025-02-26 00:00:00"
-  end_time: "2025-02-26 23:59:59"
-  daily_points: [10000,5000,4000,3000,2000,1000,1000,1000,1000,1000]
-  accumulated_points: [200000,100000,50000,30000,20000,10000,8000,7000,6000,5000]
-  faucet_point: 100
-  blacklist: ["12345678"]
+trading_competition:
+  begin_time: "2025-03-05T00:00:00Z"
+  end_time: "2025-03-15T00:00:00Z"
+  daily_points: [1,2,3]
+  accumulated_points: [1,2,3]
+  faucet_points: 100
+  blacklist: [""]
 
+telegram_bot:
+  token: "1234567890"
+  chat_id: "1234567890"
 
 
