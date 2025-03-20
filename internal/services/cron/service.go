@@ -82,6 +82,7 @@ func (s *Service) Run() error {
 	addSyncFuncs(c, "0 0 1 * * *", s.PowerUp)
 	addSyncFuncs(c, "0 0 * * * *", s.HandleTradeCompetition)
 	addSyncFuncs(c, "*/10 * * * *", s.MonitorPendingRecords)
+	addSyncFuncs(c, "*/5 * * * *", s.MonitorCPUResources)
 
 	c.Run()
 	return nil

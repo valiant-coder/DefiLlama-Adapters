@@ -146,6 +146,8 @@ type PowerUpConfig struct {
 	NetEOS     uint64 `yaml:"net_eos"`
 	CPUEOS     uint64 `yaml:"cpu_eos"`
 	MaxPayment uint64 `yaml:"max_payment"`
+	CPUMonitorEnabled bool    `yaml:"cpu_monitor_enabled"`
+	CPUThreshold      float64 `yaml:"cpu_threshold"` // Threshold percentage (0-100) to trigger powerup
 }
 
 type HyperionConfig struct {
