@@ -142,4 +142,7 @@ telegram_bot:
   token: "1234567890"
   chat_id: "1234567890"
 
+monitor:
+  deposit_withdraw_timeout: 10m
+
 

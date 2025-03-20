@@ -98,9 +98,13 @@ type Config struct {
 	} `yaml:"trading_competition"`
 
 	TelegramBot struct {
-		Token string `yaml:"token"`
+		Token  string `yaml:"token"`
 		ChatID string `yaml:"chat_id"`
 	} `yaml:"telegram_bot"`
+
+	Monitor struct {
+		DepositWithdrawTimeout time.Duration `yaml:"deposit_withdraw_timeout"`
+	} `yaml:"monitor"`
 }
 
 type ExsatNetworkConfig struct {
@@ -234,10 +238,9 @@ type EventConfig struct {
 	SetPoolFeeRate string `yaml:"set_pool_fee_rate"`
 
 	// token-chain events
-	CreateToken string `yaml:"create_token"`
+	CreateToken  string `yaml:"create_token"`
 	AddXSATChain string `yaml:"add_xsat_chain"`
 	MapXSAT      string `yaml:"map_xsat"`
-
 }
 
 func DefaultEventConfig() EventConfig {

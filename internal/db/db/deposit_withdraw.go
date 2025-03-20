@@ -186,3 +186,21 @@ func (r *Repo) GetPendingWithdrawRecords(ctx context.Context, uid string) ([]*Wi
 	err := r.WithContext(ctx).Where("uid = ? and status = ?", uid, WithdrawStatusPending).Find(&records).Error
 	return records, err
 }
+
+func (r *Repo) GetAllPendingDepositRecords(ctx context.Context) ([]*DepositRecord, error) {
+	var records []*DepositRecord
+	err := r.WithContext(ctx).
+		Select("id, uid, symbol, amount, chain_name, deposit_address, time, tx_hash").
+		Where("status = ?", DepositStatusPending).
+		Find(&records).Error
+	return records, err
+}
+
+func (r *Repo) GetAllPendingWithdrawRecords(ctx context.Context) ([]*WithdrawRecord, error) {
+	var records []*WithdrawRecord
+	err := r.WithContext(ctx).
+		Select("id, uid, symbol, amount, chain_name, fee, bridge_fee, recipient, withdraw_at, tx_hash").
+		Where("status = ?", WithdrawStatusPending).
+		Find(&records).Error
+	return records, err
+}
