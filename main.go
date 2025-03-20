@@ -32,6 +32,7 @@ func main() {
 			cmd.HandlerCmd,
 			cmd.CronCmd,
 			cmd.WebSocketCommand,
+			cmd.AdminApi,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
