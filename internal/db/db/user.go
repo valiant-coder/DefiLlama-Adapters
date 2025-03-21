@@ -24,16 +24,22 @@ const (
 	LoginMethodGoogle   LoginMethod = "google"
 	LoginMethodApple    LoginMethod = "apple"
 	LoginMethodTelegram LoginMethod = "telegram"
+	LoginMethodEVM      LoginMethod = "evm"
 )
 
 type User struct {
 	gorm.Model
-	Username    string      `gorm:"column:username;type:varchar(255);not null;index:idx_username"`
+	Username    string      `gorm:"column:username;type:varchar(255);default:null;index:idx_username"`
 	UID         string      `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid"`
-	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
-	Avatar      string      `gorm:"column:avatar;type:varchar(255);not null;default:''"`
-	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);not null;uniqueIndex:idx_login_method_oauth_id"`
+	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);default:null;uniqueIndex:idx_login_method_oauth_id"`
+	Avatar      string      `gorm:"column:avatar;type:varchar(255);default:null"`
+	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);default:null;uniqueIndex:idx_login_method_oauth_id"`
 	Email       string      `gorm:"column:email;type:varchar(255);default:null"`
+
+	// for evm user
+	EVMAddress string `gorm:"column:evm_address;type:varchar(255);default:null;uniqueIndex:idx_evm_address"`
+	EOSAccount string `gorm:"column:eos_account;type:varchar(255);default:null;index:idx_eos_account_permission"`
+	Permission string `gorm:"column:permission;type:varchar(255);default:null;index:idx_eos_account_permission"`
 }
 
 func (User) TableName() string {

@@ -1750,11 +1750,21 @@ const docTemplatemarketplace = `{
         "entity.ReqUserLogin": {
             "type": "object",
             "properties": {
+                "evm_address": {
+                    "description": "for evm user",
+                    "type": "string"
+                },
                 "id_token": {
+                    "type": "string"
+                },
+                "message": {
                     "type": "string"
                 },
                 "method": {
                     "description": "google,apple,telegram",
+                    "type": "string"
+                },
+                "signature": {
                     "type": "string"
                 },
                 "telegram_data": {
@@ -1913,11 +1923,21 @@ const docTemplatemarketplace = `{
                 "email": {
                     "type": "string"
                 },
+                "eos_account": {
+                    "type": "string"
+                },
+                "evm_address": {
+                    "description": "for evm user",
+                    "type": "string"
+                },
                 "passkeys": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entity.RespUserCredential"
                     }
+                },
+                "permission": {
+                    "type": "string"
                 },
                 "uid": {
                     "type": "string"

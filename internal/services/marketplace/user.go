@@ -14,6 +14,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/redis/go-redis/v9"
+	"github.com/relvacode/iso8601"
+	"github.com/spruceid/siwe-go"
 )
 
 type UserService struct {
@@ -34,65 +39,160 @@ func NewUserService() *UserService {
 	}
 }
 
+// LoginHandler defines the interface for different login methods
+type LoginHandler interface {
+	Handle(ctx context.Context, req entity.ReqUserLogin) (*db.User, error)
+}
+
+// GoogleLoginHandler handles Google login
+type GoogleLoginHandler struct {
+	clientID string
+}
+
+func (h *GoogleLoginHandler) Handle(_ context.Context, req entity.ReqUserLogin) (*db.User, error) {
+	userInfo, err := oauth2.VerifyGoogleToken(req.IdToken, h.clientID)
+	if err != nil {
+		return nil, fmt.Errorf("verify google token: %w", err)
+	}
+	return &db.User{
+		Username:    userInfo.Name,
+		OauthID:     userInfo.GoogleID,
+		LoginMethod: db.LoginMethodGoogle,
+		Avatar:      userInfo.Picture,
+		Email:       userInfo.Email,
+	}, nil
+}
+
+// AppleLoginHandler handles Apple login
+type AppleLoginHandler struct {
+	clientID string
+}
+
+func (h *AppleLoginHandler) Handle(_ context.Context, req entity.ReqUserLogin) (*db.User, error) {
+	userInfo, err := oauth2.ParseAppleIDToken(req.IdToken, h.clientID)
+	if err != nil {
+		return nil, fmt.Errorf("verify apple token: %w", err)
+	}
+	return &db.User{
+		Username:    req.UserName,
+		OauthID:     userInfo.UserID,
+		LoginMethod: db.LoginMethodApple,
+		Email:       userInfo.Email,
+	}, nil
+}
+
+// TelegramLoginHandler handles Telegram login
+type TelegramLoginHandler struct {
+	botToken string
+}
+
+func (h *TelegramLoginHandler) Handle(_ context.Context, req entity.ReqUserLogin) (*db.User, error) {
+	userInfo, err := oauth2.VerifyTelegramLogin(h.botToken, oauth2.TelegramData{
+		ID:        req.TelegramData.ID,
+		FirstName: req.TelegramData.FirstName,
+		LastName:  req.TelegramData.LastName,
+		Username:  req.TelegramData.Username,
+		PhotoURL:  req.TelegramData.PhotoURL,
+		Hash:      req.TelegramData.Hash,
+		AuthDate:  req.TelegramData.AuthDate,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("verify telegram data: %w", err)
+	}
+	username := userInfo.Username
+	if username == "" {
+		username = fmt.Sprintf("%s %s", userInfo.FirstName, userInfo.LastName)
+	}
+	return &db.User{
+		Username:    username,
+		OauthID:     strconv.FormatInt(userInfo.ID, 10),
+		LoginMethod: db.LoginMethodTelegram,
+		Avatar:      userInfo.PhotoURL,
+	}, nil
+}
+
+// EVMLoginHandler handles EVM login
+type EVMLoginHandler struct {
+	redis redis.Cmdable
+}
+
+func (h *EVMLoginHandler) Handle(ctx context.Context, req entity.ReqUserLogin) (*db.User, error) {
+	ms, err := siwe.ParseMessage(req.Message)
+	if err != nil {
+		return nil, fmt.Errorf("parse message: %w", err)
+	}
+
+	issuedAt, err := iso8601.ParseString(ms.GetIssuedAt())
+	if err != nil {
+		return nil, fmt.Errorf("parse issuedAt: %w", err)
+	}
+	if time.Now().After(issuedAt.Add(5 * time.Minute)) {
+		return nil, errors.New("issuedAt is expired")
+	}
+
+	// verify nonce
+	nonceKey := fmt.Sprint("login_nonce:", ms.GetNonce())
+	isExistNonce, err := h.redis.Exists(ctx, nonceKey).Result()
+	if err != nil {
+		return nil, fmt.Errorf("check nonce: %w", err)
+	}
+	if isExistNonce == 1 {
+		return nil, errors.New("nonce used")
+	}
+
+	publicKey, err := ms.VerifyEIP191(req.Signature)
+	if err != nil {
+		return nil, fmt.Errorf("verify signature: %w", err)
+	}
+
+	evmAddress := crypto.PubkeyToAddress(*publicKey).String()
+	if !strings.EqualFold(evmAddress, req.EVMAddress) {
+		return nil, errors.New("evm address not match")
+	}
+
+	if err := h.redis.Set(ctx, nonceKey, "1", 5*time.Minute); err != nil {
+		return nil, fmt.Errorf("set nonce: %w", err)
+	}
+
+	return &db.User{
+		Username:    req.EVMAddress,
+		LoginMethod: db.LoginMethodEVM,
+		OauthID:     req.EVMAddress,
+		EVMAddress:  req.EVMAddress,
+	}, nil
+}
+
 func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (string, error) {
 	cfg := config.Conf()
-	var user *db.User
-	switch req.Method {
-	case "google":
-		userInfo, err := oauth2.VerifyGoogleToken(req.IdToken, cfg.Oauth2.Google.ClientID)
-		if err != nil {
-			log.Logger().Errorf("verify google token error: %v,id_token: %s", err, req.IdToken)
-			return "", err
-		}
-		user = &db.User{
-			Username:    userInfo.Name,
-			OauthID:     userInfo.GoogleID,
-			LoginMethod: db.LoginMethodGoogle,
-			Avatar:      userInfo.Picture,
-			Email:       userInfo.Email,
-		}
-	case "apple":
-		userInfo, err := oauth2.ParseAppleIDToken(req.IdToken, cfg.Oauth2.Apple.ClientID)
-		if err != nil {
-			log.Logger().Errorf("verify apple token error: %v,id_token: %s", err, req.IdToken)
-			return "", err
-		}
-		user = &db.User{
-			Username:    req.UserName,
-			OauthID:     userInfo.UserID,
-			LoginMethod: db.LoginMethodApple,
-			Email:       userInfo.Email,
-		}
-	case "telegram":
-		userInfo, err := oauth2.VerifyTelegramLogin(cfg.Oauth2.Telegram.BotToken, oauth2.TelegramData{
-			ID:        req.TelegramData.ID,
-			FirstName: req.TelegramData.FirstName,
-			LastName:  req.TelegramData.LastName,
-			Username:  req.TelegramData.Username,
-			PhotoURL:  req.TelegramData.PhotoURL,
-			Hash:      req.TelegramData.Hash,
-			AuthDate:  req.TelegramData.AuthDate,
-		})
-		if err != nil {
-			log.Logger().Errorf("verify telegram data error: %v", err)
-			return "", err
-		}
-		username := userInfo.Username
-		if username == "" {
-			username = fmt.Sprintf("%s %s", userInfo.FirstName, userInfo.LastName)
-		}
-		user = &db.User{
-			Username:    username,
-			OauthID:     strconv.FormatInt(userInfo.ID, 10),
-			LoginMethod: db.LoginMethodTelegram,
-			Avatar:      userInfo.PhotoURL,
-		}
-	default:
+
+	handlers := map[string]LoginHandler{
+		string(db.LoginMethodGoogle): &GoogleLoginHandler{
+			clientID: cfg.Oauth2.Google.ClientID,
+		},
+		string(db.LoginMethodApple): &AppleLoginHandler{
+			clientID: cfg.Oauth2.Apple.ClientID,
+		},
+		string(db.LoginMethodTelegram): &TelegramLoginHandler{
+			botToken: cfg.Oauth2.Telegram.BotToken,
+		},
+		string(db.LoginMethodEVM): &EVMLoginHandler{
+			redis: s.repo.Redis(),
+		},
+	}
+
+	handler, ok := handlers[req.Method]
+	if !ok {
 		return "", errors.New("invalid login method")
 	}
 
-	if err := s.repo.UpsertUser(ctx, user); err != nil {
+	user, err := handler.Handle(ctx, req)
+	if err != nil {
+		log.Logger().Errorf("login failed for method %s: %v", req.Method, err)
 		return "", err
+	}
+
+	if err := s.repo.UpsertUser(ctx, user); err != nil {
+		return "", fmt.Errorf("upsert user: %w", err)
 	}
 
 	return user.UID, nil
@@ -134,11 +234,30 @@ func (s *UserService) GetUserInfo(ctx context.Context, uid string) (entity.RespU
 		return entity.RespUserInfo{}, err
 	}
 
+	var eosAccount, permission string
+	if user.LoginMethod == db.LoginMethodEVM {
+		eosAccount = user.EOSAccount
+		permission = user.Permission
+	} else {
+		for _, c := range credentials {
+			if c.EOSAccount != "" {
+				eosAccount = c.EOSAccount
+				permission = "active"
+				break
+			}
+		}
+	}
+
 	return entity.RespUserInfo{
 		UID:      user.UID,
 		UserName: user.Username,
 		Passkeys: credentials,
 		Email:    user.Email,
+
+		// for evm user
+		EVMAddress: user.EVMAddress,
+		EOSAccount: eosAccount,
+		Permission: permission,
 	}, nil
 }
 
