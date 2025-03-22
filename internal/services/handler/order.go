@@ -210,7 +210,7 @@ func (s *Service) handleCreateOrder(action hyperion.Action) error {
 
 		entityOrder := entity.OrderFromHistoryDB(order)
 		if order.Status == ckhdb.OrderStatusFilled {
-			err := s.repo.AddUnreadOrder(ctx, order.Trader, entityOrder.ID)
+			err := s.repo.AddUnreadOrder(ctx, order.Trader, order.Permission, entityOrder.ID)
 			if err != nil {
 				log.Printf("add unread order failed: %v", err)
 			}
@@ -440,7 +440,7 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 		s.historyOrderBuffer.Add(&historyOrder)
 		entityOrder := entity.OrderFromHistoryDB(historyOrder)
 		if historyOrder.Status == ckhdb.OrderStatusFilled {
-			err := s.repo.AddUnreadOrder(ctx, makerOrder.Trader, entityOrder.ID)
+			err := s.repo.AddUnreadOrder(ctx, makerOrder.Trader, makerOrder.Permission, entityOrder.ID)
 			if err != nil {
 				log.Printf("add unread order failed: %v", err)
 			}

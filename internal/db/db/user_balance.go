@@ -81,7 +81,7 @@ func (r *Repo) GetUserBalances(ctx context.Context, accountName string, userAvai
 	}
 
 	// 2. Get open orders
-	openOrders, err := r.GetOpenOrderByTrader(ctx, accountName)
+	openOrders, err := r.GetOpenOrderByTrader(ctx, accountName,"active")
 	if err != nil {
 		return nil, err
 	}

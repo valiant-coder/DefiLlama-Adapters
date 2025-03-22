@@ -83,14 +83,6 @@ func Run(addr string, release bool) error {
 	v1.GET("/klines", klines)
 	v1.GET("/depth", getDepth)
 	v1.GET("/latest-trades", getLatestTrades)
-	v1.GET("/open-orders", getOpenOrders)
-	v1.GET("/history-orders", getHistoryOrders)
-	v1.GET("/orders/:id", getOrderDetail)
-	v1.POST("/orders/read", markOrderAsRead)
-	v1.GET("/unread-orders", checkUnreadOrders)
-	v1.POST("/orders/clear-unread", clearAllUnreadOrders)
-
-	v1.GET("/balances", getUserBalances)
 
 	r.GET("/system-info", getSystemInfo)
 	r.POST("/eos/pay-cpu", payCPU)
@@ -114,6 +106,16 @@ func Run(addr string, release bool) error {
 	auth.DELETE("/credentials/:credential_id", deleteUserCredential)
 
 	auth.GET("/user-info", getUserInfo)
+
+	// orders
+	auth.GET("/open-orders", getOpenOrders)
+	auth.GET("/history-orders", getHistoryOrders)
+	auth.GET("/orders/:id", getOrderDetail)
+	auth.GET("/unread-orders", checkUnreadOrders)
+	auth.POST("/orders/clear-unread", clearAllUnreadOrders)
+
+	// user balance
+	auth.GET("/balances", getUserBalances)
 
 	// sub-account routes
 	auth.POST("/sub-accounts", addSubAccount)

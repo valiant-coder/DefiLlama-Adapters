@@ -261,6 +261,10 @@ func (s *UserService) GetUserInfo(ctx context.Context, uid string) (entity.RespU
 	}, nil
 }
 
+func (s *UserService) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) (string, string, error) {
+	return s.repo.GetEOSAccountAndPermissionByUID(ctx, uid)
+}
+
 func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserCredential, uid string) error {
 	newUserCredential := db.UserCredential{
 		UID:          uid,

@@ -91,6 +91,27 @@ func (r *Repo) GetTotalUserCount(ctx context.Context) (int64, error) {
 	return totalUserCount, nil
 }
 
+func (r *Repo) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) (string, string, error) {
+	var user User
+	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
+	if result.Error != nil {
+		return "", "", result.Error
+	}
+	if user.EVMAddress != "" {
+		return user.EOSAccount, user.Permission, nil
+	}
+	credentials, err := r.GetUserCredentials(ctx, uid)
+	if err != nil {
+		return "", "", err
+	}
+	for _, c := range credentials {
+		if c.EOSAccount != "" {
+			return c.EOSAccount, "active", nil
+		}
+	}
+	return "", "", nil
+}
+
 type UserCredential struct {
 	gorm.Model
 	UID            string    `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`

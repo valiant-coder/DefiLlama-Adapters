@@ -26,6 +26,8 @@ func NewOrderService() *OrderService {
 }
 
 func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.OpenOrder, int64, error) {
+
+
 	orders, total, err := s.repo.GetOpenOrders(ctx, queryParams)
 	if err != nil {
 		return make([]entity.OpenOrder, 0), 0, err
@@ -39,6 +41,7 @@ func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *querypara
 }
 
 func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.Order, int64, error) {
+	
 	orders, total, err := s.ckhdbRepo.QueryHistoryOrders(ctx, queryParams)
 	if err != nil {
 		return make([]entity.Order, 0), 0, err
@@ -47,12 +50,12 @@ func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryp
 	result := make([]entity.Order, 0, len(orders))
 
 	trader := queryParams.Get("trader")
-
+	permission := queryParams.Get("permission")
 	for _, order := range orders {
 		orderEntity := entity.OrderFromHistoryDB(order)
 
 		if orderEntity.Status == 2 && trader != "" {
-			unread, err := s.repo.IsOrderUnread(ctx, trader, orderEntity.ID)
+			unread, err := s.repo.IsOrderUnread(ctx, trader, permission, orderEntity.ID)
 			if err == nil {
 				orderEntity.Unread = unread
 			}
@@ -88,7 +91,7 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 		orderDetail.Order = entity.OrderFromHistoryDB(*order)
 
 		if orderDetail.Status == 2 && orderDetail.Trader != "" {
-			_ = s.repo.MarkOrderAsRead(ctx, orderDetail.Trader, id)
+			_ = s.repo.MarkOrderAsRead(ctx, orderDetail.Trader, orderDetail.Permission, id)
 			orderDetail.Order.Unread = false
 		}
 	}
@@ -106,14 +109,34 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 	return orderDetail, nil
 }
 
-func (s *OrderService) CheckUnreadFilledOrders(ctx context.Context, trader string) (bool, error) {
-	return s.repo.HasUnreadOrders(ctx, trader)
+func (s *OrderService) CheckUnreadFilledOrders(ctx context.Context,uid string) (bool, error) {
+	if uid != "" {
+		eosAccount, permission, err := s.repo.GetEOSAccountAndPermissionByUID(ctx, uid)
+		if err != nil {
+			return false, err
+		}
+		if eosAccount == "" {
+			return false, nil
+		}
+		return s.repo.HasUnreadOrders(ctx, eosAccount, permission)
+	}
+	return false, nil
 }
 
-func (s *OrderService) MarkOrderAsRead(ctx context.Context, trader string, orderID string) error {
-	return s.repo.MarkOrderAsRead(ctx, trader, orderID)
+func (s *OrderService) MarkOrderAsRead(ctx context.Context, trader,permission string, orderID string) error {
+	return s.repo.MarkOrderAsRead(ctx, trader,permission, orderID)
 }
 
-func (s *OrderService) ClearAllUnreadOrders(ctx context.Context, trader string) error {
-	return s.repo.ClearUnreadOrders(ctx, trader)
+func (s *OrderService) ClearAllUnreadOrders(ctx context.Context, uid string) error {
+	if uid != "" {
+		eosAccount, permission, err := s.repo.GetEOSAccountAndPermissionByUID(ctx, uid)
+		if err != nil {
+			return err
+		}
+		if eosAccount == "" {
+			return nil
+		}
+		return s.repo.ClearUnreadOrders(ctx, eosAccount, permission)
+	}
+	return nil
 }

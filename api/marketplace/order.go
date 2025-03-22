@@ -7,8 +7,6 @@ import (
 
 	"exapp-go/pkg/queryparams"
 
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
@@ -19,14 +17,25 @@ import (
 // @Accept json
 // @Produce json
 // @Param pool_id query string false "pool_id"
-// @Param trader query string true "eos account name"
 // @Param side    query string false "0 buy 1 sell"
 // @Success 200 {array} entity.OpenOrder "open order list"
 // @Router /api/v1/open-orders [get]
 func getOpenOrders(c *gin.Context) {
 	queryParams := queryparams.NewQueryParams(c)
 
-	orders, total, err := marketplace.NewOrderService().GetOpenOrders(c.Request.Context(), queryParams)
+	uid := c.GetString("uid")
+	userService := marketplace.NewUserService()
+	ctx := c.Request.Context()
+	if uid != "" {
+		eosAccount, permission, err := userService.GetEOSAccountAndPermissionByUID(ctx, uid)
+		if err != nil {
+			api.Error(c, err)
+			return
+		}
+		queryParams.Add("trader", eosAccount)
+		queryParams.Add("permission", permission)
+	}
+	orders, total, err := marketplace.NewOrderService().GetOpenOrders(ctx, queryParams)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -49,7 +58,23 @@ func getOpenOrders(c *gin.Context) {
 func getHistoryOrders(c *gin.Context) {
 	queryParams := queryparams.NewQueryParams(c)
 
-	orders, total, err := marketplace.NewOrderService().GetHistoryOrders(c.Request.Context(), queryParams)
+	uid := c.GetString("uid")
+	userService := marketplace.NewUserService()
+	ctx := c.Request.Context()
+	if uid != "" {
+		eosAccount, permission, err := userService.GetEOSAccountAndPermissionByUID(ctx, uid)
+		if err != nil {
+			api.Error(c, err)
+			return
+		}
+		if eosAccount == "" {
+			api.OK(c, make([]entity.Order, 0))
+			return
+		}
+		queryParams.Add("trader", eosAccount)
+		queryParams.Add("permission", permission)
+	}
+	orders, total, err := marketplace.NewOrderService().GetHistoryOrders(ctx, queryParams)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -97,48 +122,15 @@ func getDepth(c *gin.Context) {
 	api.OK(c, depth)
 }
 
-// @Summary Mark order as read
-// @Description Mark order as read and remove notification dot
-// @Tags order
-// @Accept json
-// @Produce json
-// @Param req body entity.ReqMakeOrderAsRead true "Request to mark order as read"
-// @Success 200
-// @Router /api/v1/orders/read [post]
-func markOrderAsRead(c *gin.Context) {
-	var req entity.ReqMakeOrderAsRead
-	if err := c.ShouldBindJSON(&req); err != nil {
-		api.Error(c, err)
-		return
-	}
-
-	orderService := marketplace.NewOrderService()
-	err := orderService.MarkOrderAsRead(c.Request.Context(), req.Trader, req.ID)
-	if err != nil {
-		api.Error(c, err)
-		return
-	}
-
-	api.OK(c, nil)
-}
-
 // @Summary Check for unread orders
 // @Description Check if user has any unread completed orders
 // @Tags order
 // @Accept json
 // @Produce json
-// @Param trader query string true "trader eos account name"
 // @Success 200 {object} entity.RespUnreadOrder "Response for unread status"
 // @Router /api/v1/unread-orders [get]
 func checkUnreadOrders(c *gin.Context) {
-	trader := c.Query("trader")
-
-	if trader == "" {
-		api.Error(c, fmt.Errorf("trader is required"))
-		return
-	}
-
-	hasUnread, err := marketplace.NewOrderService().CheckUnreadFilledOrders(c.Request.Context(), trader)
+	hasUnread, err := marketplace.NewOrderService().CheckUnreadFilledOrders(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -152,22 +144,10 @@ func checkUnreadOrders(c *gin.Context) {
 // @Tags order
 // @Accept json
 // @Produce json
-// @Param req body entity.ReqClearAllUnreadOrders true "Request to clear all unread orders"
 // @Success 200
 // @Router /api/v1/orders/clear-unread [post]
 func clearAllUnreadOrders(c *gin.Context) {
-	var req entity.ReqClearAllUnreadOrders
-	if err := c.ShouldBindJSON(&req); err != nil {
-		api.Error(c, err)
-		return
-	}
-
-	if req.Trader == "" {
-		api.Error(c, fmt.Errorf("trader is required"))
-		return
-	}
-
-	err := marketplace.NewOrderService().ClearAllUnreadOrders(c.Request.Context(), req.Trader)
+	err := marketplace.NewOrderService().ClearAllUnreadOrders(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return
