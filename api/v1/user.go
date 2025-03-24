@@ -33,9 +33,10 @@ func getUserInfo(c *gin.Context) {
 // @Success 200 {array} entity.SubAccountBalance "user balances"
 // @Router /api/v1/balances [get]
 func getUserBalances(c *gin.Context) {
-	accountName := c.Query("account")
+	subAccount := GetSubAccountFromContext(c)
+
 	userService := marketplace.NewUserService()
-	balances, err := userService.GetUserBalance(c.Request.Context(), accountName)
+	balances, err := userService.GetUserBalance(c.Request.Context(), subAccount.EOSAccount)
 	if err != nil {
 		api.Error(c, err)
 		return

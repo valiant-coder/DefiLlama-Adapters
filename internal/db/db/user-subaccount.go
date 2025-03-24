@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -69,4 +70,23 @@ func (r *Repo) GetUserSubAccountByEOSAccountAndPermission(ctx context.Context, e
 
 func (r *Repo) UpdateUserSubAccount(ctx context.Context, subAccount *UserSubAccount) error {
 	return r.WithContext(ctx).Model(&UserSubAccount{}).Where("id = ?", subAccount.ID).Updates(subAccount).Error
+}
+
+type UserSubAccountBalance struct {
+	gorm.Model
+	UID        string          `gorm:"column:uid;type:varchar(255);not null;index:idx_uid"`
+	EOSAccount string          `gorm:"column:eos_account;type:varchar(255);not null;index:idx_eos_permission"`
+	Permission string          `gorm:"column:permission;type:varchar(255);not null;index:idx_eos_permission"`
+	Coin       string          `gorm:"column:coin;type:varchar(255);not null;index:idx_coin"`
+	Balance    decimal.Decimal `gorm:"column:balance;type:decimal(36,18);not null"`
+}
+
+func (UserSubAccountBalance) TableName() string {
+	return "user_subaccount_balances"
+}
+
+func (r *Repo) GetUserSubAccountBalance(ctx context.Context, eosAccount string, permission string) ([]*UserSubAccountBalance, error) {
+	var balances []*UserSubAccountBalance
+	err := r.WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).Find(&balances).Error
+	return balances, err
 }
