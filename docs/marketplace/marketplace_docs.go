@@ -28,14 +28,6 @@ const docTemplatemarketplace = `{
                     "user"
                 ],
                 "summary": "Get user balances",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "eos account name",
-                        "name": "account",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "user balances",
@@ -283,13 +275,6 @@ const docTemplatemarketplace = `{
                     },
                     {
                         "type": "string",
-                        "description": "eos account name",
-                        "name": "trader",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "0 buy 1 sell",
                         "name": "side",
                         "in": "query"
@@ -321,48 +306,6 @@ const docTemplatemarketplace = `{
                     "order"
                 ],
                 "summary": "Clear all unread orders",
-                "parameters": [
-                    {
-                        "description": "Request to clear all unread orders",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqClearAllUnreadOrders"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/read": {
-            "post": {
-                "description": "Mark order as read and remove notification dot",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Mark order as read",
-                "parameters": [
-                    {
-                        "description": "Request to mark order as read",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqMakeOrderAsRead"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -487,15 +430,6 @@ const docTemplatemarketplace = `{
                     "order"
                 ],
                 "summary": "Check for unread orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "trader eos account name",
-                        "name": "trader",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Response for unread status",
@@ -1672,14 +1606,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "entity.ReqClearAllUnreadOrders": {
-            "type": "object",
-            "properties": {
-                "trader": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.ReqDeleteSubAccount": {
             "type": "object",
             "properties": {
@@ -1722,17 +1648,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "entity.ReqMakeOrderAsRead": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "trader": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.ReqPayCPU": {
             "type": "object",
             "required": [
@@ -1761,7 +1676,7 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "method": {
-                    "description": "google,apple,telegram",
+                    "description": "google,apple,telegram,evm",
                     "type": "string"
                 },
                 "signature": {

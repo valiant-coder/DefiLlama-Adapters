@@ -44,9 +44,15 @@ func (s *UserService) getCoinUSDTPrice(ctx context.Context) (map[string]string, 
 	return coinUSDTPrice, nil
 }
 
-func (s *UserService) GetUserBalance(ctx context.Context, accountName string) ([]entity.UserBalance, error) {
-	if accountName == "" {
-		return nil, errors.New("account is required")
+func (s *UserService) GetUserBalance(ctx context.Context,uid string) ([]entity.UserBalance, error) {
+	
+	if uid == "" {
+		return nil, errors.New("uid is required")
+	}
+
+	accountName,err := s.repo.GetEosAccountByUID(ctx,uid)
+	if err != nil {
+		return nil, err
 	}
 
 	hyperionCfg := config.Conf().Eos.Hyperion
@@ -145,3 +151,5 @@ func (s *UserService) CalculateUserUSDTBalance(ctx context.Context, accountName 
 	}
 	return total, nil
 }
+
+
