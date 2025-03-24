@@ -746,7 +746,10 @@ const docTemplatemarketplace = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.RespGetSubAccounts"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.SubAccountInfo"
+                            }
                         }
                     }
                 }
@@ -1758,17 +1761,6 @@ const docTemplatemarketplace = `{
             "properties": {
                 "address": {
                     "type": "string"
-                }
-            }
-        },
-        "entity.RespGetSubAccounts": {
-            "type": "object",
-            "properties": {
-                "sub_accounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.SubAccountInfo"
-                    }
                 }
             }
         },

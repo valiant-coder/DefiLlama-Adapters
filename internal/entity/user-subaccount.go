@@ -28,9 +28,7 @@ type SubAccountInfo struct {
 	PublicKeys []string `json:"public_keys"`
 }
 
-type RespGetSubAccounts struct {
-	SubAccounts []SubAccountInfo `json:"sub_accounts"`
-}
+
 
 type SubAccountBalance struct {
 	Coin    string        `json:"coin"`
