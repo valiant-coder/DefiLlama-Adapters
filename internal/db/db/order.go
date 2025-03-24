@@ -109,7 +109,16 @@ func (r *Repo) GetOpenOrders(ctx context.Context, queryParams *queryparams.Query
 	return orders, total, nil
 }
 
-func (r *Repo) GetOpenOrderByTrader(ctx context.Context, trader string, permission string) ([]*OpenOrder, error) {
+func (r *Repo) GetOpenOrdersByTrader(ctx context.Context, trader string) ([]*OpenOrder, error) {
+	var orders []*OpenOrder
+	err := r.WithContext(ctx).Where("trader = ?", trader).Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func (r *Repo) GetOpenOrdersByTraderPermission(ctx context.Context, trader string, permission string) ([]*OpenOrder, error) {
 	var orders []*OpenOrder
 	err := r.WithContext(ctx).Where("trader = ? and permission = ?", trader, permission).Find(&orders).Error
 	if err != nil {
@@ -231,31 +240,31 @@ func (r *Repo) BatchDeleteOpenOrders(ctx context.Context, orders []*OpenOrder) e
 }
 
 // Get Redis key for unread orders
-func getUnreadOrdersKey(trader,permission string) string {
-	return fmt.Sprintf("unread_filled_orders:%s:%s", trader,permission)
+func getUnreadOrdersKey(trader, permission string) string {
+	return fmt.Sprintf("unread_filled_orders:%s:%s", trader, permission)
 }
 
 // Add unread order
-func (r *Repo) AddUnreadOrder(ctx context.Context, trader,permission string, orderID string) error {
-	key := getUnreadOrdersKey(trader,permission)
+func (r *Repo) AddUnreadOrder(ctx context.Context, trader, permission string, orderID string) error {
+	key := getUnreadOrdersKey(trader, permission)
 	return r.Redis().SAdd(ctx, key, orderID).Err()
 }
 
 // Mark order as read
-func (r *Repo) MarkOrderAsRead(ctx context.Context, trader,permission string, orderID string) error {
-	key := getUnreadOrdersKey(trader,permission)
+func (r *Repo) MarkOrderAsRead(ctx context.Context, trader, permission string, orderID string) error {
+	key := getUnreadOrdersKey(trader, permission)
 	return r.Redis().SRem(ctx, key, orderID).Err()
 }
 
 // Check if order is unread
-func (r *Repo) IsOrderUnread(ctx context.Context, trader,permission string, orderID string) (bool, error) {
-	key := getUnreadOrdersKey(trader,permission)
+func (r *Repo) IsOrderUnread(ctx context.Context, trader, permission string, orderID string) (bool, error) {
+	key := getUnreadOrdersKey(trader, permission)
 	return r.Redis().SIsMember(ctx, key, orderID).Result()
 }
 
 // Check if user has any unread orders
-func (r *Repo) HasUnreadOrders(ctx context.Context, trader,permission string) (bool, error) {
-	key := getUnreadOrdersKey(trader,permission)
+func (r *Repo) HasUnreadOrders(ctx context.Context, trader, permission string) (bool, error) {
+	key := getUnreadOrdersKey(trader, permission)
 	count, err := r.Redis().SCard(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -267,7 +276,7 @@ func (r *Repo) HasUnreadOrders(ctx context.Context, trader,permission string) (b
 }
 
 // ClearUnreadOrders clears all unread orders for a trader
-func (r *Repo) ClearUnreadOrders(ctx context.Context, trader,permission string) error {
-	key := getUnreadOrdersKey(trader,permission)
+func (r *Repo) ClearUnreadOrders(ctx context.Context, trader, permission string) error {
+	key := getUnreadOrdersKey(trader, permission)
 	return r.Redis().Del(ctx, key).Err()
 }

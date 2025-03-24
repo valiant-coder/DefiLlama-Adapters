@@ -112,7 +112,7 @@ func getUserInfo(c *gin.Context) {
 // @Router /api/v1/balances [get]
 func getUserBalances(c *gin.Context) {
 	userService := marketplace.NewUserService()
-	balances, err := userService.GetUserBalance(c.Request.Context(), c.GetString("uid"))
+	balances, err := userService.FetchUserBalanceByUID(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return

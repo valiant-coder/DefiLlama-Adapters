@@ -36,7 +36,7 @@ func getUserBalances(c *gin.Context) {
 	subAccount := GetSubAccountFromContext(c)
 
 	userService := marketplace.NewUserService()
-	balances, err := userService.GetUserBalance(c.Request.Context(), subAccount.EOSAccount)
+	balances, err := userService.FetchUserBalanceByUID(c.Request.Context(), subAccount.EOSAccount)
 	if err != nil {
 		api.Error(c, err)
 		return

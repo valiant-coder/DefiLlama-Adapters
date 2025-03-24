@@ -90,3 +90,5 @@ func (r *Repo) GetUserSubAccountBalance(ctx context.Context, eosAccount string, 
 	err := r.WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).Find(&balances).Error
 	return balances, err
 }
+
+
