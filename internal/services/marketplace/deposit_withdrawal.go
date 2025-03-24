@@ -6,7 +6,7 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
-	"exapp-go/pkg/eos"
+	"exapp-go/pkg/onedex"
 	"exapp-go/pkg/queryparams"
 	"fmt"
 	"log"
@@ -39,7 +39,7 @@ func (s *DepositWithdrawalService) GetDepositRecords(ctx context.Context, uid st
 	return result, total, nil
 }
 
-func (s *DepositWithdrawalService) pollForDepositAddress(ctx context.Context, bridgeClient *eos.BridgeClient, req eos.RequestDepositAddress) (string, error) {
+func (s *DepositWithdrawalService) pollForDepositAddress(ctx context.Context, bridgeClient *onedex.BridgeClient, req onedex.RequestDepositAddress) (string, error) {
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		address, err := bridgeClient.GetDepositAddress(ctx, req)
@@ -51,7 +51,7 @@ func (s *DepositWithdrawalService) pollForDepositAddress(ctx context.Context, br
 	return "", errors.New("timeout waiting for deposit address")
 }
 
-func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridgeClient *eos.BTCBridgeClient, req eos.RequestBTCDepositAddress) (string, error) {
+func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridgeClient *onedex.BTCBridgeClient, req onedex.RequestBTCDepositAddress) (string, error) {
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		address, err := bridgeClient.GetDepositAddress(ctx, req)
@@ -117,17 +117,16 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		}
 	}
 
-
 	var newDepositAddress string
 	if req.Symbol == "BTC" && targetChain.DepositByBTCBridge {
-		btcBridgeClient := eos.NewBTCBridgeClient(
+		btcBridgeClient := onedex.NewBTCBridgeClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.Exsat.BTCBridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
 		)
 
-		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
+		resp, err := btcBridgeClient.MappingAddress(ctx, onedex.BTCMappingAddrRequest{
 			Remark:           remark,
 			RecipientAddress: s.eosCfg.OneDex.VaultEVMAddress,
 		})
@@ -136,7 +135,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		}
 		log.Printf("mapping new btc address txid: %v", resp.TransactionID)
 
-		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, eos.RequestBTCDepositAddress{
+		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, onedex.RequestBTCDepositAddress{
 			Remark:              remark,
 			RecipientEVMAddress: s.eosCfg.OneDex.VaultEVMAddress,
 		})
@@ -145,14 +144,14 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 			return entity.RespFirstDeposit{}, err
 		}
 	} else {
-		bridgeClient := eos.NewBridgeClient(
+		bridgeClient := onedex.NewBridgeClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.Exsat.BridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
 		)
 
-		resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
+		resp, err := bridgeClient.MappingAddress(ctx, onedex.MappingAddrRequest{
 			PermissionID:     targetChain.PermissionID,
 			RecipientAddress: s.eosCfg.OneDex.VaultEVMAddress,
 			Remark:           remark,
@@ -162,7 +161,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 		}
 		log.Printf("mapping new address txid: %v", resp.TransactionID)
 
-		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
+		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, onedex.RequestDepositAddress{
 			PermissionID: targetChain.PermissionID,
 			Remark:       remark,
 			Recipient:    s.eosCfg.OneDex.VaultEVMAddress,
@@ -243,14 +242,14 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 
 	var newDepositAddress string
 	if req.Symbol == "BTC" && targetChain.DepositByBTCBridge {
-		btcBridgeClient := eos.NewBTCBridgeClient(
+		btcBridgeClient := onedex.NewBTCBridgeClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.Exsat.BTCBridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
 		)
 
-		resp, err := btcBridgeClient.MappingAddress(ctx, eos.BTCMappingAddrRequest{
+		resp, err := btcBridgeClient.MappingAddress(ctx, onedex.BTCMappingAddrRequest{
 			Remark:           remark,
 			RecipientAddress: s.eosCfg.OneDex.VaultEVMAddress,
 		})
@@ -259,7 +258,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 		log.Printf("mapping new btc address txid: %v", resp.TransactionID)
 
-		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, eos.RequestBTCDepositAddress{
+		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, onedex.RequestBTCDepositAddress{
 			Remark:              remark,
 			RecipientEVMAddress: s.eosCfg.OneDex.VaultEVMAddress,
 		})
@@ -268,14 +267,14 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			return entity.RespDeposit{}, err
 		}
 	} else {
-		bridgeClient := eos.NewBridgeClient(
+		bridgeClient := onedex.NewBridgeClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.Exsat.BridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
 		)
 
-		resp, err := bridgeClient.MappingAddress(ctx, eos.MappingAddrRequest{
+		resp, err := bridgeClient.MappingAddress(ctx, onedex.MappingAddrRequest{
 			PermissionID:     targetChain.PermissionID,
 			RecipientAddress: s.eosCfg.OneDex.VaultEVMAddress,
 			Remark:           remark,
@@ -285,7 +284,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 		log.Printf("mapping new address txid: %v", resp.TransactionID)
 
-		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, eos.RequestDepositAddress{
+		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, onedex.RequestDepositAddress{
 			PermissionID: targetChain.PermissionID,
 			Remark:       remark,
 			Recipient:    s.eosCfg.OneDex.VaultEVMAddress,
