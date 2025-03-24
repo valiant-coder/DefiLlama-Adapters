@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"exapp-go/pkg/eth"
+
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 // ----- Price Cache Methods -----
@@ -119,16 +120,13 @@ func determineCoinAndLockedAmount(order *db.OpenOrder) (string, decimal.Decimal)
 
 // ----- Main Balance Functions -----
 
-// FetchUserDetailedBalances retrieves detailed balance information for a user
-func (s *UserService) FetchUserDetailedBalances(ctx context.Context, accountName string, userAvailableBalances []UserBalance, allTokens, poolTokens map[string]string) ([]UserBalanceWithLock, error) {
-	// Get user ID from account name
-	uid, err := s.repo.GetUIDByEOSAccount(ctx, accountName)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []UserBalanceWithLock{}, nil
-		}
-		return nil, err
-	}
+// fetchUserDetailedBalances retrieves detailed balance information for a user
+func (s *UserService) fetchUserDetailedBalances(
+	ctx context.Context,
+	isEvmUser bool,
+	uid, eosAccount, permission string,
+	userAvailableBalances []UserBalance,
+	allTokens, poolTokens map[string]string) ([]UserBalanceWithLock, error) {
 
 	// 1. Build a map of available balances for quick lookup
 	userBalanceMap := make(map[string]decimal.Decimal, len(userAvailableBalances))
@@ -136,8 +134,13 @@ func (s *UserService) FetchUserDetailedBalances(ctx context.Context, accountName
 		userBalanceMap[balance.Coin] = balance.Balance
 	}
 
-	// 2. Get open orders to calculate locked amounts
-	openOrders, err := s.repo.GetOpenOrdersByTrader(ctx, accountName)
+	var err error
+	var openOrders []*db.OpenOrder
+	if !isEvmUser {
+		openOrders, err = s.repo.GetOpenOrdersByTrader(ctx, eosAccount)
+	} else {
+		openOrders, err = s.repo.GetOpenOrdersByTraderPermission(ctx, eosAccount, permission)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +204,7 @@ func (s *UserService) FetchUserDetailedBalances(ctx context.Context, accountName
 
 		userBalances = append(userBalances, UserBalanceWithLock{
 			UserBalance: UserBalance{
-				Account: accountName,
+				Account: eosAccount,
 				Coin:    coin,
 				Balance: balance,
 			},
@@ -225,7 +228,7 @@ func (s *UserService) FetchUserDetailedBalances(ctx context.Context, accountName
 
 		userBalances = append(userBalances, UserBalanceWithLock{
 			UserBalance: UserBalance{
-				Account: accountName,
+				Account: eosAccount,
 				Coin:    coin,
 				Balance: decimal.Zero,
 			},
@@ -259,30 +262,30 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		return nil, errors.New("uid is required")
 	}
 
-	// Get EOS account name associated with this user ID
-	accountName, err := s.repo.GetEosAccountByUID(ctx, uid)
+	user, err := s.repo.GetUser(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
 
-	// Fetch on-chain token balances using Hyperion API
-	hyperionCfg := config.Conf().Eos.Hyperion
-	hyperionClient := hyperion.NewClient(hyperionCfg.Endpoint)
-	tokens, err := hyperionClient.GetTokens(ctx, accountName)
-	if err != nil {
-		log.Printf("Get tokens failed: %v-%v", accountName, err)
-		return nil, err
-	}
-
-	// Convert token balances to UserBalance format
+	var eosAccount string
 	var userAvailableBalances []UserBalance
-	for _, token := range tokens {
-		userBalance := UserBalance{
-			Account: accountName,
-			Coin:    fmt.Sprintf("%s-%s", token.Contract, token.Symbol),
-			Balance: token.Amount,
+	var isEvmUser bool
+	if user.LoginMethod == db.LoginMethodEVM {
+		isEvmUser = true
+		eosAccount = user.EOSAccount
+		userAvailableBalances, err = s.getEvmUserAvailableBalances(ctx, user.EVMAddress)
+		if err != nil {
+			return nil, err
 		}
-		userAvailableBalances = append(userAvailableBalances, userBalance)
+	} else {
+		eosAccount, err = s.repo.GetEosAccountByUID(ctx, uid)
+		if err != nil {
+			return nil, err
+		}
+		userAvailableBalances, err = s.getPasskeyUserAvailableBalances(ctx, eosAccount)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get token metadata
@@ -297,7 +300,15 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 	}
 
 	// Fetch detailed balances including locked amounts
-	userBalances, err := s.FetchUserDetailedBalances(ctx, accountName, userAvailableBalances, allTokens, poolTokens)
+	userBalances, err := s.fetchUserDetailedBalances(
+		ctx,
+		isEvmUser,
+		uid,
+		eosAccount,
+		user.Permission,
+		userAvailableBalances,
+		allTokens,
+		poolTokens)
 	if err != nil {
 		return nil, err
 	}
@@ -350,6 +361,76 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 	}
 
 	return result, nil
+}
+
+func (s *UserService) getPasskeyUserAvailableBalances(ctx context.Context, accountName string) ([]UserBalance, error) {
+	// Fetch on-chain token balances using Hyperion API
+	hyperionCfg := config.Conf().Eos.Hyperion
+	hyperionClient := hyperion.NewClient(hyperionCfg.Endpoint)
+	tokens, err := hyperionClient.GetTokens(ctx, accountName)
+	if err != nil {
+		log.Printf("Get tokens failed: %v-%v", accountName, err)
+		return nil, err
+	}
+
+	// Convert token balances to UserBalance format
+	var userAvailableBalances []UserBalance
+	for _, token := range tokens {
+		userBalance := UserBalance{
+			Account: accountName,
+			Coin:    fmt.Sprintf("%s-%s", token.Contract, token.Symbol),
+			Balance: token.Amount,
+		}
+		userAvailableBalances = append(userAvailableBalances, userBalance)
+	}
+
+	return userAvailableBalances, nil
+}
+
+func (s *UserService) getEvmUserAvailableBalances(ctx context.Context, evmAddress string) ([]UserBalance, error) {
+
+	ethscanCfg := config.Conf().Evm.Ethscan
+	ethscanClient := eth.NewEthScanClient(ethscanCfg.Endpoint, ethscanCfg.ApiKey)
+
+	tokenBalances, err := ethscanClient.GetTokenBalancesByAddress(ctx, evmAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all tokens from the database to map EVM addresses to EOS contract-symbol format
+	tokens, err := s.repo.ListTokens(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map of EVM addresses to tokens for quick lookup
+	// Using lowercase addresses to make the lookup case-insensitive
+	evmToTokenMap := make(map[string]*db.Token)
+	for i := range tokens {
+		if tokens[i].EVMContractAddress != "" {
+			// Store with lowercase key for case-insensitive lookup
+			evmToTokenMap[strings.ToLower(tokens[i].EVMContractAddress)] = &tokens[i]
+		}
+	}
+
+	var userAvailableBalances []UserBalance
+	for _, tokenBalance := range tokenBalances {
+		// Look up the token in our map using lowercase address for case-insensitive matching
+		token, exists := evmToTokenMap[strings.ToLower(tokenBalance.TokenAddress)]
+		if !exists {
+			// Skip tokens that don't have a mapping in our database
+			continue
+		}
+
+		userBalance := UserBalance{
+			Account: evmAddress,
+			Coin:    fmt.Sprintf("%s-%s", token.EOSContractAddress, token.Symbol),
+			Balance: tokenBalance.Balance,
+		}
+		userAvailableBalances = append(userAvailableBalances, userBalance)
+	}
+
+	return userAvailableBalances, nil
 }
 
 // CalculateTotalUSDTValueForUser calculates the total value of all user assets in USDT

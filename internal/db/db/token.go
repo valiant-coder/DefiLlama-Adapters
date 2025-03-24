@@ -64,6 +64,7 @@ type Token struct {
 	Symbol             string `gorm:"column:symbol;type:varchar(255);not null;uniqueIndex:idx_symbol"`
 	Name               string `gorm:"column:name;type:varchar(255);default:null"`
 	EOSContractAddress string `gorm:"column:eos_contract_address;type:varchar(255);not null"`
+	EVMContractAddress string `gorm:"column:evm_contract_address;type:varchar(255);default:null"`
 	Decimals           uint8  `gorm:"column:decimals;type:tinyint(3);not null"`
 	IconUrl            string `gorm:"column:icon_url;type:varchar(255);default:null"`
 
