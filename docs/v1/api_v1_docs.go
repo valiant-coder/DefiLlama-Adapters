@@ -1079,6 +1079,9 @@ const docTemplateapi_v1 = `{
                     "items": {
                         "$ref": "#/definitions/entity.LockBalance"
                     }
+                },
+                "usdt_price": {
+                    "type": "string"
                 }
             }
         },
