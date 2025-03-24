@@ -151,7 +151,7 @@ func (h *EVMLoginHandler) Handle(ctx context.Context, req entity.ReqUserLogin) (
 	}
 
 	if err := h.redis.Set(ctx, nonceKey, "1", 5*time.Minute); err != nil {
-		return nil, fmt.Errorf("set nonce: %w", err)
+		return nil, fmt.Errorf("set nonce: %v", err)
 	}
 
 	return &db.User{
