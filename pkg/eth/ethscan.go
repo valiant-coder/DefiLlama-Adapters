@@ -71,7 +71,7 @@ type TokenBalanceResponse struct {
 
 func (c *EthScanClient) GetTokenBalancesByAddress(ctx context.Context, address string) ([]TokenBalance, error) {
 
-	url := fmt.Sprintf("%s/addresses/%s/token-balances", c.Endpoint, address)
+	url := fmt.Sprintf("%s/api/v2/addresses/%s/token-balances", c.Endpoint, address)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
