@@ -42,10 +42,7 @@ func (s *Service) handleNewAccount(action hyperion.Action) error {
 }
 
 func (s *Service) updateUserTokenBalance(account string, permission string) error {
-	if permission != "active" {
-		account = fmt.Sprintf("%s@%s", account, permission)
-	}
-	go s.publisher.PublishBalanceUpdate(account)
+	go s.publisher.PublishBalanceUpdate(fmt.Sprintf("%s@%s", account, permission))
 
 	return nil
 }
