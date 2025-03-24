@@ -37,7 +37,7 @@ type User struct {
 	Email       string      `gorm:"column:email;type:varchar(255);default:null"`
 
 	// for evm user
-	EVMAddress string `gorm:"column:evm_address;type:varchar(255);default:null;uniqueIndex:idx_evm_address"`
+	EVMAddress string `gorm:"column:evm_address;type:varchar(255);default:null;index:idx_evm_address"`
 	EOSAccount string `gorm:"column:eos_account;type:varchar(255);default:null;index:idx_eos_account_permission"`
 	Permission string `gorm:"column:permission;type:varchar(255);default:null;index:idx_eos_account_permission"`
 }

@@ -85,64 +85,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "/api/v1/history-orders": {
-            "get": {
-                "description": "Get history orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get history orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "eos account name",
-                        "name": "trader",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "0 buy 1 sell",
-                        "name": "side",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "0 market 1limit",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "status",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "history orders",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Order"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/klines": {
             "get": {
                 "description": "Get kline data by pool id and interval",
@@ -253,98 +195,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "/api/v1/open-orders": {
-            "get": {
-                "description": "Get open orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get open orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "0 buy 1 sell",
-                        "name": "side",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "open order list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.OpenOrder"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/clear-unread": {
-            "post": {
-                "description": "Clear all unread orders for a trader",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Clear all unread orders",
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/{id}": {
-            "get": {
-                "description": "Get history order detail",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get history order detail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "history order detail",
-                        "schema": {
-                            "$ref": "#/definitions/entity.OrderDetail"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/pools": {
             "get": {
                 "description": "Get a list of all trading pools",
@@ -412,29 +262,6 @@ const docTemplatemarketplace = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.Pool"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/unread-orders": {
-            "get": {
-                "description": "Check if user has any unread completed orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Check for unread orders",
-                "responses": {
-                    "200": {
-                        "description": "Response for unread status",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespUnreadOrder"
                         }
                     }
                 }
@@ -716,6 +543,64 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/history-orders": {
+            "get": {
+                "description": "Get history orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get history orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "eos account name",
+                        "name": "trader",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "0 buy 1 sell",
+                        "name": "side",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "0 market 1limit",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "history orders",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Order"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Login",
@@ -743,6 +628,98 @@ const docTemplatemarketplace = `{
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/open-orders": {
+            "get": {
+                "description": "Get open orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get open orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "pool_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "0 buy 1 sell",
+                        "name": "side",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "open order list",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.OpenOrder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/clear-unread": {
+            "post": {
+                "description": "Clear all unread orders for a trader",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Clear all unread orders",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "description": "Get history order detail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Get history order detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "history order detail",
+                        "schema": {
+                            "$ref": "#/definitions/entity.OrderDetail"
+                        }
                     }
                 }
             }
@@ -1057,6 +1034,29 @@ const docTemplatemarketplace = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.TotalTradeStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/unread-orders": {
+            "get": {
+                "description": "Check if user has any unread completed orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Check for unread orders",
+                "responses": {
+                    "200": {
+                        "description": "Response for unread status",
+                        "schema": {
+                            "$ref": "#/definitions/entity.RespUnreadOrder"
                         }
                     }
                 }
