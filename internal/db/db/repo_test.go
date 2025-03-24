@@ -11,7 +11,7 @@ import (
 
 func TestRepo_AutoMigrate(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
-	config.Load("config/config_dev.toml")
+	config.Load("config/config_dev.yaml")
 	r := New()
 	err := r.Debug().AutoMigrate()
 	if err != nil {
