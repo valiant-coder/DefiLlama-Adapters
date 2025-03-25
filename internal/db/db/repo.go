@@ -5,16 +5,20 @@ import (
 	"crypto/tls"
 	"errors"
 	"exapp-go/config"
+	"exapp-go/data"
 	"exapp-go/internal/db/plugins"
 	"exapp-go/pkg/cache"
 	"exapp-go/pkg/queryparams"
 	"fmt"
+	json "github.com/json-iterator/go"
 	"log"
 	"net/url"
 	"os"
+	"reflect"
+	"strings"
 	"sync"
 	"time"
-
+	
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/redis/go-redis/v9"
@@ -48,7 +52,7 @@ func New() *Repo {
 			fmt.Printf("db connect err: %v\n", err)
 			os.Exit(1)
 		}
-
+		
 		cachePlugin := plugins.NewCachePlugin(cache.DefaultStore())
 		err = db.Use(cachePlugin)
 		if err != nil {
@@ -97,13 +101,13 @@ func New() *Repo {
 				}
 			}
 		}
-
+		
 		fmt.Println("db connect success")
 		go repo.ensureConnection(context.Background())
 	})
-
+	
 	return repo
-
+	
 }
 
 func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
@@ -115,7 +119,7 @@ func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
 		port,
 		dbName,
 		loc)
-
+	
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
@@ -123,13 +127,13 @@ func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
 		Logger:                                   logger.Default.LogMode(logger.Silent),
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
-
+	
 	if err != nil {
 		return nil, err
 	}
-
+	
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
-
+	
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err
@@ -138,20 +142,20 @@ func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	sqlDB.SetConnMaxIdleTime(time.Minute * 10)
-
+	
 	err = db.AutoMigrate()
-
+	
 	if err != nil {
 		return nil, err
 	}
-
+	
 	return db, nil
 }
 
 func (r *Repo) ensureConnection(ctx context.Context) {
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
-
+	
 	for {
 		select {
 		case <-ctx.Done():
@@ -167,15 +171,15 @@ func (r *Repo) ensureConnection(ctx context.Context) {
 func (r *Repo) checkAndReconnect() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
+	
 	sqlDB, err := r.DB.DB()
 	if err != nil {
 		return fmt.Errorf("Failed to get database instance: %w", err)
 	}
-
+	
 	if err := sqlDB.PingContext(context.Background()); err != nil {
 		_ = sqlDB.Close()
-
+		
 		mysqlCfg := config.Conf().Mysql
 		newDB, err := dbConnect(mysqlCfg.User, mysqlCfg.Pass, mysqlCfg.Host, mysqlCfg.Port, mysqlCfg.Database, mysqlCfg.Loc)
 		if err != nil {
@@ -251,7 +255,7 @@ func (r *Repo) ExecSQL(ctx context.Context, sql string, values ...interface{}) (
 		err = errors.New("no rows affected")
 	}
 	return
-
+	
 }
 
 func (r *Repo) Transaction(ctx context.Context, f func(repo *Repo) error) (err error) {
@@ -264,30 +268,30 @@ func (r *Repo) Query(ctx context.Context, models interface{}, params *queryparam
 	if len(params.Order) == 0 {
 		params.Order = "id desc"
 	}
-
+	
 	db := r.DB.WithContext(ctx).Limit(params.Limit).Offset(params.Offset).Order(params.Order)
-
+	
 	if params.Select != "" {
 		db = db.Select(params.Select)
 	}
-
+	
 	if len(params.Joins) > 0 {
 		db = db.Joins(params.Joins)
 	}
-
+	
 	if len(params.Group) > 0 {
 		db = db.Group(params.Group)
 	}
-
+	
 	if len(params.Having) > 0 {
 		db = db.Having(params.Having)
 	}
-
+	
 	plains := params.Query.Plains(queryable...)
 	if len(plains) > 0 {
 		db = db.Where(plains[0], plains[1:]...)
 	}
-
+	
 	if len(params.CustomQuery) != 0 {
 		for queryStr, queryValue := range params.CustomQuery {
 			if len(queryValue) == 0 {
@@ -305,12 +309,12 @@ func (r *Repo) Query(ctx context.Context, models interface{}, params *queryparam
 	if len(params.TableName) > 0 {
 		db = db.Table(params.TableName)
 	}
-
+	
 	err = db.Find(models).Error
 	if err != nil {
 		return
 	}
-
+	
 	err = db.Limit(-1).Offset(-1).Count(&total).Error
 	return
 }
@@ -337,4 +341,228 @@ func addMigrateFunc(f MigrateFunc) {
 		migrateFuncs = make([]MigrateFunc, 0)
 	})
 	migrateFuncs = append(migrateFuncs, f)
+}
+
+type Cacheable interface {
+	RedisKey() string
+	
+	// TODO
+	// ExpireDuration() time.Duration
+}
+
+func Get[T any](e Cacheable) (i *T, err error) {
+	
+	if res := GetCache[T](e.RedisKey()); res != nil {
+		
+		return res, nil
+	}
+	
+	return GetWithoutCache[T](e)
+}
+
+func GetWithoutCache[T any](e Cacheable) (i *T, err error) {
+	
+	err = repo.DB.First(&e).Error
+	if err != nil {
+		
+		return
+	}
+	
+	repo.SaveCache(e)
+	return
+}
+
+func GetCache[T any](key string) *T {
+	
+	var temp T
+	value, err := repo.redis.Get(context.TODO(), key).Result()
+	if err != nil {
+		
+		return nil
+	}
+	
+	err = json.Unmarshal([]byte(value), &temp)
+	if err != nil {
+		
+		return nil
+	}
+	
+	return &temp
+}
+
+func (r *Repo) DelCache(key string) {
+	
+	if err := r.redis.Del(context.TODO(), key).Err(); err != nil {
+	
+	}
+}
+
+func (r *Repo) SaveCache(i Cacheable) {
+	
+	if err := r.SaveCacheBy(i.RedisKey(), i, time.Hour*12); err != nil {
+		
+	}
+}
+
+func (r *Repo) SaveCacheBy(key string, i interface{}, d ...time.Duration) error {
+	
+	value, _ := json.Marshal(i)
+	
+	duration := time.Hour * 12
+	if len(d) > 0 {
+		
+		duration = d[0]
+	}
+	
+	if err := r.redis.Set(context.TODO(), key, value, duration).Err(); err != nil {
+		
+		return err
+	}
+	
+	return nil
+}
+
+type OrderSummary struct {
+	TotalCount uint64 `json:"total_count"`
+	TotalValue uint64 `json:"total_value"`
+}
+
+type ListResult[T any] struct {
+	Array   []*T
+	Total   int64
+	Summary any
+}
+
+type ListHandler func(db *gorm.DB, param data.ListParamInterface) any
+
+// List 通用查询
+// 不需要做为查询的条件的属性，tag需要添加 ignore:"true"
+// 需要使用模糊查询的属性，tag需要添加 fuzzy:"true"
+func List[T data.ListParamInterface, E any](param T, handlers ...ListHandler) (result ListResult[E], err error) {
+	
+	db := repo.DB
+	
+	// 额外处理
+	if len(handlers) > 0 && handlers[0] != nil {
+		
+		handler := handlers[0]
+		handler(db, param)
+	}
+	
+	tValue := reflect.ValueOf(param)
+	tType := tValue.Type()
+	for i := 0; i < tValue.NumField(); i++ {
+		field := tValue.Field(i)
+		fieldType := tType.Field(i)
+		// fieldName := fieldType.Name
+		
+		// 跳过 ListParam 的字段
+		if fieldType.Type == reflect.TypeOf(data.ListParam{}) {
+			continue
+		}
+		
+		if (field.IsZero() && field.Kind() != reflect.Bool) ||
+			tType.Field(i).Tag.Get("ignore") == "true" { // 跳过空值和被忽略的字段
+			
+			continue
+		}
+		
+		tag := tType.Field(i).Tag.Get("json")
+		if tag == "" {
+			continue
+		}
+		dbName := strings.Split(tag, ",")[0] // 获取 json 标签的第一部分作为列名
+		
+		if tType.Field(i).Tag.Get("fuzzy") == "true" {
+			
+			db = db.Where(dbName+" like ?", fuzzyText(field.String()))
+			continue
+		}
+		
+		if field.Kind() == reflect.String {
+			value := field.String()
+			// 不等于条件查询
+			if strings.HasPrefix(value, "@not ") {
+				
+				db = db.Where(dbName+" != ?", strings.TrimPrefix(value, "@not "))
+				continue
+			}
+			
+			// in 条件查询
+			if strings.HasPrefix(value, "@in ") {
+				
+				inValues := strings.Split(strings.TrimPrefix(value, "@in "), "|")
+				db = db.Where(dbName+" IN (?)", inValues)
+				continue
+			}
+		}
+		
+		// 默认所有类型为相等判断
+		db = db.Where(dbName+" = ?", field.Interface())
+	}
+	
+	var total int64
+	if !param.CloseCounter() {
+		countDb := db.Session(&gorm.Session{})
+		
+		if param.GetCountColumn() != "" {
+			
+			// count(id)
+			countDb = countDb.Select(param.GetCountColumn())
+		}
+		
+		if err = countDb.Count(&total).Error; err != nil {
+			
+			return
+		}
+	}
+	
+	// 只查询数量
+	if param.IsOnlyCount() {
+		
+		result = ListResult[E]{Total: total}
+		return
+	}
+	
+	// TODO 执行数据统计
+	var summaryInfo any
+	if len(handlers) > 1 && handlers[1] != nil {
+		
+		summaryHandler := handlers[1]
+		
+		summaryDB := db.Session(&gorm.Session{})
+		summaryInfo = summaryHandler(summaryDB, param)
+	}
+	
+	// 处理排序
+	order := param.GetOrder()
+	if order != "" {
+		
+		db = db.Order(order)
+	}
+	
+	var array []*E
+	if err = db.Limit(param.GetLimit()).Offset(param.Offset()).Find(&array).Error; err != nil {
+		
+		return
+	}
+	
+	if param.CloseCounter() {
+		
+		total = int64(len(array))
+	}
+	
+	result = ListResult[E]{Array: array, Total: total, Summary: summaryInfo}
+	return
+}
+
+func IsNotFound(e error) bool {
+	
+	return errors.Is(e, gorm.ErrRecordNotFound) || errors.Is(e, redis.Nil)
+}
+
+// 模糊搜索内容格式化
+func fuzzyText(t string) string {
+	
+	return "%" + t + "%"
 }

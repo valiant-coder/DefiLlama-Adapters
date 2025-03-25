@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"os"
 	"time"
-
+	
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-
+	
 	v1 "exapp-go/docs/v1"
 )
 
@@ -30,7 +30,7 @@ func Run(addr string, release bool) error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()
-
+	
 	// ginSwagger
 	if !release {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, func(config *ginSwagger.Config) {
@@ -41,7 +41,7 @@ func Run(addr string, release bool) error {
 			v1.SwaggerInfoapi_v1.Host = swaggerHost
 		}
 	}
-
+	
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowCredentials = true
@@ -51,28 +51,28 @@ func Run(addr string, release bool) error {
 		log.Logger().Errorf("[Recovery] %s", err)
 		api.Error(c, fmt.Errorf("%v", err))
 	}
-
+	
 	r.Use(
 		cors.New(corsConfig),
 		api.Logger(),
 		api.Trace("api-v1"),
 		gin.CustomRecovery(handleRecovery),
 	)
-
+	
 	v1 := r.Group("/api/v1")
-
+	
 	v1.GET("/ping", ping)
 	v1.GET("/pools", pools)
 	v1.GET("/pools/:symbolOrId", getPoolDetail)
 	v1.GET("/klines", klines)
 	v1.GET("/depth", getDepth)
 	v1.GET("/latest-trades", getLatestTrades)
-
+	
 	v1.GET("/system-info", getSystemInfo)
-
+	
 	v1.GET("/tokens", getSupportTokens)
 	v1.GET("/token/:symbol", getToken)
-
+	
 	// Protected routes requiring API key authentication
 	auth := v1.Group("/")
 	auth.Use(AuthMiddleware())
@@ -84,7 +84,7 @@ func Run(addr string, release bool) error {
 		auth.GET("/orders/:id", getOrderDetail)
 		auth.GET("/balances", getUserBalances)
 	}
-
+	
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,
 			config.Conf().HTTPS.CertFile,

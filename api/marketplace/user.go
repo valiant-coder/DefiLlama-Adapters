@@ -22,7 +22,6 @@ func authenticator(c *gin.Context) (interface{}, error) {
 	if err := c.ShouldBind(&req); err != nil {
 		return nil, err
 	}
-
 	userService := marketplace.NewUserService()
 	uid, err := userService.Login(c.Request.Context(), req)
 	if err != nil {
@@ -135,7 +134,6 @@ func deleteUserCredential(c *gin.Context) {
 		api.Error(c, errors.New("credential_id is required"))
 		return
 	}
-
 	userService := marketplace.NewUserService()
 	if err := userService.DeleteUserCredential(c.Request.Context(), c.GetString("uid"), credentialID); err != nil {
 		api.Error(c, err)
