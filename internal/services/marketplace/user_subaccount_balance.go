@@ -6,7 +6,6 @@ import (
 	"exapp-go/internal/entity"
 	"exapp-go/pkg/onedex"
 	"fmt"
-	"strings"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
@@ -78,100 +77,62 @@ func (s *UserService) GetUserSubaccountBalances(ctx context.Context, eosAccount,
 		coin := availBalance.Coin
 		processedCoins[coin] = true
 
-		var totalLocked decimal.Decimal
-		poolBalances := lockedCoins[coin]
-		if poolBalances == nil {
-			poolBalances = []*UserPoolBalance{}
-		}
-
-		// Calculate total locked amount
-		for _, pb := range poolBalances {
-			totalLocked = totalLocked.Add(pb.Balance)
-		}
-
-		// Only include visible tokens
-		if _, exists := poolTokens[coin]; !exists {
-			if _, exists := allTokens[coin]; !exists {
-				continue
-			}
+		if !isVisibleToken(coin, poolTokens, allTokens) {
+			continue
 		}
 
 		// Create subaccount balance
 		var subAccountBalance entity.SubAccountBalance
 		subAccountBalance.Coin = coin
 		subAccountBalance.Balance = availBalance.Balance.String()
-		subAccountBalance.Locked = totalLocked.String()
 
-		// Set USDT price if available
-		parts := strings.Split(coin, "-")
-		if len(parts) == 2 {
-			symbol := parts[1]
-			if price, ok := coinUSDTPrice[symbol]; ok {
-				subAccountBalance.USDTPrice = price
-			}
-			if strings.Contains(coin, "USDT") {
-				subAccountBalance.USDTPrice = "1" // USDT price is always 1 USDT
-			}
-		}
+		// Process locked amounts
+		userBalanceWithLock := processBalanceWithLocks(
+			eosAccount,
+			coin,
+			availBalance.Balance,
+			lockedCoins,
+			make(map[string]decimal.Decimal), // No depositing for subaccounts
+			make(map[string]decimal.Decimal), // No withdrawing for subaccounts
+		)
+		subAccountBalance.Locked = userBalanceWithLock.Locked.String()
+		subAccountBalance.Locks = convertPoolBalancesToLocks(userBalanceWithLock.PoolBalance)
 
-		// Convert pool balances to locks
-		subAccountBalance.Locks = make([]entity.LockBalance, 0, len(poolBalances))
-		for _, poolBalance := range poolBalances {
-			subAccountBalance.Locks = append(subAccountBalance.Locks, entity.LockBalance{
-				PoolID:     poolBalance.PoolID,
-				PoolSymbol: poolBalance.PoolSymbol,
-				Balance:    poolBalance.Balance.String(),
-			})
-		}
+		// Set USDT price
+		setUSDTPrice(&subAccountBalance, coin, coinUSDTPrice)
 
 		result = append(result, subAccountBalance)
 	}
 
 	// Process coins that only have locked amounts
-	for coin, poolBalances := range lockedCoins {
+	for coin := range lockedCoins {
 		if processedCoins[coin] {
 			continue // Already processed
 		}
 
-		// Only include visible tokens
-		if _, exists := poolTokens[coin]; !exists {
-			if _, exists := allTokens[coin]; !exists {
-				continue
-			}
-		}
-
-		var totalLocked decimal.Decimal
-		for _, pb := range poolBalances {
-			totalLocked = totalLocked.Add(pb.Balance)
+		if !isVisibleToken(coin, poolTokens, allTokens) {
+			continue
 		}
 
 		// Create subaccount balance for coins with only locked amounts
 		var subAccountBalance entity.SubAccountBalance
 		subAccountBalance.Coin = coin
 		subAccountBalance.Balance = "0"
-		subAccountBalance.Locked = totalLocked.String()
 
-		// Set USDT price if available
-		parts := strings.Split(coin, "-")
-		if len(parts) == 2 {
-			symbol := parts[1]
-			if price, ok := coinUSDTPrice[symbol]; ok {
-				subAccountBalance.USDTPrice = price
-			}
-			if strings.Contains(coin, "USDT") {
-				subAccountBalance.USDTPrice = "1" // USDT price is always 1 USDT
-			}
-		}
+		// Process locked amounts
+		userBalanceWithLock := processBalanceWithLocks(
+			eosAccount,
+			coin,
+			decimal.Zero,
+			lockedCoins,
+			make(map[string]decimal.Decimal), // No depositing for subaccounts
+			make(map[string]decimal.Decimal), // No withdrawing for subaccounts
+		)
+		subAccountBalance.Locked = userBalanceWithLock.Locked.String()
+		subAccountBalance.Locks = convertPoolBalancesToLocks(userBalanceWithLock.PoolBalance)
 
-		// Convert pool balances to locks
-		subAccountBalance.Locks = make([]entity.LockBalance, 0, len(poolBalances))
-		for _, poolBalance := range poolBalances {
-			subAccountBalance.Locks = append(subAccountBalance.Locks, entity.LockBalance{
-				PoolID:     poolBalance.PoolID,
-				PoolSymbol: poolBalance.PoolSymbol,
-				Balance:    poolBalance.Balance.String(),
-			})
-		}
+		// Set USDT price
+		setUSDTPrice(&subAccountBalance, coin, coinUSDTPrice)
 
 		result = append(result, subAccountBalance)
 	}

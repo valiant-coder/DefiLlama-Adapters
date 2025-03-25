@@ -118,6 +118,91 @@ func determineCoinAndLockedAmount(order *db.OpenOrder) (string, decimal.Decimal)
 	return order.PoolBaseCoin, order.OriginalQuantity.Sub(order.ExecutedQuantity)
 }
 
+// ----- Shared Helper Functions -----
+
+// processBalanceWithLocks processes a balance with its locked amounts and returns a UserBalanceWithLock
+func processBalanceWithLocks(
+	account string,
+	coin string,
+	balance decimal.Decimal,
+	lockedCoins map[string][]*UserPoolBalance,
+	depositingBalance map[string]decimal.Decimal,
+	withdrawingBalance map[string]decimal.Decimal,
+) UserBalanceWithLock {
+	var totalLocked decimal.Decimal
+	poolBalances := lockedCoins[coin]
+	if poolBalances == nil {
+		poolBalances = []*UserPoolBalance{}
+	}
+
+	// Calculate total locked amount across all pools
+	for _, pb := range poolBalances {
+		totalLocked = totalLocked.Add(pb.Balance)
+	}
+
+	return UserBalanceWithLock{
+		UserBalance: UserBalance{
+			Account: account,
+			Coin:    coin,
+			Balance: balance,
+		},
+		Locked:      totalLocked,
+		PoolBalance: poolBalances,
+		Depositing:  depositingBalance[coin],
+		Withdrawing: withdrawingBalance[coin],
+	}
+}
+
+// isVisibleToken checks if a token is visible based on pool tokens and all tokens maps
+func isVisibleToken(coin string, poolTokens, allTokens map[string]string) bool {
+	if _, exists := poolTokens[coin]; exists {
+		return true
+	}
+	if _, exists := allTokens[coin]; exists {
+		return true
+	}
+	return false
+}
+
+// setUSDTPrice sets the USDT price for a coin in the given balance
+func setUSDTPrice(balance interface{}, coin string, coinUSDTPrice map[string]string) {
+	parts := strings.Split(coin, "-")
+	if len(parts) != 2 {
+		return
+	}
+
+	symbol := parts[1]
+	if price, ok := coinUSDTPrice[symbol]; ok {
+		switch b := balance.(type) {
+		case *entity.UserBalance:
+			b.USDTPrice = price
+		case *entity.SubAccountBalance:
+			b.USDTPrice = price
+		}
+	}
+	if strings.Contains(coin, "USDT") {
+		switch b := balance.(type) {
+		case *entity.UserBalance:
+			b.USDTPrice = "1"
+		case *entity.SubAccountBalance:
+			b.USDTPrice = "1"
+		}
+	}
+}
+
+// convertPoolBalancesToLocks converts UserPoolBalance to entity.LockBalance
+func convertPoolBalancesToLocks(poolBalances []*UserPoolBalance) []entity.LockBalance {
+	locks := make([]entity.LockBalance, 0, len(poolBalances))
+	for _, poolBalance := range poolBalances {
+		locks = append(locks, entity.LockBalance{
+			PoolID:     poolBalance.PoolID,
+			PoolSymbol: poolBalance.PoolSymbol,
+			Balance:    poolBalance.Balance.String(),
+		})
+	}
+	return locks
+}
+
 // ----- Main Balance Functions -----
 
 // fetchUserDetailedBalances retrieves detailed balance information for a user
@@ -191,68 +276,41 @@ func (s *UserService) fetchUserDetailedBalances(
 
 	// 7. Process coins with existing balances
 	for coin, balance := range userBalanceMap {
-		var totalLocked decimal.Decimal
-		poolBalances := lockedCoins[coin]
-		if poolBalances == nil {
-			poolBalances = []*UserPoolBalance{}
+		if !isVisibleToken(coin, poolTokens, allTokens) {
+			continue
 		}
 
-		// Calculate total locked amount across all pools
-		for _, pb := range poolBalances {
-			totalLocked = totalLocked.Add(pb.Balance)
-		}
-
-		userBalances = append(userBalances, UserBalanceWithLock{
-			UserBalance: UserBalance{
-				Account: eosAccount,
-				Coin:    coin,
-				Balance: balance,
-			},
-			Locked:      totalLocked,
-			PoolBalance: poolBalances,
-			Depositing:  depositingBalance[coin],
-			Withdrawing: withdrawingBalance[coin],
-		})
+		userBalances = append(userBalances, processBalanceWithLocks(
+			eosAccount,
+			coin,
+			balance,
+			lockedCoins,
+			depositingBalance,
+			withdrawingBalance,
+		))
 	}
 
 	// 8. Process coins with only locked amounts (no available balance)
-	for coin, poolBalances := range lockedCoins {
+	for coin := range lockedCoins {
 		if _, exists := userBalanceMap[coin]; exists {
 			continue // Already processed in previous step
 		}
 
-		var totalLocked decimal.Decimal
-		for _, pb := range poolBalances {
-			totalLocked = totalLocked.Add(pb.Balance)
-		}
-
-		userBalances = append(userBalances, UserBalanceWithLock{
-			UserBalance: UserBalance{
-				Account: eosAccount,
-				Coin:    coin,
-				Balance: decimal.Zero,
-			},
-			Locked:      totalLocked,
-			PoolBalance: poolBalances,
-			Depositing:  depositingBalance[coin],
-			Withdrawing: withdrawingBalance[coin],
-		})
-	}
-
-	// 9. Filter to only include visible tokens
-	result := make([]UserBalanceWithLock, 0, len(userBalances))
-	for _, balance := range userBalances {
-		// Include if it's a pool token or a recognized token
-		if _, exists := poolTokens[balance.Coin]; exists {
-			result = append(result, balance)
+		if !isVisibleToken(coin, poolTokens, allTokens) {
 			continue
 		}
-		if _, exists := allTokens[balance.Coin]; exists {
-			result = append(result, balance)
-		}
+
+		userBalances = append(userBalances, processBalanceWithLocks(
+			eosAccount,
+			coin,
+			decimal.Zero,
+			lockedCoins,
+			depositingBalance,
+			withdrawingBalance,
+		))
 	}
 
-	return result, nil
+	return userBalances, nil
 }
 
 // FetchUserBalanceByUID retrieves all user balances by user ID
@@ -322,24 +380,10 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 	// Convert to entity.UserBalance format for API response
 	result := make([]entity.UserBalance, 0, len(userBalances))
 	for _, ub := range userBalances {
-		// Extract coin symbol from "contract-symbol" format
-		parts := strings.Split(ub.Coin, "-")
-		if len(parts) != 2 {
-			continue
-		}
-
 		// Create user balance entity
 		var userBalance entity.UserBalance
 		userBalance.Coin = ub.Coin
-
-		// Set USDT price if available
-		coin := parts[1]
-		if price, ok := coinUSDTPrice[coin]; ok {
-			userBalance.USDTPrice = price
-		}
-		if strings.Contains(ub.Coin, "USDT") {
-			userBalance.USDTPrice = "1" // USDT price is always 1 USDT
-		}
+		setUSDTPrice(&userBalance, ub.Coin, coinUSDTPrice)
 
 		// Convert decimal values to strings for JSON response
 		userBalance.Balance = ub.Balance.String()
@@ -348,14 +392,7 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		userBalance.Withdrawing = ub.Withdrawing.String()
 
 		// Convert pool balances to entity format
-		userBalance.Locks = make([]entity.LockBalance, 0, len(ub.PoolBalance))
-		for _, poolBalance := range ub.PoolBalance {
-			userBalance.Locks = append(userBalance.Locks, entity.LockBalance{
-				PoolID:     poolBalance.PoolID,
-				PoolSymbol: poolBalance.PoolSymbol,
-				Balance:    poolBalance.Balance.String(),
-			})
-		}
+		userBalance.Locks = convertPoolBalancesToLocks(ub.PoolBalance)
 
 		result = append(result, userBalance)
 	}
