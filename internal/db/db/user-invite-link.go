@@ -20,7 +20,7 @@ func init() {
 type UserInviteLink struct {
 	gorm.Model
 	UID     string `gorm:"column:uid;type:varchar(255);not null;index:idx_uid;"`
-	Code    string `gorm:"column:code;type:varchar(255);not null;index:idx_code;uniqueIndex:idx_code"`
+	Code    string `gorm:"column:code;type:varchar(255);not null;;uniqueIndex:idx_code"`
 	Link    string `gorm:"column:link;type:varchar(255);"`
 	Count   uint   `gorm:"column:invite_count;type:int(11);not null;default:0"`   // 邀请人数
 	Percent uint   `gorm:"column:invite_percent;type:int(11);not null;default:0"` // 返佣比例
