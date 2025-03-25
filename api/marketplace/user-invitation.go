@@ -57,7 +57,7 @@ func getInviteUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body data.UILinkListParam true "request"
-// @Success 200 {object} internal.db.db.UserInvitationLink "invitation links"
+// @Success 200 {object} api.Response "invitation links"
 // @Router /user/invitation/links [get]
 func getInvitationLinks(c *gin.Context) {
 
