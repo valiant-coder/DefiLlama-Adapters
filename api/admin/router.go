@@ -118,6 +118,7 @@ func Run(addr string, release bool) error {
 
 	// user
 	authorized.GET("/users", queryUsers)
+	authorized.GET("/user-passkeys/:uid", getPasskeys)
 
 	return r.Run(addr)
 

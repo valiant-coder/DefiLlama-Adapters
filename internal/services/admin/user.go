@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"exapp-go/internal/db/db"
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/pkg/queryparams"
 )
@@ -29,6 +30,21 @@ func (s *AdminServices) QueryUsers(ctx context.Context, params *queryparams.Quer
 	var resp []*entity_admin.RespUser
 	for _, user := range users {
 		resp = append(resp, new(entity_admin.RespUser).Fill(user))
+	}
+
+	return resp, total, nil
+}
+
+func (s *AdminServices) GetPasskeys(ctx context.Context, queryParams *queryparams.QueryParams) ([]*entity_admin.RespPasskey, int64, error) {
+	var passkeys []*db.UserCredential
+
+	total, err := s.repo.Query(ctx, &passkeys, queryParams, "uid")
+	if err != nil {
+		return nil, 0, err
+	}
+	var resp []*entity_admin.RespPasskey
+	for _, passkey := range passkeys {
+		resp = append(resp, new(entity_admin.RespPasskey).Fill(passkey))
 	}
 
 	return resp, total, nil

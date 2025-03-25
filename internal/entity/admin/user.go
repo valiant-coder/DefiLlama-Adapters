@@ -41,3 +41,34 @@ func (r *RespUser) Fill(a *db.UserList) *RespUser {
 	}
 	return r
 }
+
+type RespPasskey struct {
+	UID            string
+	CredentialID   string
+	PublicKey      string
+	Name           string
+	LastUsedAt     entity.Time
+	LastUsedIP     string
+	Synced         bool
+	EOSAccount     string
+	EOSPermissions string
+	DeviceID       string
+	BlockNumber    uint64
+	AAGuid         string
+}
+
+func (r *RespPasskey) Fill(a *db.UserCredential) *RespPasskey {
+	r.UID = a.UID
+	r.CredentialID = a.CredentialID
+	r.PublicKey = a.PublicKey
+	r.Name = a.Name
+	r.LastUsedAt = entity.Time(a.LastUsedAt)
+	r.LastUsedIP = a.LastUsedIP
+	r.Synced = a.Synced
+	r.EOSAccount = a.EOSAccount
+	r.EOSPermissions = a.EOSPermissions
+	r.DeviceID = a.DeviceID
+	r.BlockNumber = a.BlockNumber
+	r.AAGuid = a.AAGuid
+	return r
+}
