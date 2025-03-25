@@ -9,11 +9,20 @@ import (
 )
 
 func (s *Service) initAccountLastBlockNum(ctx context.Context) error {
-	lastBlockNum, err := s.repo.GetUserCredentialMaxBlockNumber(ctx)
+	lastCredentialMaxBlockNumber, err := s.repo.GetUserCredentialMaxBlockNumber(ctx)
 	if err != nil {
 		return fmt.Errorf("get user credential max block number failed: %w", err)
 	}
-
+	lastUserMaxBlockNumber, err := s.repo.GetUserMaxBlockNumber(ctx)
+	if err != nil {
+		return fmt.Errorf("get user max block number failed: %w", err)
+	}
+	var lastBlockNum uint64
+	if lastCredentialMaxBlockNumber > lastUserMaxBlockNumber {
+		lastBlockNum = lastCredentialMaxBlockNumber
+	} else {
+		lastBlockNum = lastUserMaxBlockNumber
+	}
 	if lastBlockNum == 0 {
 		lastBlockNum = s.hyperionCfg.StartBlock
 	} else {
@@ -32,11 +41,13 @@ func (s *Service) syncAccountHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  "eosio:updateauth",
+			Filter:  fmt.Sprintf("eosio:updateauth,%s:%s", s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader),
 			Limit:   s.hyperionCfg.BatchSize,
 			Sort:    "asc",
 			After:   strconv.FormatUint(s.accountLastBlockNum, 10),
-		})
+		},
+		)
+
 		if err != nil {
 			return fmt.Errorf("get actions failed: %w", err)
 		}
@@ -49,7 +60,6 @@ func (s *Service) syncAccountHistory(ctx context.Context) error {
 			if err := s.publishAction(action); err != nil {
 				return fmt.Errorf("publish action failed: %w", err)
 			}
-
 			s.accountLastBlockNum = action.BlockNum
 		}
 
@@ -72,6 +82,14 @@ func (s *Service) SyncAccount(ctx context.Context) (<-chan hyperion.Action, erro
 		{
 			Contract:  "eosio",
 			Action:    "updateauth",
+			Account:   "",
+			StartFrom: int64(s.accountLastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.oneDexCfg.EVMAgentContract,
+			Action:    s.eosCfg.Events.LogNewTrader,
 			Account:   "",
 			StartFrom: int64(s.accountLastBlockNum) + 1,
 			ReadUntil: 0,

@@ -13,8 +13,6 @@ type ReqUserLogin struct {
 
 	// for evm user
 	EVMAddress string `json:"evm_address"`
-	Signature  string `json:"signature"`
-	Message    string `json:"message"`
 }
 
 type TelegramData struct {

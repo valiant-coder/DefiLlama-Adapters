@@ -84,7 +84,7 @@ func (s *Service) recordUserBalances() error {
 	for i := 0; i < workerCount; i++ {
 		go func() {
 			for account := range taskChan {
-				usdtAmount, err := userService.CalculateUserUSDTBalance(ctx, account.EOSAccount)
+				usdtAmount, err := userService.CalculateTotalUSDTValueForUser(ctx, account.EOSAccount)
 				if err != nil {
 					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.EOSAccount, err)}
 					continue

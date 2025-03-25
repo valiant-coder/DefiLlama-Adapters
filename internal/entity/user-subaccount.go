@@ -21,20 +21,18 @@ type RespDeleteSubAccount struct {
 }
 
 type SubAccountInfo struct {
-	Name       string   `json:"name"`
-	EOSAccount string   `json:"eos_account"`
-	Permission string   `json:"permission"`
-	APIKey     string   `json:"api_key"`
-	PublicKeys []string `json:"public_keys"`
-}
-
-type RespGetSubAccounts struct {
-	SubAccounts []SubAccountInfo `json:"sub_accounts"`
+	Name       string              `json:"name"`
+	EOSAccount string              `json:"eos_account"`
+	Permission string              `json:"permission"`
+	APIKey     string              `json:"api_key"`
+	PublicKeys []string            `json:"public_keys"`
+	Balances   []SubAccountBalance `json:"balances"`
 }
 
 type SubAccountBalance struct {
-	Coin    string        `json:"coin"`
-	Balance string        `json:"balance"`
-	Locked  string        `json:"locked"`
-	Locks   []LockBalance `json:"locks"`
+	Coin      string        `json:"coin"`
+	Balance   string        `json:"balance"`
+	USDTPrice string        `json:"usdt_price"`
+	Locked    string        `json:"locked"`
+	Locks     []LockBalance `json:"locks"`
 }

@@ -19,7 +19,7 @@ import (
 // @Param pool_id query string false "pool_id"
 // @Param side    query string false "0 buy 1 sell"
 // @Success 200 {array} entity.OpenOrder "open order list"
-// @Router /api/v1/open-orders [get]
+// @Router /open-orders [get]
 func getOpenOrders(c *gin.Context) {
 	queryParams := queryparams.NewQueryParams(c)
 
@@ -54,7 +54,7 @@ func getOpenOrders(c *gin.Context) {
 // @Param type  query string false "0 market 1limit"
 // @Param status query string false "status"
 // @Success 200 {array} entity.Order "history orders"
-// @Router /api/v1/history-orders [get]
+// @Router /history-orders [get]
 func getHistoryOrders(c *gin.Context) {
 	queryParams := queryparams.NewQueryParams(c)
 
@@ -89,7 +89,7 @@ func getHistoryOrders(c *gin.Context) {
 // @Produce json
 // @Param id path string true "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy"
 // @Success 200 {object} entity.OrderDetail "history order detail"
-// @Router /api/v1/orders/{id} [get]
+// @Router /orders/{id} [get]
 func getOrderDetail(c *gin.Context) {
 	id := c.Param("id")
 	order, err := marketplace.NewOrderService().GetOrderDetail(c.Request.Context(), id)
@@ -128,7 +128,7 @@ func getDepth(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} entity.RespUnreadOrder "Response for unread status"
-// @Router /api/v1/unread-orders [get]
+// @Router /unread-orders [get]
 func checkUnreadOrders(c *gin.Context) {
 	hasUnread, err := marketplace.NewOrderService().CheckUnreadFilledOrders(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
@@ -145,7 +145,7 @@ func checkUnreadOrders(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200
-// @Router /api/v1/orders/clear-unread [post]
+// @Router /orders/clear-unread [post]
 func clearAllUnreadOrders(c *gin.Context) {
 	err := marketplace.NewOrderService().ClearAllUnreadOrders(c.Request.Context(), c.GetString("uid"))
 	if err != nil {

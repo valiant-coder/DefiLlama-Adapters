@@ -107,13 +107,11 @@ func getUserInfo(c *gin.Context) {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Param account query string false "eos account name"
 // @Success 200 {array} entity.UserBalance "user balances"
 // @Router /api/v1/balances [get]
 func getUserBalances(c *gin.Context) {
-	accountName := c.Query("account")
 	userService := marketplace.NewUserService()
-	balances, err := userService.GetUserBalance(c.Request.Context(), accountName)
+	balances, err := userService.FetchUserBalanceByUID(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return

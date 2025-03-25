@@ -124,7 +124,6 @@ func Run(addr string, release bool) error {
 
 	auth.POST("/first-deposit", firstDeposit)
 	auth.POST("/deposit", deposit)
-	auth.POST("/withdrawal", withdrawal)
 
 	auth.GET("/deposit-history", getDepositHistory)
 	auth.GET("/withdrawal-history", getWithdrawalHistory)

@@ -3,12 +3,15 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
 	"fmt"
 	"log"
 	"strings"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 func (s *Service) handleNewAccount(action hyperion.Action) error {
@@ -42,10 +45,7 @@ func (s *Service) handleNewAccount(action hyperion.Action) error {
 }
 
 func (s *Service) updateUserTokenBalance(account string, permission string) error {
-	if permission != "active" {
-		account = fmt.Sprintf("%s@%s", account, permission)
-	}
-	go s.publisher.PublishBalanceUpdate(account)
+	go s.publisher.PublishBalanceUpdate(fmt.Sprintf("%s@%s", account, permission))
 
 	return nil
 }
@@ -152,4 +152,48 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 	}
 
 	return nil
+}
+
+func (s *Service) handleEVMTraderMap(action hyperion.Action) error {
+	ctx := context.Background()
+	var data struct {
+		Trader struct {
+			Actor      string `json:"actor"`
+			Permission string `json:"permission"`
+		} `json:"trader"`
+		Address string `json:"address"`
+	}
+	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+		log.Printf("Unmarshal evm trader map failed: %v", err)
+		return nil
+	}
+	evmAddress := strings.ToLower("0x" + data.Address)
+	user, err := s.repo.GetUserByEVMAddress(ctx, evmAddress)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			user = &db.User{
+				Username:    evmAddress,
+				LoginMethod: db.LoginMethodEVM,
+				OauthID:     evmAddress,
+				EVMAddress:  evmAddress,
+				EOSAccount:  data.Trader.Actor,
+				Permission:  data.Trader.Permission,
+				BlockNumber: action.BlockNum,
+			}
+
+		} else {
+			log.Printf("Get user by evm address failed: %v", err)
+			return nil
+		}
+	}
+	user.EOSAccount = data.Trader.Actor
+	user.Permission = data.Trader.Permission
+	user.BlockNumber = action.BlockNum
+	err = s.repo.UpsertUser(ctx, user)
+	if err != nil {
+		log.Printf("Upsert user failed: %v", err)
+		return nil
+	}
+	return nil
+
 }
