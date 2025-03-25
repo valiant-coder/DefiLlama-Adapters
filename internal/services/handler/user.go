@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
 	"fmt"
 	"log"
@@ -166,19 +167,28 @@ func (s *Service) handleEVMTraderMap(action hyperion.Action) error {
 		log.Printf("Unmarshal evm trader map failed: %v", err)
 		return nil
 	}
-	user, err := s.repo.GetUserByEVMAddress(ctx, strings.ToLower("0x"+data.Address))
+	evmAddress := strings.ToLower("0x" + data.Address)
+	user, err := s.repo.GetUserByEVMAddress(ctx, evmAddress)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Printf("User not found for address: %v", data.Address)
+			user = &db.User{
+				LoginMethod: db.LoginMethodEVM,
+				OauthID:     evmAddress,
+				EVMAddress:  evmAddress,
+				EOSAccount:  data.Trader.Actor,
+				Permission:  data.Trader.Permission,
+			}
+
+		} else {
+			log.Printf("Get user by evm address failed: %v", err)
 			return nil
 		}
-		return nil
 	}
 	user.EOSAccount = data.Trader.Actor
 	user.Permission = data.Trader.Permission
-	err = s.repo.UpdateUser(ctx, user)
-	if err!= nil {
-		log.Printf("Update user failed: %v", err)
+	err = s.repo.UpsertUser(ctx, user)
+	if err != nil {
+		log.Printf("Upsert user failed: %v", err)
 		return nil
 	}
 	return nil
