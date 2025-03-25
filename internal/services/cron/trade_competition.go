@@ -76,7 +76,7 @@ func (s *Service) recordUserBalances() error {
 	// Create task channel
 	taskChan := make(chan db.EOSAccountInfo, len(eosAccounts))
 	for _, account := range eosAccounts {
-		taskChan <- account
+		taskChan <- *account
 	}
 	close(taskChan)
 
@@ -206,7 +206,7 @@ func (s *Service) calculateUserAccumulatedProfit() error {
 	uidToAccount := make(map[string]db.EOSAccountInfo, len(eosAccounts))
 	uids := make([]string, len(eosAccounts))
 	for i, account := range eosAccounts {
-		uidToAccount[account.UID] = account
+		uidToAccount[account.UID] = *account
 		uids[i] = account.UID
 	}
 
