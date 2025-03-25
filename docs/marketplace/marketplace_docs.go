@@ -1884,11 +1884,40 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "entity.SubAccountBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "string"
+                },
+                "coin": {
+                    "type": "string"
+                },
+                "locked": {
+                    "type": "string"
+                },
+                "locks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.LockBalance"
+                    }
+                },
+                "usdt_price": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.SubAccountInfo": {
             "type": "object",
             "properties": {
                 "api_key": {
                     "type": "string"
+                },
+                "balances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.SubAccountBalance"
+                    }
                 },
                 "eos_account": {
                     "type": "string"

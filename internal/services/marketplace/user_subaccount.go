@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"log"
+
 	"gorm.io/datatypes"
 )
 
@@ -79,12 +81,19 @@ func (s *UserService) GetSubAccounts(ctx context.Context, uid string) ([]*entity
 
 	var result []*entity.SubAccountInfo
 	for _, sa := range subAccounts {
+		subAccountBalance, err := s.GetUserSubaccountBalances(ctx, sa.EOSAccount, sa.Permission)
+		if err != nil {
+			log.Printf("failed to get sub-account balance: %v", err)
+			continue
+
+		}
 		result = append(result, &entity.SubAccountInfo{
 			Name:       sa.Name,
 			EOSAccount: sa.EOSAccount,
 			Permission: sa.Permission,
 			APIKey:     sa.APIKey,
 			PublicKeys: sa.PublicKeys,
+			Balances:   subAccountBalance,
 		})
 	}
 
@@ -102,5 +111,3 @@ func (s *UserService) DeleteSubAccount(ctx context.Context, uid string, req enti
 		Success: true,
 	}, nil
 }
-
-
