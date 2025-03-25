@@ -1675,14 +1675,8 @@ const docTemplatemarketplace = `{
                 "id_token": {
                     "type": "string"
                 },
-                "message": {
-                    "type": "string"
-                },
                 "method": {
                     "description": "google,apple,telegram,evm",
-                    "type": "string"
-                },
-                "signature": {
                     "type": "string"
                 },
                 "telegram_data": {

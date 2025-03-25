@@ -14,11 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/redis/go-redis/v9"
-	"github.com/relvacode/iso8601"
-	"github.com/spruceid/siwe-go"
 )
 
 type UserService struct {
@@ -113,46 +108,9 @@ func (h *TelegramLoginHandler) Handle(_ context.Context, req entity.ReqUserLogin
 
 // EVMLoginHandler handles EVM login
 type EVMLoginHandler struct {
-	redis redis.Cmdable
 }
 
 func (h *EVMLoginHandler) Handle(ctx context.Context, req entity.ReqUserLogin) (*db.User, error) {
-	ms, err := siwe.ParseMessage(req.Message)
-	if err != nil {
-		return nil, fmt.Errorf("parse message: %w", err)
-	}
-
-	issuedAt, err := iso8601.ParseString(ms.GetIssuedAt())
-	if err != nil {
-		return nil, fmt.Errorf("parse issuedAt: %w", err)
-	}
-	if time.Now().After(issuedAt.Add(5 * time.Minute)) {
-		return nil, errors.New("issuedAt is expired")
-	}
-
-	// verify nonce
-	nonceKey := fmt.Sprint("login_nonce:", ms.GetNonce())
-	isExistNonce, err := h.redis.Exists(ctx, nonceKey).Result()
-	if err != nil {
-		return nil, fmt.Errorf("check nonce: %w", err)
-	}
-	if isExistNonce == 1 {
-		return nil, errors.New("nonce used")
-	}
-
-	publicKey, err := ms.VerifyEIP191(req.Signature)
-	if err != nil {
-		return nil, fmt.Errorf("verify signature: %w", err)
-	}
-
-	evmAddress := crypto.PubkeyToAddress(*publicKey).String()
-	if !strings.EqualFold(evmAddress, req.EVMAddress) {
-		return nil, errors.New("evm address not match")
-	}
-
-	if err := h.redis.Set(ctx, nonceKey, "1", 5*time.Minute); err != nil {
-		return nil, fmt.Errorf("set nonce: %v", err)
-	}
 
 	return &db.User{
 		Username:    req.EVMAddress,
@@ -175,9 +133,7 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 		string(db.LoginMethodTelegram): &TelegramLoginHandler{
 			botToken: cfg.Oauth2.Telegram.BotToken,
 		},
-		string(db.LoginMethodEVM): &EVMLoginHandler{
-			redis: s.repo.Redis(),
-		},
+		string(db.LoginMethodEVM): &EVMLoginHandler{},
 	}
 
 	handler, ok := handlers[req.Method]
