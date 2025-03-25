@@ -253,5 +253,19 @@ func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.
 		return nil, 0, err
 	}
 
-	return records, 0, nil
+	var total int64
+	countSQL := fmt.Sprintf(`
+        SELECT COUNT(*) FROM (
+            SELECT id FROM deposit_records %s
+            UNION ALL
+            SELECT id FROM withdraw_records %s
+        ) AS total_count
+    `, whereSQL, whereSQL)
+
+	err = r.Raw(countSQL, queryParams[:len(queryParams)-2]...).Scan(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return records, total, nil
 }
