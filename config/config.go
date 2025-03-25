@@ -76,7 +76,6 @@ type Config struct {
 	} `yaml:"oauth2"`
 	
 	Eos EosConfig `yaml:"eos"`
-	
 	Evm EVMConfig `yaml:"evm"`
 	
 	Faucet struct {
