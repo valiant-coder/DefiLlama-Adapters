@@ -117,7 +117,7 @@ func Run(addr string, release bool) error {
 	authorized.PUT("/admin_permission/:id", updateAdminPermission)
 
 	// user
-	r.GET("/users", queryUsers)
+	authorized.GET("/users", queryUsers)
 
 	return r.Run(addr)
 
