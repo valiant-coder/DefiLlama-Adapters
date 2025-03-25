@@ -176,6 +176,7 @@ type OneDexConfig struct {
 	AppTakerFeeRate          float64 `yaml:"app_taker_fee_rate"`
 	AppMakerFeeRate          float64 `yaml:"app_maker_fee_rate"`
 	TokenContract            string  `yaml:"token_contract"`
+	EVMAgentContract         string  `yaml:"evm_agent_contract"`  
 }
 
 type ExsatConfig struct {
@@ -252,6 +253,8 @@ type EventConfig struct {
 	CreateToken  string `yaml:"create_token"`
 	AddXSATChain string `yaml:"add_xsat_chain"`
 	MapXSAT      string `yaml:"map_xsat"`
+
+	LogNewTrader string `yaml:"log_new_trader"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -271,5 +274,6 @@ func DefaultEventConfig() EventConfig {
 		CreateToken:    "createtoken",
 		AddXSATChain:   "addxsatchain",
 		MapXSAT:        "mapxsat",
+		LogNewTrader:   "lognewtrader",
 	}
 }

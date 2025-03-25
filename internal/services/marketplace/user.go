@@ -112,6 +112,16 @@ type EVMLoginHandler struct {
 
 func (h *EVMLoginHandler) Handle(req entity.ReqUserLogin) (*db.User, error) {
 
+	if req.EVMAddress == "" {
+		return nil, errors.New("evm address is empty")
+	}
+
+	if !strings.HasPrefix(req.EVMAddress, "0x") {
+		req.EVMAddress = "0x" + req.EVMAddress
+	}
+
+	req.EVMAddress = strings.ToLower(req.EVMAddress)
+
 	return &db.User{
 		Username:    req.EVMAddress,
 		LoginMethod: db.LoginMethodEVM,

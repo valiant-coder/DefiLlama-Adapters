@@ -40,6 +40,8 @@ type User struct {
 	EVMAddress string `gorm:"column:evm_address;type:varchar(255);default:null;index:idx_evm_address"`
 	EOSAccount string `gorm:"column:eos_account;type:varchar(255);default:null;index:idx_eos_account_permission"`
 	Permission string `gorm:"column:permission;type:varchar(255);default:null;index:idx_eos_account_permission"`
+
+	BlockNumber uint64 `gorm:"column:block_number;default:0;type:bigint(20)"`
 }
 
 func (User) TableName() string {
@@ -70,16 +72,27 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 	return r.DB.WithContext(ctx).Create(user).Error
 }
 
+
+func (r *Repo) UpdateUser(ctx context.Context, user *User) error {
+	return r.DB.WithContext(ctx).Model(&User{}).Where("id =?", user.ID).Updates(user).Error
+}
+
 func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
 	var user User
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
 	return result.RowsAffected > 0, result.Error
 }
 
-func (r *Repo) GetUser(ctx context.Context, uid string) (User, error) {
+func (r *Repo) GetUser(ctx context.Context, uid string) (*User, error) {
 	var user User
-	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
-	return user, result.Error
+	err := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user).Error
+	return &user, err
+}
+
+func (r *Repo) GetUserByEVMAddress(ctx context.Context, evmAddress string) (*User, error) {
+	var user User
+	result := r.DB.WithContext(ctx).Where("evm_address =?", evmAddress).First(&user)
+	return &user, result.Error
 }
 
 func (r *Repo) GetTotalUserCount(ctx context.Context) (int64, error) {
@@ -110,6 +123,18 @@ func (r *Repo) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) 
 		}
 	}
 	return "", "", nil
+}
+
+func (r *Repo) GetUserMaxBlockNumber(ctx context.Context) (uint64, error) {
+	var blockNumber *uint64
+	err := r.WithContext(ctx).Model(&User{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
+	if err != nil {
+		return 0, err
+	}
+	if blockNumber == nil {
+		return 0, nil
+	}
+	return *blockNumber, nil
 }
 
 type UserCredential struct {

@@ -3,12 +3,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"exapp-go/pkg/hyperion"
 	"fmt"
 	"log"
 	"strings"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 func (s *Service) handleNewAccount(action hyperion.Action) error {
@@ -149,4 +151,36 @@ func (s *Service) handleUpdateAuth(action hyperion.Action) error {
 	}
 
 	return nil
+}
+
+func (s *Service) handleEVMTraderMap(action hyperion.Action) error {
+	ctx := context.Background()
+	var data struct {
+		Trader struct {
+			Actor      string `json:"actor"`
+			Permission string `json:"permission"`
+		} `json:"trader"`
+		Address string `json:"address"`
+	}
+	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
+		log.Printf("Unmarshal evm trader map failed: %v", err)
+		return nil
+	}
+	user, err := s.repo.GetUserByEVMAddress(ctx, strings.ToLower("0x"+data.Address))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("User not found for address: %v", data.Address)
+			return nil
+		}
+		return nil
+	}
+	user.EOSAccount = data.Trader.Actor
+	user.Permission = data.Trader.Permission
+	err = s.repo.UpdateUser(ctx, user)
+	if err!= nil {
+		log.Printf("Update user failed: %v", err)
+		return nil
+	}
+	return nil
+
 }
