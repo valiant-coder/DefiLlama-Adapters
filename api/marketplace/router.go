@@ -129,6 +129,19 @@ func Run(addr string, release bool) error {
 	auth.GET("/deposit-history", getDepositHistory)
 	auth.GET("/withdrawal-history", getWithdrawalHistory)
 
+	// User Invitation
+	auth.GET("/user/invitation", getInvitationInfo)
+	auth.GET("/user/invites", getInviteUsers)
+	auth.GET("/user/invitation/links", getInvitationLinks)
+	auth.POST("/user/invitation/link", createInvitationLink)
+	auth.DELETE("/user/invitation/link/:link_id", deleteInvitationLink)
+
+	// User Points
+	auth.GET("/user/points", getPointsInfo)
+	auth.GET("/user/points/records", getPointsRecords)
+	auth.GET("/user/points/conf", getPointsConf)
+	auth.PUT("/user/points/conf", updatePointsConf)
+
 	if config.Conf().HTTPS.Enabled {
 		return r.RunTLS(addr,
 			config.Conf().HTTPS.CertFile,

@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-
+	
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 )
@@ -53,24 +53,24 @@ func getRelevantPrecisions(price decimal.Decimal) []string {
 	if price.IsZero() {
 		return []string{}
 	}
-
+	
 	// Predefined precision groups
 	precisionGroups := map[string][]string{
 		"high":   {"0.01", "0.1", "1", "10"},
 		"medium": {"0.0001", "0.001", "0.01", "0.1"},
 		"low":    {"0.000000001", "0.00000001", "0.0000001", "0.000001"},
 	}
-
+	
 	// For prices greater than 10
 	if price.GreaterThanOrEqual(decimal.NewFromInt(10)) {
 		return precisionGroups["high"]
 	}
-
+	
 	// For prices greater than 1
 	if price.GreaterThanOrEqual(decimal.NewFromInt(1)) {
 		return precisionGroups["medium"]
 	}
-
+	
 	// For prices less than 1, find first non-zero decimal place
 	decimalStr := price.String()
 	firstNonZeroIndex := 2                           // Skip "0."
@@ -80,12 +80,12 @@ func getRelevantPrecisions(price decimal.Decimal) []string {
 			break
 		}
 	}
-
+	
 	// Use lowest precision group if many decimal places
 	if firstNonZeroIndex > 6 {
 		return precisionGroups["low"]
 	}
-
+	
 	// Select appropriate precisions based on first non-zero position
 	var relevantPrecisions []string
 	for _, p := range SupportedPrecisions {
@@ -95,25 +95,25 @@ func getRelevantPrecisions(price decimal.Decimal) []string {
 			relevantPrecisions = append(relevantPrecisions, p)
 		}
 	}
-
+	
 	// Keep maximum 4 precision levels
 	if len(relevantPrecisions) > 4 {
 		return relevantPrecisions[len(relevantPrecisions)-4:]
 	}
-
+	
 	return relevantPrecisions
 }
 
 // Calculate price slots for all precisions
 func calculateAllSlots(price decimal.Decimal, isBid bool) ([]string, []string) {
 	slots := []string{}
-
+	
 	// Get relevant precision levels
 	precisions := getRelevantPrecisions(price)
 	if !contains(precisions, "0.000000001") {
 		precisions = append(precisions, "0.000000001")
 	}
-
+	
 	for _, p := range precisions {
 		precision, _ := decimal.NewFromString(p)
 		if isBid {
@@ -132,7 +132,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	if len(params) == 0 {
 		return nil, nil
 	}
-
+	
 	// 1. Batch check UniqID
 	pipe := r.redis.Pipeline()
 	uniqIDChecks := make(map[string]*redis.BoolCmd)
@@ -145,7 +145,7 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	if _, err := pipe.Exec(ctx); err != nil {
 		return nil, fmt.Errorf("check uniq ids error: %w", err)
 	}
-
+	
 	// Filter already processed UniqIDs
 	var validParams []UpdateDepthParams
 	for _, param := range params {
@@ -156,11 +156,11 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 		}
 		validParams = append(validParams, param)
 	}
-
+	
 	if len(validParams) == 0 {
 		return nil, nil
 	}
-
+	
 	// 2. Batch add UniqID to processed set
 	pipe = r.redis.Pipeline()
 	for _, param := range validParams {
@@ -171,10 +171,10 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	if _, err := pipe.Exec(ctx); err != nil {
 		return nil, fmt.Errorf("add uniq ids error: %w", err)
 	}
-
+	
 	// 3. Aggregate parameters
 	validParams = aggregateParams(validParams)
-
+	
 	// 4. Optimized Redis script for batch updates
 	script := redis.NewScript(`
 	local updates = {}
@@ -201,10 +201,10 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 	end
 	return updates
 	`)
-
+	
 	var changes []DepthChange
 	batchSize := 100 // Maximum number of items per batch
-
+	
 	// 5. Process updates in batches
 	for i := 0; i < len(validParams); i += batchSize {
 		end := i + batchSize
@@ -212,41 +212,41 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 			end = len(validParams)
 		}
 		batchParams := validParams[i:end]
-
+		
 		var keys []string
 		var args []interface{}
-
+		
 		// Prepare batch update parameters
 		for _, param := range batchParams {
 			side := "sell"
 			if param.IsBuy {
 				side = "buy"
 			}
-
+			
 			// Calculate slots for all precisions
 			precisions, slots := calculateAllSlots(param.Price, param.IsBuy)
 			for i, precision := range precisions {
 				slot := slots[i]
 				hashKey := fmt.Sprintf("{depth:%d}:%s:%s:hash", param.PoolID, side, precision)
 				sortedSetKey := fmt.Sprintf("{depth:%d}:%s:%s:sorted_set", param.PoolID, side, precision)
-
+				
 				keys = append(keys, hashKey, sortedSetKey)
 				args = append(args, slot, param.Amount.String())
 			}
 		}
-
+		
 		// Execute batch update
 		results, err := script.Run(ctx, r.redis, keys, args...).Result()
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute batch update: %v", err)
 		}
-
+		
 		// Process results
 		resultList, ok := results.([]interface{})
 		if !ok {
 			return nil, fmt.Errorf("unexpected result type: %T", results)
 		}
-
+		
 		// Record changes
 		resultIdx := 0
 		for _, param := range batchParams {
@@ -256,12 +256,12 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 				if resultIdx >= len(resultList) {
 					continue
 				}
-
+				
 				newTotal := decimal.RequireFromString(resultList[resultIdx].(string)).Truncate(8)
 				if newTotal.LessThan(decimal.Zero) {
 					newTotal = decimal.Zero
 				}
-
+				
 				changes = append(changes, DepthChange{
 					PoolID:    param.PoolID,
 					IsBuy:     param.IsBuy,
@@ -269,12 +269,12 @@ func (r *Repo) UpdateDepthV2(ctx context.Context, params []UpdateDepthParams) ([
 					Amount:    newTotal,
 					Precision: precision,
 				})
-
+				
 				resultIdx++
 			}
 		}
 	}
-
+	
 	return changes, nil
 }
 
@@ -285,17 +285,17 @@ func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, 
 		Bids:   [][]string{},
 		Asks:   [][]string{},
 	}
-
+	
 	// Get depth data using minimum precision
-
+	
 	// Get bids (buy orders)
 	bidsHash := fmt.Sprintf("{depth:%d}:buy:%s:hash", poolId, precision)
 	bidsSortedSet := fmt.Sprintf("{depth:%d}:buy:%s:sorted_set", poolId, precision)
-
+	
 	// Get asks (sell orders)
 	asksHash := fmt.Sprintf("{depth:%d}:sell:%s:hash", poolId, precision)
 	asksSortedSet := fmt.Sprintf("{depth:%d}:sell:%s:sorted_set", poolId, precision)
-
+	
 	// Get bids (high to low, limit 100)
 	bids, err := r.redis.ZRevRange(ctx, bidsSortedSet, 0, int64(limit-1)).Result()
 	if err != nil && err != redis.Nil {
@@ -316,7 +316,7 @@ func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, 
 			}
 		}
 	}
-
+	
 	// Get asks (low to high, limit 100)
 	asks, err := r.redis.ZRange(ctx, asksSortedSet, 0, int64(limit-1)).Result()
 	if err != nil && err != redis.Nil {
@@ -337,7 +337,7 @@ func (r *Repo) GetDepthV2(ctx context.Context, poolId uint64, precision string, 
 			}
 		}
 	}
-
+	
 	return depth, nil
 }
 
@@ -352,7 +352,7 @@ func contains(s []string, e string) bool {
 }
 
 // ClearDepths clears depth data
-func (s *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
+func (r *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
 	keys := []string{
 		fmt.Sprintf("{depth:%d}:processed_ids", poolID),
 	}
@@ -364,15 +364,15 @@ func (s *Repo) ClearDepthsV2(ctx context.Context, poolID uint64) error {
 			fmt.Sprintf("{depth:%d}:sell:%s:sorted_set", poolID, precision),
 		}...)
 	}
-	return s.redis.Del(ctx, keys...).Err()
+	return r.redis.Del(ctx, keys...).Err()
 }
 
 func (r *Repo) CleanInvalidDepth(poolID uint64, lastPrice decimal.Decimal, isBuy bool) (int64, error) {
 	ctx := context.Background()
 	var totalCleaned int64
-
+	
 	pipe := r.redis.Pipeline()
-
+	
 	for _, precision := range SupportedPrecisions {
 		var (
 			hashKey      string
@@ -380,7 +380,7 @@ func (r *Repo) CleanInvalidDepth(poolID uint64, lastPrice decimal.Decimal, isBuy
 			min          string
 			max          string
 		)
-
+		
 		if isBuy {
 			// For buy orders, clean all sell orders less than or equal to the executed price
 			hashKey = fmt.Sprintf("{depth:%d}:sell:%s:hash", poolID, precision)
@@ -400,7 +400,7 @@ func (r *Repo) CleanInvalidDepth(poolID uint64, lastPrice decimal.Decimal, isBuy
 			min = "(" + slotPrice.String() // Use "(" prefix to exclude this price
 			max = "+inf"
 		}
-
+		
 		// Get list of prices to delete
 		prices, err := r.redis.ZRangeByScore(ctx, sortedSetKey, &redis.ZRangeBy{
 			Min: min,
@@ -409,7 +409,7 @@ func (r *Repo) CleanInvalidDepth(poolID uint64, lastPrice decimal.Decimal, isBuy
 		if err != nil {
 			return 0, fmt.Errorf("get invalid prices error for precision %s: %w", precision, err)
 		}
-
+		
 		if len(prices) > 0 {
 			// Delete data from hash table
 			pipe.HDel(ctx, hashKey, prices...)
@@ -418,13 +418,13 @@ func (r *Repo) CleanInvalidDepth(poolID uint64, lastPrice decimal.Decimal, isBuy
 			totalCleaned += int64(len(prices))
 		}
 	}
-
+	
 	if totalCleaned > 0 {
 		_, err := pipe.Exec(ctx)
 		if err != nil {
 			return 0, fmt.Errorf("clean invalid depth error: %w", err)
 		}
 	}
-
+	
 	return totalCleaned, nil
 }
