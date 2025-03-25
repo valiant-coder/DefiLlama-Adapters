@@ -28,13 +28,10 @@ type SubAccountInfo struct {
 	PublicKeys []string `json:"public_keys"`
 }
 
-type RespGetSubAccounts struct {
-	SubAccounts []SubAccountInfo `json:"sub_accounts"`
-}
-
 type SubAccountBalance struct {
-	Coin    string        `json:"coin"`
-	Balance string        `json:"balance"`
-	Locked  string        `json:"locked"`
-	Locks   []LockBalance `json:"locks"`
+	Coin      string        `json:"coin"`
+	Balance   string        `json:"balance"`
+	USDTPrice string        `json:"usdt_price"`
+	Locked    string        `json:"locked"`
+	Locks     []LockBalance `json:"locks"`
 }

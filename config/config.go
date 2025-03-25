@@ -77,7 +77,7 @@ type Config struct {
 
 	Eos EosConfig `yaml:"eos"`
 
-	ExsatNetwork ExsatNetworkConfig `yaml:"exsat_network"`
+	Evm EVMConfig `yaml:"evm"`
 
 	Faucet struct {
 		Enabled              bool    `yaml:"enabled"`
@@ -107,13 +107,22 @@ type Config struct {
 	} `yaml:"monitor"`
 }
 
-type ExsatNetworkConfig struct {
-	CurrencySymbol   string `yaml:"currency_symbol"`
-	NetworkUrl       string `yaml:"network_url"`
-	ChainId          int    `yaml:"chain_id"`
-	NetworkName      string `yaml:"network_name"`
-	BlockExplorerUrl string `yaml:"block_explorer_url"`
+type EVMConfig struct {
+	Ethscan struct {
+		Endpoint string `yaml:"endpoint"`
+		ApiKey   string `yaml:"api_key"`
+	} `yaml:"ethscan"`
+
+	ExsatNetwork struct {
+		CurrencySymbol   string `yaml:"currency_symbol"`
+		NetworkUrl       string `yaml:"network_url"`
+		ChainId          int    `yaml:"chain_id"`
+		NetworkName      string `yaml:"network_name"`
+		BlockExplorerUrl string `yaml:"block_explorer_url"`
+	} `yaml:"exsat_network"`
 }
+
+
 
 type NsqConfig struct {
 	Nsqds     []string      `yaml:"nsqds"`
@@ -142,10 +151,10 @@ type EosConfig struct {
 }
 
 type PowerUpConfig struct {
-	Enabled    bool   `yaml:"enabled"`
-	NetEOS     uint64 `yaml:"net_eos"`
-	CPUEOS     uint64 `yaml:"cpu_eos"`
-	MaxPayment uint64 `yaml:"max_payment"`
+	Enabled           bool    `yaml:"enabled"`
+	NetEOS            uint64  `yaml:"net_eos"`
+	CPUEOS            uint64  `yaml:"cpu_eos"`
+	MaxPayment        uint64  `yaml:"max_payment"`
 	CPUMonitorEnabled bool    `yaml:"cpu_monitor_enabled"`
 	CPUThreshold      float64 `yaml:"cpu_threshold"` // Threshold percentage (0-100) to trigger powerup
 }

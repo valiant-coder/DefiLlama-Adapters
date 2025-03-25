@@ -1,4 +1,4 @@
-package eos
+package onedex
 
 import (
 	"context"
@@ -11,7 +11,7 @@ func TestBTCBridgeClient_MappingAddress(t *testing.T) {
 		"http://44.223.68.11:8888",
 		"brdgmng.xsat",
 		"asdfasdfasdf",
-		"5Jx3SWM25yWYe9EpHtexLSqBb6afAz3VLVbzrGBXhn2H3mF6LUU",
+		"",
 	)
 	resp, err := client.MappingAddress(context.Background(), BTCMappingAddrRequest{
 		RecipientAddress:     "asdfasdfasdf",

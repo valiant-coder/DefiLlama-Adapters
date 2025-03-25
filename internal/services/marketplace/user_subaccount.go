@@ -71,18 +71,15 @@ func (s *UserService) AddSubAccount(ctx context.Context, uid string, req entity.
 }
 
 // GetSubAccounts retrieves all sub-accounts for a user
-func (s *UserService) GetSubAccounts(ctx context.Context, uid string) (*entity.RespGetSubAccounts, error) {
+func (s *UserService) GetSubAccounts(ctx context.Context, uid string) ([]*entity.SubAccountInfo, error) {
 	subAccounts, err := s.repo.GetUserSubAccounts(ctx, uid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sub-accounts: %w", err)
 	}
 
-	result := &entity.RespGetSubAccounts{
-		SubAccounts: make([]entity.SubAccountInfo, 0, len(subAccounts)),
-	}
-
+	var result []*entity.SubAccountInfo
 	for _, sa := range subAccounts {
-		result.SubAccounts = append(result.SubAccounts, entity.SubAccountInfo{
+		result = append(result, &entity.SubAccountInfo{
 			Name:       sa.Name,
 			EOSAccount: sa.EOSAccount,
 			Permission: sa.Permission,
@@ -105,3 +102,5 @@ func (s *UserService) DeleteSubAccount(ctx context.Context, uid string, req enti
 		Success: true,
 	}, nil
 }
+
+

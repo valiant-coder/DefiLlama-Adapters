@@ -45,14 +45,8 @@ func (s *Server) handleNSQMessage(msg *nsq.Message) error {
 			log.Printf("Failed to unmarshal order update: %v", err)
 			return nil
 		}
-		var trader string
-		if order.Permission != "active" {
-			trader = fmt.Sprintf("%s@%s", order.Trader, order.Permission)
-		} else {
-			trader = order.Trader
-		}
 		// Push order update to specific user
-		s.pusher.PushOrderUpdate(trader, order)
+		s.pusher.PushOrderUpdate(fmt.Sprintf("%s@%s", order.Trader, order.Permission), order)
 
 	case MsgTypeBalanceUpdate:
 		var account string

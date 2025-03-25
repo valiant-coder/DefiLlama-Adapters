@@ -1,4 +1,4 @@
-package eos
+package onedex
 
 import (
 	"context"
