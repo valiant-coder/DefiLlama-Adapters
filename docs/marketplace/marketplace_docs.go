@@ -1093,6 +1093,269 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/user/invitation": {
+            "get": {
+                "description": "Get invitation info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "Get invitation info",
+                "responses": {}
+            }
+        },
+        "/user/invitation/link": {
+            "post": {
+                "description": "Create invitation link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "Create invitation link",
+                "parameters": [
+                    {
+                        "description": "create invitation link params",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UILinkParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "invitation link",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/invitation/link/{link_id}": {
+            "delete": {
+                "description": "Delete invitation link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "Delete invitation link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "link id",
+                        "name": "link_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/user/invitation/links": {
+            "get": {
+                "description": "Get invitation links",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "Get invitation links",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UILinkListParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "invitation links",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/invites": {
+            "get": {
+                "description": "Get invite users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "Get invite users",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UserInvitationListParam"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/user/points": {
+            "get": {
+                "description": "获取积分信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-points"
+                ],
+                "summary": "获取积分信息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UPRecordListParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "points info",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/points/conf": {
+            "get": {
+                "description": "获取积分配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-points"
+                ],
+                "summary": "获取积分配置",
+                "responses": {
+                    "200": {
+                        "description": "points conf",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新积分配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-points"
+                ],
+                "summary": "更新积分配置",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UserPointsConfParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "points conf",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/points/records": {
+            "get": {
+                "description": "获取积分记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-points"
+                ],
+                "summary": "获取积分记录",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UPRecordListParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "points records",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/withdrawal-history": {
             "get": {
                 "security": [
@@ -1126,6 +1389,218 @@ const docTemplatemarketplace = `{
         }
     },
     "definitions": {
+        "api.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "meta": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "data.UILinkListParam": {
+            "type": "object",
+            "required": [
+                "current",
+                "pageSize"
+            ],
+            "properties": {
+                "close_count": {
+                    "type": "boolean"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "count_column": {
+                    "type": "string"
+                },
+                "current": {
+                    "description": "页面",
+                    "type": "integer"
+                },
+                "keyword": {
+                    "type": "string"
+                },
+                "only_count": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "pageSize": {
+                    "description": "页码",
+                    "type": "integer",
+                    "maximum": 1000
+                },
+                "summary_info": {
+                    "type": "boolean"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.UILinkParam": {
+            "type": "object",
+            "properties": {
+                "percent": {
+                    "type": "integer"
+                }
+            }
+        },
+        "data.UPRecordListParam": {
+            "type": "object",
+            "required": [
+                "current",
+                "pageSize"
+            ],
+            "properties": {
+                "close_count": {
+                    "type": "boolean"
+                },
+                "count_column": {
+                    "type": "string"
+                },
+                "current": {
+                    "description": "页面",
+                    "type": "integer"
+                },
+                "interval": {
+                    "type": "integer"
+                },
+                "keyword": {
+                    "type": "string"
+                },
+                "method": {
+                    "$ref": "#/definitions/types.UserPointsMethod"
+                },
+                "only_count": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "pageSize": {
+                    "description": "页码",
+                    "type": "integer",
+                    "maximum": 1000
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "summary_info": {
+                    "type": "boolean"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "tx_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/types.UserPointsType"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.UserInvitationListParam": {
+            "type": "object",
+            "required": [
+                "current",
+                "pageSize"
+            ],
+            "properties": {
+                "close_count": {
+                    "type": "boolean"
+                },
+                "count_column": {
+                    "type": "string"
+                },
+                "current": {
+                    "description": "页面",
+                    "type": "integer"
+                },
+                "invite_code": {
+                    "type": "string"
+                },
+                "inviter": {
+                    "type": "string"
+                },
+                "keyword": {
+                    "type": "string"
+                },
+                "only_count": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "pageSize": {
+                    "description": "页码",
+                    "type": "integer",
+                    "maximum": 1000
+                },
+                "summary_info": {
+                    "type": "boolean"
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.UserPointsConfParam": {
+            "type": "object",
+            "properties": {
+                "base_trade_points": {
+                    "type": "integer"
+                },
+                "first_trade_rate": {
+                    "type": "integer"
+                },
+                "invite_percent": {
+                    "type": "integer"
+                },
+                "invite_rebate_percent": {
+                    "type": "integer"
+                },
+                "maker_weight": {
+                    "type": "integer"
+                },
+                "max_invite_link_count": {
+                    "type": "integer"
+                },
+                "max_per_invite_points": {
+                    "type": "integer"
+                },
+                "max_per_trade_points": {
+                    "type": "integer"
+                },
+                "order_min_pending_time": {
+                    "type": "integer"
+                },
+                "order_min_value": {
+                    "type": "integer"
+                },
+                "taker_weight": {
+                    "type": "integer"
+                },
+                "upgrade_invite_percent": {
+                    "type": "integer"
+                },
+                "upgrade_inviter_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "entity.Chain": {
             "type": "object",
             "properties": {
@@ -2337,6 +2812,41 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 }
             }
+        },
+        "types.UserPointsMethod": {
+            "type": "string",
+            "enum": [
+                "in",
+                "out"
+            ],
+            "x-enum-varnames": [
+                "UserPointsMethodIn",
+                "UserPointsMethodOut"
+            ]
+        },
+        "types.UserPointsType": {
+            "type": "string",
+            "enum": [
+                "trade",
+                "trade_rebate",
+                "active",
+                "manual",
+                "invitation"
+            ],
+            "x-enum-comments": {
+                "UserPointsTypeActive": "活动",
+                "UserPointsTypeInvitation": "邀请",
+                "UserPointsTypeManual": "手动",
+                "UserPointsTypeTrade": "交易",
+                "UserPointsTypeTradeRebate": "交易返佣"
+            },
+            "x-enum-varnames": [
+                "UserPointsTypeTrade",
+                "UserPointsTypeTradeRebate",
+                "UserPointsTypeActive",
+                "UserPointsTypeManual",
+                "UserPointsTypeInvitation"
+            ]
         }
     },
     "securityDefinitions": {
