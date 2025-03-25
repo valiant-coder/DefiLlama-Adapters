@@ -17,18 +17,18 @@ func (s *UserService) GetUserSubaccountBalances(ctx context.Context, eosAccount,
 	api := eos.New(config.Conf().Eos.NodeURL)
 
 	// Fetch subaccount balances from OneDex
-	balancesResp, err := onedex.GetSubaccountBalances(ctx, api, eosAccount, permission)
+	balances, err := onedex.GetSubaccountBalances(ctx, api, eosAccount, permission)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get subaccount balances: %w", err)
 	}
 
 	// Convert to UserBalance format for processing
 	var userAvailableBalances []UserBalance
-	for _, balance := range balancesResp.Balances {
+	for _, balance := range balances {
 		userBalance := UserBalance{
 			Account: eosAccount,
 			Coin:    fmt.Sprintf("%s-%s", balance.Contract, balance.Symbol),
-			Balance: balance.Amount,
+			Balance: balance.BalanceDecimal,
 		}
 		userAvailableBalances = append(userAvailableBalances, userBalance)
 	}

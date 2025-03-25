@@ -2,22 +2,54 @@ package onedex
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
 )
 
-type GetBalancesResponse struct {
-	Balances []Balance `json:"balances"`
-}
-
 type Balance struct {
-	Symbol    string          `json:"symbol"`
-	Precision uint8           `json:"precision"`
-	Amount    decimal.Decimal `json:"amount"`
-	Contract  string          `json:"contract"`
+	Id             uint64          `json:"id"`
+	Contract       string          `json:"contract"`
+	Balance        string          `json:"balance"`
+	BalanceDecimal decimal.Decimal `json:"balance_decimal"`
+	Symbol         string          `json:"symbol"`
 }
 
-func GetSubaccountBalances(ctx context.Context, client *eos.API, account, permission string) (*GetBalancesResponse, error) {
-	return nil, nil
+func GetSubaccountBalances(ctx context.Context, client *eos.API, account, permission string) ([]*Balance, error) {
+
+	request := eos.GetTableRowsRequest{
+		Code:       account,
+		Scope:      permission,
+		Table:      "funds",
+		JSON:       true,
+		LowerBound: "0",
+		UpperBound: "-1",
+		Limit:      100,
+	}
+
+	response, err := client.GetTableRows(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(response.Rows))
+
+	var balances []*Balance
+	err = json.Unmarshal(response.Rows, &balances)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, balance := range balances {
+		asset, err := eos.NewAssetFromString(balance.Balance)
+		if err != nil {
+			return nil, err
+		}
+		balance.Symbol = asset.Symbol.Symbol
+		balance.BalanceDecimal = decimal.NewFromInt(int64(asset.Amount)).Shift(-int32(asset.Symbol.Precision))
+	}
+	return balances, nil
+
 }
