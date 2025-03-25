@@ -299,7 +299,7 @@ func (r *Repo) QueryUserList(ctx context.Context, params *queryparams.QueryParam
 	err := tx.Select("users.*,"+
 		"newestWithdraw.last_withdraw_at,"+"oldestDeposit.first_deposit_at,"+
 		"newestDeposit.last_deposit_at,"+"pc.passkey_count, lu.last_used_at").
-		Where("users.deleted_at IS NULL").
+		// Where("users.deleted_at IS NULL").
 		Joins("LEFT JOIN (?) AS oldestDeposit ON users.uid = oldestDeposit.uid", oldestDepositRecords).
 		Joins("LEFT JOIN (?) AS newestDeposit ON users.uid = newestDeposit.uid", newestDepositRecords).
 		Joins("LEFT JOIN (?) AS newestWithdraw ON users.uid = newestWithdraw.uid", newestWithdrawRecords).
@@ -317,5 +317,4 @@ func (r *Repo) QueryUserList(ctx context.Context, params *queryparams.QueryParam
 	}
 
 	return users, total, nil
-
 }

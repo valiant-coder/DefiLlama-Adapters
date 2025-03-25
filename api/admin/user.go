@@ -53,3 +53,15 @@ func getPasskeys(c *gin.Context) {
 
 	api.List(c, resp, total)
 }
+
+func getTransactionsRecord(c *gin.Context) {
+	queryParams := queryparams.NewQueryParams(c)
+
+	resp, total, err := admin.New().GetPasskeys(c.Request.Context(), queryParams)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.List(c, resp, total)
+}

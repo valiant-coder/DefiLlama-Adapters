@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"exapp-go/config"
+	"exapp-go/pkg/queryparams"
 	"exapp-go/pkg/utils"
 	"fmt"
 	"testing"
@@ -27,4 +28,22 @@ func TestRepo_UpdateDepth(t *testing.T) {
 	}
 	fmt.Println(depth)
 
+}
+
+func TestQueryTransactionsRecord(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+
+	r := New()
+	record, totle, err := r.QueryTransactionsRecord(context.Background(), &queryparams.QueryParams{
+		Offset: 0,
+		Limit:  10,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(record[0])
+
+	fmt.Println(record, totle)
 }

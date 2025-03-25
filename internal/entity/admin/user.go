@@ -43,18 +43,18 @@ func (r *RespUser) Fill(a *db.UserList) *RespUser {
 }
 
 type RespPasskey struct {
-	UID            string
-	CredentialID   string
-	PublicKey      string
-	Name           string
-	LastUsedAt     entity.Time
-	LastUsedIP     string
-	Synced         bool
-	EOSAccount     string
-	EOSPermissions string
-	DeviceID       string
-	BlockNumber    uint64
-	AAGuid         string
+	UID            string      `json:"id"`
+	CredentialID   string      `json:"credential_id"`
+	PublicKey      string      `json:"public_key"`
+	Name           string      `json:"name"`
+	LastUsedAt     entity.Time `json:"last_used_at"`
+	LastUsedIP     string      `json:"last_used_ip"`
+	Synced         bool        `json:"synced"`
+	EOSAccount     string      `json:"eos_account"`
+	EOSPermissions string      `json:"eos_permissions"`
+	DeviceID       string      `json:"device_id"`
+	BlockNumber    uint64      `json:"block_number"`
+	AAGuid         string      `json:"aaguid"`
 }
 
 func (r *RespPasskey) Fill(a *db.UserCredential) *RespPasskey {
@@ -71,4 +71,20 @@ func (r *RespPasskey) Fill(a *db.UserCredential) *RespPasskey {
 	r.BlockNumber = a.BlockNumber
 	r.AAGuid = a.AAGuid
 	return r
+}
+
+type RespTransactionsRecord struct {
+	ID             uint        `json:"id"`
+	DepositAt      entity.Time `json:"deposit_at"`
+	WithdrawAt     entity.Time `json:"withdraw_at"`
+	Symbol         string      `json:"symbol"`
+	CoinName       string      `json:"coin_name"`
+	EVMAddress     string      `json:"evm_address"`
+	UID            string      `json:"uid"`
+	Free           float64     `json:"free"`
+	DepositChain   string      `json:"deposit_chain"`
+	WithdrawChain  string      `json:"withdraw_chain"`
+	DepositAmount  float64     `json:"deposit_amount"`
+	WithdrawAmount float64     `json:"withdraw_amount"`
+	TxHash         string      `json:"tx_hash"`
 }

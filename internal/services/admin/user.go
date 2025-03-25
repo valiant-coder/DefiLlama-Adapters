@@ -49,3 +49,13 @@ func (s *AdminServices) GetPasskeys(ctx context.Context, queryParams *queryparam
 
 	return resp, total, nil
 }
+
+func (s *AdminServices) GetTransactionsRecord(ctx context.Context, params *queryparams.QueryParams) ([]*db.TransactionsRecord, int64, error) {
+
+	record, total, err := s.repo.QueryTransactionsRecord(ctx, params)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return record, total, nil
+}
