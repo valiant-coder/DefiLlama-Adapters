@@ -66,6 +66,7 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 		existingUser.Avatar = user.Avatar
 		existingUser.Username = user.Username
 		existingUser.Email = user.Email
+		existingUser.BlockNumber = user.BlockNumber
 		*user = existingUser
 		return r.DB.WithContext(ctx).Save(user).Error
 	}

@@ -172,11 +172,13 @@ func (s *Service) handleEVMTraderMap(action hyperion.Action) error {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			user = &db.User{
+				Username:    evmAddress,
 				LoginMethod: db.LoginMethodEVM,
 				OauthID:     evmAddress,
 				EVMAddress:  evmAddress,
 				EOSAccount:  data.Trader.Actor,
 				Permission:  data.Trader.Permission,
+				BlockNumber: action.BlockNum,
 			}
 
 		} else {
@@ -186,6 +188,7 @@ func (s *Service) handleEVMTraderMap(action hyperion.Action) error {
 	}
 	user.EOSAccount = data.Trader.Actor
 	user.Permission = data.Trader.Permission
+	user.BlockNumber = action.BlockNum
 	err = s.repo.UpsertUser(ctx, user)
 	if err != nil {
 		log.Printf("Upsert user failed: %v", err)
