@@ -153,3 +153,5 @@ monitor:
   deposit_withdraw_timeout: 10m
 
 
+invitation:
+  host: "https://xxx.xxx.xxx"

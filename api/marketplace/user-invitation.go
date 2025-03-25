@@ -4,7 +4,7 @@ import (
 	"exapp-go/api"
 	"exapp-go/data"
 	"exapp-go/internal/services/marketplace"
-
+	
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,14 +15,14 @@ import (
 // @Produce json
 // @Router /user/invitation [get]
 func getInvitationInfo(c *gin.Context) {
-
+	
 	service := marketplace.NewUserInvitationService()
 	userInvitation, err := service.GetUserInvitation(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	api.OK(c, userInvitation)
 }
 
@@ -31,23 +31,23 @@ func getInvitationInfo(c *gin.Context) {
 // @Tags user-invitation
 // @Accept json
 // @Produce json
-// @Param request body data.UIListParam true "request"
+// @Param request body data.UserInvitationListParam true "request"
 // @Router /user/invites [get]
 func getInviteUsers(c *gin.Context) {
-
+	
 	var param data.UserInvitationListParam
 	if err := c.ShouldBindJSON(&param); err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	service := marketplace.NewUserInvitationService()
 	result, err := service.GetInviteUsers(c.Request.Context(), param)
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	api.List(c, result.Array, result.Total)
 }
 
@@ -60,20 +60,20 @@ func getInviteUsers(c *gin.Context) {
 // @Success 200 {object} internal.db.db.UserInvitationLink "invitation links"
 // @Router /user/invitation/links [get]
 func getInvitationLinks(c *gin.Context) {
-
+	
 	var param data.UILinkListParam
 	if err := c.ShouldBindJSON(&param); err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	service := marketplace.NewUserInvitationService()
 	result, err := service.GetUserInvitationLinks(c.Request.Context(), param)
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	api.List(c, result.Array, result.Total)
 }
 
@@ -86,20 +86,20 @@ func getInvitationLinks(c *gin.Context) {
 // @Success 200 {object} api.Response "invitation link"
 // @Router /user/invitation/link [post]
 func createInvitationLink(c *gin.Context) {
-
+	
 	var param data.UILinkParam
 	if err := c.ShouldBindJSON(&param); err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	service := marketplace.NewUserInvitationService()
 	err := service.CreateUILink(c.Request.Context(), c.GetString("uid"), &param)
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-
+	
 	api.OK(c, "success")
 }
 
@@ -112,14 +112,14 @@ func createInvitationLink(c *gin.Context) {
 // @Success 200
 // @Router /user/invitation/link/{link_id} [delete]
 func deleteInvitationLink(c *gin.Context) {
-
+	
 	service := marketplace.NewUserInvitationService()
 	err := service.DeleteInvitationLink(c.Request.Context(), c.Param("link_id"))
 	if err != nil {
-
+		
 		api.Error(c, err)
 		return
 	}
-
+	
 	api.OK(c, "success")
 }
