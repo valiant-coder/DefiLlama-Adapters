@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"time"
-
+	
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -27,12 +27,12 @@ func init() {
 		if err != nil {
 			return err
 		}
-
+		
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("123456"), bcrypt.DefaultCost)
 		if err != nil {
 			return err
 		}
-
+		
 		admin := &Admin{
 			Name:     "admin",
 			Password: string(hashedPassword),
@@ -168,7 +168,7 @@ func (r *Repo) DeleteAdmin(ctx context.Context, id uint) error {
 }
 
 func (r *Repo) GetAllAdminRoles(ctx context.Context) ([]*AdminRole, error) {
-
+	
 	var roles []*AdminRole
 	if err := r.DB.WithContext(ctx).Preload("Permissions.Actions").Find(&roles).Error; err != nil {
 		return nil, err
