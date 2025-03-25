@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 	"exapp-go/data"
-	"exapp-go/internal/tools"
-	"exapp-go/internal/types"
+	"exapp-go/pkg/tools"
+	"exapp-go/pkg/types"
 	"time"
 	
 	"gorm.io/gorm"

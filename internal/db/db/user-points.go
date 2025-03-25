@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"exapp-go/internal/types"
+	"exapp-go/pkg/types"
 	
 	"gorm.io/gorm"
 )

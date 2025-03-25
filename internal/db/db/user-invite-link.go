@@ -4,7 +4,7 @@ import (
 	"context"
 	"exapp-go/config"
 	"exapp-go/data"
-	"exapp-go/internal/tools"
+	"exapp-go/pkg/tools"
 	
 	"gorm.io/gorm"
 )

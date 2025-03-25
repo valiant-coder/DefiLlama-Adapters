@@ -13,6 +13,9 @@ type ReqUserLogin struct {
 
 	// for evm user
 	EVMAddress string `json:"evm_address"`
+
+	// Invite Code
+	InviteCode string `json:"invite_code"`
 }
 
 type TelegramData struct {
