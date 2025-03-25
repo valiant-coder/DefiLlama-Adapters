@@ -29,11 +29,11 @@ func getSystemInfo(c *gin.Context) {
 		TokenContract:   config.Conf().Eos.OneDex.TokenContract,
 		DexContract:     config.Conf().Eos.CdexConfig.OneDexContract,
 		ExsatNetwork: entity.ExsatNetwork{
-			CurrencySymbol:   config.Conf().ExsatNetwork.CurrencySymbol,
-			NetworkUrl:       config.Conf().ExsatNetwork.NetworkUrl,
-			ChainId:          config.Conf().ExsatNetwork.ChainId,
-			NetworkName:      config.Conf().ExsatNetwork.NetworkName,
-			BlockExplorerUrl: config.Conf().ExsatNetwork.BlockExplorerUrl,
+			CurrencySymbol:   config.Conf().Evm.ExsatNetwork.CurrencySymbol,
+			NetworkUrl:       config.Conf().Evm.ExsatNetwork.NetworkUrl,
+			ChainId:          config.Conf().Evm.ExsatNetwork.ChainId,
+			NetworkName:      config.Conf().Evm.ExsatNetwork.NetworkName,
+			BlockExplorerUrl: config.Conf().Evm.ExsatNetwork.BlockExplorerUrl,
 		},
 		TradingCompetition: entity.TradingCompetition{
 			BeginTime:         entity.Time(config.Conf().TradingCompetition.BeginTime),

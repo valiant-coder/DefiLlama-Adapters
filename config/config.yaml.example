@@ -96,6 +96,7 @@ eos:
     app_taker_fee_rate: 0.001
     app_maker_fee_rate: 0.001
     token_contract: tokencontract
+    evm_agent_contract: evmag.1dex
   exsat:
     bridge_contract: bridgecontract
     btc_bridge_contract: btcbridgecontract
@@ -117,12 +118,16 @@ eos:
     add_xsat_chain: addxsatchain
     map_xsat: "mapxsat"
 
-exsat_network:
-  currency_symbol: ""
-  network_url: ""
-  chain_id: 
-  network_name: "exSat"
-  block_explorer_url: ""
+evm:
+  ethscan:
+    endpoint: "https://sepolia.etherscan.io/api"
+    api_key: "1234567890"
+  exsat_network:
+    currency_symbol: ""
+    network_url: ""
+    chain_id: 
+    network_name: "exSat"
+    block_explorer_url: ""
 
 faucet:
   enabled: false

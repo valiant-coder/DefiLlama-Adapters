@@ -47,7 +47,7 @@ func addSubAccount(c *gin.Context) {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Success 200 {object} entity.RespGetSubAccounts
+// @Success 200 {array} entity.SubAccountInfo
 // @Router /sub-accounts [get]
 func getSubAccounts(c *gin.Context) {
 	uid := c.GetString("uid")

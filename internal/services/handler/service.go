@@ -264,6 +264,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateBTCWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader)] = s.handleEVMTraderMap
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
@@ -351,8 +352,8 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return "pool-action"
 	case s.eosCfg.Events.LogNewAcc, s.eosCfg.Events.DepositLog, s.eosCfg.Events.LogSend, s.eosCfg.Events.LogDeposit:
 		return fmt.Sprintf("deposit-or-create-account")
-	case "updateauth":
-		return "eos-account-update"
+	case "updateauth", s.eosCfg.Events.LogNewTrader:
+		return "eos-account-action"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
 	case s.eosCfg.Events.CreateToken, s.eosCfg.Events.AddXSATChain, s.eosCfg.Events.MapXSAT:

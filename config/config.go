@@ -76,9 +76,9 @@ type Config struct {
 	} `yaml:"oauth2"`
 	
 	Eos EosConfig `yaml:"eos"`
-	
-	ExsatNetwork ExsatNetworkConfig `yaml:"exsat_network"`
-	
+
+	Evm EVMConfig `yaml:"evm"`
+
 	Faucet struct {
 		Enabled              bool    `yaml:"enabled"`
 		EVMRpcUrl            string  `yaml:"evm_rpc_url"`
@@ -111,13 +111,22 @@ type Config struct {
 	} `yaml:"invitation"`
 }
 
-type ExsatNetworkConfig struct {
-	CurrencySymbol   string `yaml:"currency_symbol"`
-	NetworkUrl       string `yaml:"network_url"`
-	ChainId          int    `yaml:"chain_id"`
-	NetworkName      string `yaml:"network_name"`
-	BlockExplorerUrl string `yaml:"block_explorer_url"`
+type EVMConfig struct {
+	Ethscan struct {
+		Endpoint string `yaml:"endpoint"`
+		ApiKey   string `yaml:"api_key"`
+	} `yaml:"ethscan"`
+
+	ExsatNetwork struct {
+		CurrencySymbol   string `yaml:"currency_symbol"`
+		NetworkUrl       string `yaml:"network_url"`
+		ChainId          int    `yaml:"chain_id"`
+		NetworkName      string `yaml:"network_name"`
+		BlockExplorerUrl string `yaml:"block_explorer_url"`
+	} `yaml:"exsat_network"`
 }
+
+
 
 type NsqConfig struct {
 	Nsqds     []string      `yaml:"nsqds"`
@@ -171,6 +180,7 @@ type OneDexConfig struct {
 	AppTakerFeeRate          float64 `yaml:"app_taker_fee_rate"`
 	AppMakerFeeRate          float64 `yaml:"app_maker_fee_rate"`
 	TokenContract            string  `yaml:"token_contract"`
+	EVMAgentContract         string  `yaml:"evm_agent_contract"`  
 }
 
 type ExsatConfig struct {
@@ -247,6 +257,8 @@ type EventConfig struct {
 	CreateToken  string `yaml:"create_token"`
 	AddXSATChain string `yaml:"add_xsat_chain"`
 	MapXSAT      string `yaml:"map_xsat"`
+
+	LogNewTrader string `yaml:"log_new_trader"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -266,5 +278,6 @@ func DefaultEventConfig() EventConfig {
 		CreateToken:    "createtoken",
 		AddXSATChain:   "addxsatchain",
 		MapXSAT:        "mapxsat",
+		LogNewTrader:   "lognewtrader",
 	}
 }

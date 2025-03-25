@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"exapp-go/internal/db/db"
-	"exapp-go/pkg/eos"
 	"exapp-go/pkg/hyperion"
+	"exapp-go/pkg/onedex"
 	"log"
 	"strings"
 
@@ -109,7 +109,7 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 		return nil
 	}
 
-	ondexTokens, err := eos.GetOneDexSupportTokens(ctx, s.eosCfg.NodeURL, s.oneDexCfg.BridgeContract)
+	ondexTokens, err := onedex.GetOneDexSupportTokens(ctx, s.eosCfg.NodeURL, s.oneDexCfg.BridgeContract)
 	if err != nil {
 		log.Printf("failed to get ondex tokens: %v", err)
 		return nil
