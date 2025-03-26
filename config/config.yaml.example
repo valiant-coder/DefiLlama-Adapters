@@ -82,7 +82,7 @@ eos:
   cdex:
     dex_contract: dexcontract
     pool_contract: poolcontract
-    onedex_contract: onedexcontract
+    app_contract: onedexcontract
     history_contract: historycontract
     event_contract: eventcontract
     default_pool_taker_fee_rate: 0.003

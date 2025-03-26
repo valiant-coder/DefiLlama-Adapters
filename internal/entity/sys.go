@@ -6,7 +6,7 @@ type SystemInfo struct {
 	VaultEVMAddress    string             `json:"vault_evm_address"`
 	VaultEOSAddress    string             `json:"vault_eos_address"`
 	TokenContract      string             `json:"token_contract"`
-	DexContract        string             `json:"dex_contract"`
+	AppContract        string             `json:"app_contract"`
 	ExsatNetwork       ExsatNetwork       `json:"exsat_network"`
 	TradingCompetition TradingCompetition `json:"trading_competition"`
 }

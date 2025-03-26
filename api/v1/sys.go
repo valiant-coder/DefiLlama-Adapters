@@ -31,10 +31,10 @@ func ping(c *gin.Context) {
 // @Router /api/v1/system-info [get]
 func getSystemInfo(c *gin.Context) {
 	sysInfo := entity.RespSystemInfo{
-		Version:        "1.0.0",
-		PayEOSAccount:  config.Conf().Eos.PayerAccount,
-		TokenContract:  config.Conf().Eos.OneDex.TokenContract,
-		OneDexContract: config.Conf().Eos.CdexConfig.OneDexContract,
+		Version:       "1.0.0",
+		PayEOSAccount: config.Conf().Eos.PayerAccount,
+		TokenContract: config.Conf().Eos.OneDex.TokenContract,
+		AppContract:   config.Conf().Eos.CdexConfig.AppContract,
 	}
 	api.OK(c, sysInfo)
 }

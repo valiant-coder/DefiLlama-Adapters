@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
-	"exapp-go/pkg/types"
-	
+	"exapp-go/internal/types"
+
 	"gorm.io/gorm"
 )
 

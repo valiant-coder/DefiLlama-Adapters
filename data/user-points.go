@@ -1,6 +1,6 @@
 package data
 
-import "exapp-go/pkg/types"
+import "exapp-go/internal/types"
 
 type UPRecordListParam struct {
 	ListParam
