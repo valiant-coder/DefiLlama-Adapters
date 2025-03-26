@@ -55,6 +55,16 @@ func getPasskeys(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
+// @Summary Get users statis
+// @Description Get users statis
+// @Tags depth
+// @Accept json
+// @Produce json
+// @Param time_dimension query string true "month week day"
+// @Param data_type query string true "add_user_count add_passkey_count add_evm_count add_deposit_count"
+// @Param amount query string false "amount"
+// @Success 200 {object} db.UsersStatis "users statis"
+// @Router /api/v1/users_statis [get]
 func getUsersStatis(c *gin.Context) {
 
 	timeDimension := c.Query("time_dimension")
@@ -94,4 +104,27 @@ func getTransactionsRecord(c *gin.Context) {
 	}
 
 	api.List(c, resp, total)
+}
+
+// @Summary Get deposit amount total
+// @Description Get deposit amount total
+// @Tags Deposit
+// @Accept json
+// @Produce json
+// @Param start_time query string false "2006-01-06 00:00:00"
+// @Param end_time query string false "2006-01-06 23:59:59"
+// @Success 200 {array} entity_admin.RespGetDepositWithdrawal "Successful response"
+// @Router /admin/deposit/amount_total [get]
+func getDepositAmountTotal(c *gin.Context) {
+	startTime := c.Query("start_time")
+	endTime := c.Query("end_time")
+
+	resp, err := admin.New().GetDepositAmountTotal(c.Request.Context(), startTime, endTime)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.List(c, resp, 0)
+
 }

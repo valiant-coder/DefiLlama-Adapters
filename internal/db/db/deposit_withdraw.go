@@ -208,19 +208,19 @@ func (r *Repo) GetAllPendingWithdrawRecords(ctx context.Context) ([]*WithdrawRec
 }
 
 type TransactionsRecord struct {
-	ID             uint      ``
-	DepositAt      time.Time `json:"deposit_at"`
-	WithdrawAt     time.Time `json:"withdraw_at"`
-	Symbol         string    `json:"symbol"`
-	CoinName       string    `json:"coin_name"`
-	EVMAddress     string    `json:"evm_address"`
-	UID            string    `json:"uid"`
-	Fee            float64   `json:"fee"`
-	DepositChain   string    `json:"deposit_chain"`
-	WithdrawChain  string    `json:"withdraw_chain"`
-	DepositAmount  float64   `json:"deposit_amount"`
-	WithdrawAmount float64   `json:"withdraw_amount"`
-	TxHash         string    `json:"tx_hash"`
+	ID             uint            ``
+	DepositAt      time.Time       `json:"deposit_at"`
+	WithdrawAt     time.Time       `json:"withdraw_at"`
+	Symbol         string          `json:"symbol"`
+	CoinName       string          `json:"coin_name"`
+	EVMAddress     string          `json:"evm_address"`
+	UID            string          `json:"uid"`
+	Fee            decimal.Decimal `json:"fee"`
+	DepositChain   string          `json:"deposit_chain"`
+	WithdrawChain  string          `json:"withdraw_chain"`
+	DepositAmount  decimal.Decimal `json:"deposit_amount"`
+	WithdrawAmount decimal.Decimal `json:"withdraw_amount"`
+	TxHash         string          `json:"tx_hash"`
 }
 
 func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.QueryParams) ([]*TransactionsRecord, int64, error) {
@@ -291,4 +291,19 @@ func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.
 	}
 
 	return records, total, nil
+}
+
+func (r *Repo) GetDepositAmountTotal(ctx context.Context, startTime, endTime string) ([]*DepositRecord, error) {
+	var record []*DepositRecord
+
+	err := r.DB.Raw(`SELECT symbol, SUM(amount) AS amount 
+		FROM deposit_records 
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY symbol
+		ORDER BY amount DESC`, startTime, endTime).Scan(&record).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return record, nil
 }
