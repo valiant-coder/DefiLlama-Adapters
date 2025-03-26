@@ -148,6 +148,13 @@ func (s *UserInvitationService) BindInvitationLink(ctx context.Context, uid, cod
 		return err
 	}
 	
+	// check owner
+	if inviter.UID == uid {
+		
+		log.Logger().Error(uid, "cannot bind your own invitation link ->", err)
+		return err
+	}
+	
 	conf, err := s.repo.GetUserPointsConf(ctx)
 	if err != nil {
 		
