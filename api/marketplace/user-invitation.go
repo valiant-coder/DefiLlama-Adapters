@@ -114,7 +114,7 @@ func createInvitationLink(c *gin.Context) {
 func deleteInvitationLink(c *gin.Context) {
 
 	service := marketplace.NewUserInvitationService()
-	err := service.DeleteInvitationLink(c.Request.Context(), c.Param("link_id"))
+	err := service.DeleteInvitationLink(c.Request.Context(), c.Param("code"))
 	if err != nil {
 
 		api.Error(c, err)
@@ -122,4 +122,22 @@ func deleteInvitationLink(c *gin.Context) {
 	}
 
 	api.OK(c, "success")
+}
+
+// @Summary 获取邀请链接信息
+// @Description Get invitation link by code
+// @Tags user-invitation
+// @Accept json
+// @Produce json
+// @Param code path string true "code"
+func getInvitationLinkByCode(c *gin.Context) {
+
+	service := marketplace.NewUserInvitationService()
+	link, err := service.GetInvitationLinkByCode(c.Request.Context(), c.Param("code"))
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, link)
 }
