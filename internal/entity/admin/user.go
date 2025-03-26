@@ -77,5 +77,5 @@ const (
 	DataTypeAddUserCount    string = "add_user_count"
 	DataTypeAddPasskeyCount string = "add_passkey_count"
 	DataTypeAddEvmCount     string = "add_evm_count"
-	DateTypeAddEosCount     string = "add_deposit_count"
+	DateTypeAddDepositCount string = "add_deposit_count"
 )
