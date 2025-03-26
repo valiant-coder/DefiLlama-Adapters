@@ -58,7 +58,8 @@ func (s *AdminServices) GetUsersStatis(ctx context.Context, timeDimension, dataT
 		return s.repo.GetStatisAddUserCount(ctx, timeDimension, amount)
 	case entity_admin.DataTypeAddPasskeyCount:
 		return s.repo.GetStatisAddPasskeyCount(ctx, timeDimension, amount)
-
+	case entity_admin.DataTypeAddEvmCount:
+		return s.repo.GetStatisAddEvmCount(ctx, timeDimension, amount)
 	default:
 		return nil, 0, fmt.Errorf("data_type is invalid")
 	}

@@ -430,6 +430,45 @@ func (r *Repo) GetStatisAddPasskeyCount(ctx context.Context, dimension string, a
 	return data, total, nil
 }
 
+func (r *Repo) GetStatisAddEvmCount(ctx context.Context, dimension string, amount int) ([]*UsersStatis, int64, error) {
+
+	var format, param string
+	switch dimension {
+	case "day":
+		format = "DATE_FORMAT(created_at, '%Y-%m-%d')"
+		param = fmt.Sprintf("%d DAY", amount)
+	case "week":
+		format = "CONCAT(YEAR(created_at), '-W', LPAD(WEEK(created_at, 3), 2, '0'))"
+		param = fmt.Sprintf("%d WEEK", amount)
+	case "month":
+		format = "DATE_FORMAT(created_at, '%Y-%m')"
+		param = fmt.Sprintf("%d MONTH", amount)
+	default:
+		return nil, 0, fmt.Errorf("time dimension is invalid")
+	}
+
+	sql := fmt.Sprintf(`SELECT %s AS period, COUNT(*) AS count
+		FROM users
+		WHERE created_at >= CURDATE() - INTERVAL %s
+		AND evm_address IS NOT NULL
+		GROUP BY period
+		ORDER BY period;`, format, param)
+	var data []*UsersStatis
+	err := r.DB.Raw(sql).Scan(&data).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int64
+	err = r.DB.Table("users").Where("evm_address IS NOT NULL").Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	data = fillMissingDates(data, dimension, amount)
+	return data, total, nil
+}
+
 // Data when the number of fills is 0
 func fillMissingDates(rawStatis []*UsersStatis, dimension string, amount int) []*UsersStatis {
 	var layout string

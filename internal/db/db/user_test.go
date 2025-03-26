@@ -64,3 +64,21 @@ func TestGetStatisAddPasskeyCount(t *testing.T) {
 	}
 	log.Println(total)
 }
+
+func TestGetStatisAddEvmCount(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	data, total, err := r.GetStatisAddEvmCount(context.Background(), "month", 5)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, v := range data {
+		log.Println(v.Period, v.Count)
+	}
+	log.Println(total)
+}
