@@ -3,9 +3,11 @@ package db
 import (
 	"context"
 	"exapp-go/config"
+	"exapp-go/pkg/queryparams"
 	"exapp-go/pkg/utils"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/shopspring/decimal"
 )
@@ -27,4 +29,27 @@ func TestRepo_UpdateDepth(t *testing.T) {
 	}
 	fmt.Println(depth)
 
+}
+
+func TestQueryTransactionsRecord(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+
+	params := &queryparams.QueryParams{
+		Offset: 0,
+		Limit:  10,
+		CustomQuery: map[string][]interface{}{
+			"symbol":     []any{"USDT"},
+			"start_time": []any{time.Now().Add(-time.Hour * 24 * 30)},
+			"end_time":   []any{time.Now()},
+		},
+	}
+
+	r := New()
+	record, totle, err := r.QueryTransactionsRecord(context.Background(), params)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(record, totle)
 }

@@ -27,7 +27,6 @@ func NewOrderService() *OrderService {
 
 func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.OpenOrder, int64, error) {
 
-
 	orders, total, err := s.repo.GetOpenOrders(ctx, queryParams)
 	if err != nil {
 		return make([]entity.OpenOrder, 0), 0, err
@@ -41,7 +40,7 @@ func (s *OrderService) GetOpenOrders(ctx context.Context, queryParams *querypara
 }
 
 func (s *OrderService) GetHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]entity.Order, int64, error) {
-	
+
 	orders, total, err := s.ckhdbRepo.QueryHistoryOrders(ctx, queryParams)
 	if err != nil {
 		return make([]entity.Order, 0), 0, err
@@ -109,7 +108,7 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 	return orderDetail, nil
 }
 
-func (s *OrderService) CheckUnreadFilledOrders(ctx context.Context,uid string) (bool, error) {
+func (s *OrderService) CheckUnreadFilledOrders(ctx context.Context, uid string) (bool, error) {
 	if uid != "" {
 		eosAccount, permission, err := s.repo.GetEOSAccountAndPermissionByUID(ctx, uid)
 		if err != nil {
@@ -123,8 +122,8 @@ func (s *OrderService) CheckUnreadFilledOrders(ctx context.Context,uid string) (
 	return false, nil
 }
 
-func (s *OrderService) MarkOrderAsRead(ctx context.Context, trader,permission string, orderID string) error {
-	return s.repo.MarkOrderAsRead(ctx, trader,permission, orderID)
+func (s *OrderService) MarkOrderAsRead(ctx context.Context, trader, permission string, orderID string) error {
+	return s.repo.MarkOrderAsRead(ctx, trader, permission, orderID)
 }
 
 func (s *OrderService) ClearAllUnreadOrders(ctx context.Context, uid string) error {
