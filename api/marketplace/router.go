@@ -133,7 +133,8 @@ func Run(addr string, release bool) error {
 	auth.GET("/user/invites", getInviteUsers)
 	auth.GET("/user/invitation/links", getInvitationLinks)
 	auth.POST("/user/invitation/link", createInvitationLink)
-	auth.DELETE("/user/invitation/link/:link_id", deleteInvitationLink)
+	auth.GET("/user/invitation/link/:code", getInvitationLinkByCode)
+	auth.DELETE("/user/invitation/link/:code", deleteInvitationLink)
 
 	// User Points
 	auth.GET("/user/points", getPointsInfo)

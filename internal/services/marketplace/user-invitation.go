@@ -98,9 +98,9 @@ func (s *UserInvitationService) CreateUILink(ctx context.Context, uid string, pa
 	return nil
 }
 
-func (s *UserInvitationService) DeleteInvitationLink(ctx context.Context, linkCode string) error {
+func (s *UserInvitationService) DeleteInvitationLink(ctx context.Context, code string) error {
 	// 获取邀请链接
-	userInviteLink, err := s.repo.GetUserInviteLink(ctx, linkCode)
+	userInviteLink, err := s.repo.GetUserInviteLink(ctx, code)
 	if err != nil {
 
 		log.Logger().Error("get user invite link error ->", err)
@@ -114,4 +114,13 @@ func (s *UserInvitationService) DeleteInvitationLink(ctx context.Context, linkCo
 		return err
 	}
 	return nil
+}
+
+func (s *UserInvitationService) GetInvitationLinkByCode(ctx context.Context, code string) (*db.UserInviteLink, error) {
+	link, err := s.repo.GetUserInviteLink(ctx, code)
+	if err != nil {
+		log.Logger().Error(code, "get user invite link error ->", err)
+		return nil, err
+	}
+	return link, nil
 }
