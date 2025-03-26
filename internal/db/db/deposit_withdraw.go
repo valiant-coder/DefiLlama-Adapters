@@ -229,9 +229,9 @@ func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.
 	var whereConditions []string
 	var queryParams []interface{}
 
-	if coinName, ok := params.CustomQuery["symbol"]; ok {
+	if symbol, ok := params.CustomQuery["symbol"]; ok {
 		whereConditions = append(whereConditions, "symbol = ?")
-		queryParams = append(queryParams, coinName[0])
+		queryParams = append(queryParams, symbol[0])
 	}
 	if chainName, ok := params.CustomQuery["chain_name"]; ok {
 		whereConditions = append(whereConditions, "chain_name = ?")

@@ -27,3 +27,22 @@ func TestQueryUsers(t *testing.T) {
 	log.Println(len(resp), count)
 	log.Println(count)
 }
+
+func TestGetStatisAddUserCount(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	data, total, err := r.GetStatisAddUserCount(context.Background(), "day", 30)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, v := range data {
+		log.Println(v.Period, v.Count)
+	}
+
+	log.Println(total)
+}

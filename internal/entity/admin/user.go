@@ -67,18 +67,32 @@ func (r *RespPasskey) Fill(a *db.UserCredential) *RespPasskey {
 	return r
 }
 
-type RespTransactionsRecord struct {
-	ID             uint        `json:"id"`
-	DepositAt      entity.Time `json:"deposit_at"`
-	WithdrawAt     entity.Time `json:"withdraw_at"`
-	Symbol         string      `json:"symbol"`
-	CoinName       string      `json:"coin_name"`
-	EVMAddress     string      `json:"evm_address"`
-	UID            string      `json:"uid"`
-	Free           float64     `json:"free"`
-	DepositChain   string      `json:"deposit_chain"`
-	WithdrawChain  string      `json:"withdraw_chain"`
-	DepositAmount  float64     `json:"deposit_amount"`
-	WithdrawAmount float64     `json:"withdraw_amount"`
-	TxHash         string      `json:"tx_hash"`
+const (
+	TimeDimensionMonth string = "month"
+	TimeDimensionWeek  string = "week"
+	TimeDimensionDay   string = "day"
+)
+
+func IsValidTimeDimension(param string) bool {
+	switch param {
+	case TimeDimensionMonth, TimeDimensionWeek, TimeDimensionDay:
+		return true
+	default:
+		return false
+	}
+}
+
+const (
+	DataTypeAddUserCount    string = "add_user_count"
+	DataTypeAddPasskeyCount string = "add_passkey_count"
+	DataTypeAddEvmCount     string = "add_evm_count"
+	DateTypeAddEosCount     string = "add_deposit_count"
+)
+
+func IsValidDataType(param string) bool {
+	switch param {
+	case DataTypeAddUserCount, DataTypeAddPasskeyCount, DataTypeAddEvmCount, DateTypeAddEosCount:
+		return true
+	}
+	return false
 }
