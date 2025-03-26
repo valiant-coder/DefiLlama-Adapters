@@ -14,9 +14,8 @@ func TestBTCBridgeClient_MappingAddress(t *testing.T) {
 		"",
 	)
 	resp, err := client.MappingAddress(context.Background(), BTCMappingAddrRequest{
-		RecipientAddress:     "asdfasdfasdf",
-		Remark:               "test3test3",
-		AssignDepositAddress: "",
+		RecipientAddress: "asdfasdfasdf",
+		Remark:           "test3test3",
 	})
 	if err != nil {
 		t.Fatalf("Failed to mapping address: %v", err)
@@ -24,7 +23,6 @@ func TestBTCBridgeClient_MappingAddress(t *testing.T) {
 	fmt.Println(resp.TransactionID)
 	t.Logf("Mapping address response: %+v", resp)
 }
-
 
 func TestBTCBridgeClient_GetDepositAddress(t *testing.T) {
 	client := NewBTCBridgeClient(

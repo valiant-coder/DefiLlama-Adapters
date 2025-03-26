@@ -13,10 +13,9 @@ import (
 )
 
 type MappingAddrRequest struct {
-	PermissionID         uint64 `json:"permission_id"`
-	Remark               string `json:"remark"`
-	RecipientAddress     string `json:"recipient_address"`
-	AssignDepositAddress string `json:"assign_deposit_address"`
+	PermissionID     uint64 `json:"permission_id"`
+	Remark           string `json:"remark"`
+	RecipientAddress string `json:"recipient_address"`
 }
 
 type BridgeClient struct {
@@ -55,13 +54,15 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 			PermissionID         uint64          `eos:"permission_id"`
 			RecipientAddress     string          `eos:"recipient_address"`
 			Remark               string          `eos:"remark"`
+			WhitelistAddress     string          `eos:"whitelist_address"`
 			AssignDepositAddress string          `eos:"assign_deposit_address"`
 		}{
 			Actor:                eos.AN(c.actor),
 			PermissionID:         req.PermissionID,
 			Remark:               req.Remark,
 			RecipientAddress:     req.RecipientAddress,
-			AssignDepositAddress: req.AssignDepositAddress,
+			WhitelistAddress:     "",
+			AssignDepositAddress: "",
 		}),
 	}
 
@@ -73,8 +74,6 @@ type RequestDepositAddress struct {
 	Remark       string `json:"remark"`
 	Recipient    string `json:"recipient"`
 }
-
-
 
 func makeKey256(recipientAddress, remark string) [32]byte {
 	key := recipientAddress + "-" + remark
