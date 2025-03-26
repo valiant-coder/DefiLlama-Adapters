@@ -17,8 +17,8 @@ func init() {
 
 type UserPointsPair struct {
 	gorm.Model
-	Pair        string `gorm:"column:pair;type:varchar(255);not null;uniqueIndex:idx_pair"`
-	Coefficient uint64 `gorm:"column:coefficient;type:bigint(20);not null;default:1"`
+	Pair        string `json:"pair" gorm:"column:pair;type:varchar(255);not null;uniqueIndex:idx_pair"`
+	Coefficient uint64 `json:"coefficient" gorm:"column:coefficient;type:bigint(20);not null;default:1"`
 }
 
 func UserPointsPairRedisKey(pair string) string {

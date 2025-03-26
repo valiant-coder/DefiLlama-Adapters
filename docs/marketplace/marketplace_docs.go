@@ -1143,6 +1143,65 @@ const docTemplatemarketplace = `{
                 }
             }
         },
+        "/user/invitation/link/{code}": {
+            "get": {
+                "description": "Get invitation link by code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "获取邀请链接信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "invitation link",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Bind invitation link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "绑定邀请链接",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/user/invitation/link/{link_id}": {
             "delete": {
                 "description": "Delete invitation link",

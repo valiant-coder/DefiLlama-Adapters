@@ -21,14 +21,14 @@ func init() {
 type UserPointsRecord struct {
 	gorm.Model
 
-	UID         string                 `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_tx_id;"`
-	TxId        string                 `gorm:"column:tx_id;type:varchar(255);not null;uniqueIndex:idx_uid_tx_id;"`
-	Type        types.UserPointsType   `gorm:"column:type;type:varchar(255);not null;index:idx_type_method"`
-	Method      types.UserPointsMethod `gorm:"column:method;type:varchar(255);not null;index:idx_type_method"`
-	Points      uint                   `gorm:"column:points;type:int;default:0"`
-	Balance     uint64                 `gorm:"column:balance;type:bigint(20);default:0"`
-	SnapBalance uint64                 `gorm:"column:snap_balance;type:bigint(20);default:0"`
-	Remark      string                 `gorm:"column:remark;type:varchar(255);"`
+	UID         string                 `json:"uid" gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_tx_id;"`
+	TxId        string                 `json:"tx_id" gorm:"column:tx_id;type:varchar(255);not null;uniqueIndex:idx_uid_tx_id;"`
+	Type        types.UserPointsType   `json:"type" gorm:"column:type;type:varchar(255);not null;index:idx_type_method"`
+	Method      types.UserPointsMethod `json:"method" gorm:"column:method;type:varchar(255);not null;index:idx_type_method"`
+	Points      uint                   `json:"points" gorm:"column:points;type:int;default:0"`
+	Balance     uint64                 `json:"balance" gorm:"column:balance;type:bigint(20);default:0"`
+	SnapBalance uint64                 `json:"snap_balance" gorm:"column:snap_balance;type:bigint(20);default:0"`
+	Remark      string                 `json:"remark" gorm:"column:remark;type:varchar(255);"`
 }
 
 type UPRecordListRes ListResult[UserPointsRecord]
