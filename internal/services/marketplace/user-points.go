@@ -61,7 +61,6 @@ func (s *UserPointsService) GetUserPointsConf(ctx context.Context) (*db.UserPoin
 func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *data.UserPointsConfParam) error {
 
 	userPointsConf, _ := s.repo.GetUserPointsConf(ctx)
-
 	if userPointsConf == nil {
 
 		userPointsConf = &db.UserPointsConf{}
@@ -119,12 +118,21 @@ func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *da
 		userPointsConf.MaxInviteLinkCount = params.MaxInviteLinkCount
 	}
 
-	err := s.repo.SaveUserPointsConf(ctx, userPointsConf)
+	var err error
+	if userPointsConf.ID == 0 {
+
+		err = s.repo.Insert(ctx, userPointsConf)
+	} else {
+
+		err = s.repo.Update(ctx, userPointsConf)
+	}
+
 	if err != nil {
 
 		log.Logger().Error("更新积分配置信息出错 -> ", err)
 		return err
 	}
 
+	s.repo.SaveCache(userPointsConf)
 	return nil
 }

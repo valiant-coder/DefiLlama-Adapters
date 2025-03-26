@@ -4,7 +4,7 @@ import (
 	"exapp-go/api"
 	"exapp-go/data"
 	"exapp-go/internal/services/marketplace"
-	
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,14 +21,14 @@ func getPointsInfo(c *gin.Context) {
 		api.Error(c, err)
 		return
 	}
-	
+
 	service := marketplace.NewUserPointsService()
 	userPoints, err := service.GetUserPoints(c.Request.Context(), param.UID)
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-	
+
 	api.OK(c, userPoints)
 }
 
@@ -46,14 +46,14 @@ func getPointsRecords(c *gin.Context) {
 		api.Error(c, err)
 		return
 	}
-	
+
 	service := marketplace.NewUserPointsService()
 	result, err := service.GetUserPointsRecords(c.Request.Context(), param)
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-	
+
 	api.List(c, result.Array, result.Total)
 }
 
@@ -71,7 +71,7 @@ func getPointsConf(c *gin.Context) {
 		api.Error(c, err)
 		return
 	}
-	
+
 	api.OK(c, conf)
 }
 
@@ -89,13 +89,13 @@ func updatePointsConf(c *gin.Context) {
 		api.Error(c, err)
 		return
 	}
-	
+
 	service := marketplace.NewUserPointsService()
 	err := service.UpdateUserPointsConf(c.Request.Context(), &param)
 	if err != nil {
 		api.Error(c, err)
 		return
 	}
-	
+
 	api.OK(c, "success")
 }
