@@ -1037,7 +1037,7 @@ const docTemplateapi_v1 = `{
         "entity.RespSystemInfo": {
             "type": "object",
             "properties": {
-                "one_dex_contract": {
+                "app_contract": {
                     "type": "string"
                 },
                 "pay_eos_account": {

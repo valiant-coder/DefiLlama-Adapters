@@ -2421,7 +2421,7 @@ const docTemplatemarketplace = `{
         "entity.SystemInfo": {
             "type": "object",
             "properties": {
-                "dex_contract": {
+                "app_contract": {
                     "type": "string"
                 },
                 "exsat_network": {
