@@ -42,7 +42,7 @@ func getPointsInfo(c *gin.Context) {
 // @Router /user/points/records [get]
 func getPointsRecords(c *gin.Context) {
 	var param data.UPRecordListParam
-	if err := c.ShouldBindJSON(&param); err != nil {
+	if err := c.ShouldBindQuery(&param); err != nil {
 		api.Error(c, err)
 		return
 	}
