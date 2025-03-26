@@ -73,26 +73,9 @@ const (
 	TimeDimensionDay   string = "day"
 )
 
-func IsValidTimeDimension(param string) bool {
-	switch param {
-	case TimeDimensionMonth, TimeDimensionWeek, TimeDimensionDay:
-		return true
-	default:
-		return false
-	}
-}
-
 const (
 	DataTypeAddUserCount    string = "add_user_count"
 	DataTypeAddPasskeyCount string = "add_passkey_count"
 	DataTypeAddEvmCount     string = "add_evm_count"
 	DateTypeAddEosCount     string = "add_deposit_count"
 )
-
-func IsValidDataType(param string) bool {
-	switch param {
-	case DataTypeAddUserCount, DataTypeAddPasskeyCount, DataTypeAddEvmCount, DateTypeAddEosCount:
-		return true
-	}
-	return false
-}

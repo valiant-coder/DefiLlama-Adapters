@@ -34,7 +34,7 @@ func TestGetStatisAddUserCount(t *testing.T) {
 	config.Load("config/config.yaml")
 	r := New()
 
-	data, total, err := r.GetStatisAddUserCount(context.Background(), "day", 30)
+	data, total, err := r.GetStatisAddUserCount(context.Background(), "month", 5)
 	if err != nil {
 		log.Println(err)
 		return
@@ -44,5 +44,23 @@ func TestGetStatisAddUserCount(t *testing.T) {
 		log.Println(v.Period, v.Count)
 	}
 
+	log.Println(total)
+}
+
+func TestGetStatisAddPasskeyCount(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	data, total, err := r.GetStatisAddPasskeyCount(context.Background(), "month", 5)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, v := range data {
+		log.Println(v.Period, v.Count)
+	}
 	log.Println(total)
 }

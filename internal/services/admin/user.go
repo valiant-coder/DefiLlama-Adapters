@@ -5,6 +5,7 @@ import (
 	"exapp-go/internal/db/db"
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/pkg/queryparams"
+	"fmt"
 )
 
 func (s *AdminServices) QueryUsers(ctx context.Context, params *queryparams.QueryParams) ([]*entity_admin.RespUser, int64, error) {
@@ -52,12 +53,15 @@ func (s *AdminServices) GetPasskeys(ctx context.Context, queryParams *queryparam
 
 func (s *AdminServices) GetUsersStatis(ctx context.Context, timeDimension, dataType string, amount int) ([]*db.UsersStatis, int64, error) {
 
-	userData, total, err := s.repo.GetStatisAddUserCount(ctx, timeDimension, amount)
-	if err != nil {
-		return nil, 0, err
-	}
+	switch dataType {
+	case entity_admin.DataTypeAddUserCount:
+		return s.repo.GetStatisAddUserCount(ctx, timeDimension, amount)
+	case entity_admin.DataTypeAddPasskeyCount:
+		return s.repo.GetStatisAddPasskeyCount(ctx, timeDimension, amount)
 
-	return userData, total, nil
+	default:
+		return nil, 0, fmt.Errorf("data_type is invalid")
+	}
 }
 
 func (s *AdminServices) GetTransactionsRecord(ctx context.Context, params *queryparams.QueryParams) ([]*db.TransactionsRecord, int64, error) {
