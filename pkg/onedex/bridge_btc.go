@@ -12,9 +12,8 @@ import (
 )
 
 type BTCMappingAddrRequest struct {
-	Remark               string `json:"remark"`
-	RecipientAddress     string `json:"recipient_address"`
-	AssignDepositAddress string `json:"assign_deposit_address"`
+	Remark           string `json:"remark"`
+	RecipientAddress string `json:"recipient_address"`
 }
 
 type BTCBridgeClient struct {
@@ -59,7 +58,7 @@ func (c *BTCBridgeClient) MappingAddress(ctx context.Context, req BTCMappingAddr
 			PermissionID:         0,
 			Remark:               req.Remark,
 			RecipientAddress:     req.RecipientAddress,
-			AssignDepositAddress: req.AssignDepositAddress,
+			AssignDepositAddress: "",
 		}),
 	}
 
@@ -70,8 +69,6 @@ type RequestBTCDepositAddress struct {
 	Remark              string `json:"remark"`
 	RecipientEVMAddress string `json:"recipient_evm_address"`
 }
-
-
 
 func makeBTCKey256(recipientEVMAddress, remark string) [32]byte {
 	recipientEVMAddress = strings.TrimPrefix(recipientEVMAddress, "0x")
