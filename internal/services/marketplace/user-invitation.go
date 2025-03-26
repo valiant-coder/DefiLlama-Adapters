@@ -75,16 +75,19 @@ func (s *UserInvitationService) CreateUILink(ctx context.Context, uid string, pa
 	invitationConf, err := s.repo.GetUserPointsConf(ctx)
 	if err != nil {
 
+		log.Logger().Error("get user points conf error ->", err)
 		return err
 	}
+
 	if userInvitation == nil {
+
+		log.Logger().Error(uid, "user invitation not found -> create")
 
 		// 创建邀请链接
 		userInvitation = &db.UserInvitation{
 			UID:        uid,
 			MaxPercent: invitationConf.InvitePercent,
 		}
-
 	}
 
 	// 检查百分比
