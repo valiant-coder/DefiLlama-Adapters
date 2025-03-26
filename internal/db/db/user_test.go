@@ -11,7 +11,7 @@ import (
 
 func TestQueryUsers(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
-	config.Load("../../../config/config.yaml")
+	config.Load("config/config.yaml")
 	r := New()
 
 	queryparams := &queryparams.QueryParams{

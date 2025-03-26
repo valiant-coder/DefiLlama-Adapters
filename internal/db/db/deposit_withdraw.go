@@ -229,9 +229,29 @@ func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.
 	var whereConditions []string
 	var queryParams []interface{}
 
-	if recipient, ok := params.CustomQuery["recipient"]; ok {
-		whereConditions = append(whereConditions, "status = ?")
-		queryParams = append(queryParams, recipient[0].(string))
+	if coinName, ok := params.CustomQuery["symbol"]; ok {
+		whereConditions = append(whereConditions, "symbol = ?")
+		queryParams = append(queryParams, coinName[0])
+	}
+	if chainName, ok := params.CustomQuery["chain_name"]; ok {
+		whereConditions = append(whereConditions, "chain_name = ?")
+		queryParams = append(queryParams, chainName[0])
+	}
+	if uid, ok := params.CustomQuery["uid"]; ok {
+		whereConditions = append(whereConditions, "uid = ?")
+		queryParams = append(queryParams, uid[0])
+	}
+	if sendTxId, ok := params.CustomQuery["tx_hash"]; ok {
+		whereConditions = append(whereConditions, "tx_hash = ?")
+		queryParams = append(queryParams, sendTxId[0])
+	}
+	if startTime, ok := params.CustomQuery["start_time"]; ok {
+		whereConditions = append(whereConditions, "created_at > ?")
+		queryParams = append(queryParams, startTime[0])
+	}
+	if endTime, ok := params.CustomQuery["end_time"]; ok {
+		whereConditions = append(whereConditions, "created_at <= ?")
+		queryParams = append(queryParams, endTime[0])
 	}
 
 	whereSQL := ""
@@ -246,8 +266,11 @@ func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.
         ORDER BY id DESC LIMIT ? OFFSET ?
     `, whereSQL, whereSQL)
 
+	queryParams = append(queryParams, queryParams...)
 	queryParams = append(queryParams, params.Limit, params.Offset)
 
+	fmt.Println(querySQL)
+	fmt.Println(queryParams)
 	err := r.Raw(querySQL, queryParams...).Scan(&records).Error
 	if err != nil {
 		return nil, 0, err
