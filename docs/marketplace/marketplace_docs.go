@@ -2595,6 +2595,9 @@ const docTemplatemarketplace = `{
                 "buyer": {
                     "type": "string"
                 },
+                "buyer_permission": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -2605,6 +2608,9 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "seller": {
+                    "type": "string"
+                },
+                "seller_permission": {
                     "type": "string"
                 },
                 "side": {

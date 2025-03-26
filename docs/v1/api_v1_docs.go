@@ -1187,6 +1187,9 @@ const docTemplateapi_v1 = `{
                 "buyer": {
                     "type": "string"
                 },
+                "buyer_permission": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -1197,6 +1200,9 @@ const docTemplateapi_v1 = `{
                     "type": "string"
                 },
                 "seller": {
+                    "type": "string"
+                },
+                "seller_permission": {
                     "type": "string"
                 },
                 "side": {
