@@ -126,6 +126,9 @@ func Run(addr string, release bool) error {
 	authorized.GET("/deposit_amount_total", getDepositAmountTotal)
 	authorized.GET("/withdraw_amount_total", getWithdrawAmountTotal)
 
+	// coin
+	authorized.GET("/tokens", queryTokens)
+
 	return r.Run(addr)
 
 }
