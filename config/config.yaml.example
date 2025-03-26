@@ -1,0 +1,156 @@
+mysql:
+  host: localhost
+  port: "3306"
+  database: mydb
+  user: root
+  pass: password123
+  loc: Local
+  migrate: true
+
+https:
+  enabled: false
+  cert_file: /path/to/cert.pem
+  key_file: /path/to/key.pem
+
+ws:
+  https:
+    enabled: false
+    cert_file: /path/to/ws_cert.pem
+    key_file: /path/to/ws_key.pem
+
+clickhouse:
+  host: localhost
+  port: "9000"
+  database: analytics_db
+  user: default
+  pass: clickhouse_pass
+
+trace:
+  exporter: jaeger
+  jaeger_endpoint: http://localhost:14268/api/traces
+
+redis:
+  is_cluster: false
+  cluster:
+    urls:
+      - "redis-node1:6379"
+      - "redis-node2:6379"
+      - "redis-node3:6379"
+    user: redis_user
+    pass: redis_cluster_pass
+  host: localhost
+  port: 6379
+  db: 0
+  pass: redis_pass
+
+nsq:
+  nsqds:
+    - "nsqd1:4150"
+    - "nsqd2:4150"
+  lookupd: "localhost:4161"
+  lookup_ttl: 60s
+
+jwt:
+  secret_key: your_jwt_secret_key_here
+  realm: your_application_realm
+  timeout: 24
+
+oauth2:
+  google:
+    client_id: your_google_client_id
+  apple:
+    client_id: your_apple_client_id
+  telegram:
+    bot_token: "1234567890"
+
+eos:
+  node_url: https://eos.greymass.com
+  payer_account: myaccount
+  payer_private_key: your_private_key_here
+  powerup:
+    enabled: true
+    net_eos: 100000
+    cpu_eos: 1000000000
+    max_payment: 200000
+    cpu_monitor_enabled: true
+    cpu_threshold: 10
+  hyperion:
+    start_block: 0
+    batch_size: 100
+    endpoint: https://hyperion.example.com
+    stream_endpoint: wss://hyperion.example.com/stream
+  cdex:
+    dex_contract: dexcontract
+    pool_contract: poolcontract
+    app_contract: onedexcontract
+    history_contract: historycontract
+    event_contract: eventcontract
+    default_pool_taker_fee_rate: 0.003
+    default_pool_maker_fee_rate: 0.001
+  onedex:
+    bridge_contract: bridgecontract
+    actor: exappactor
+    actor_private_key: your_actor_private_key
+    app_taker_fee_rate: 0.001
+    app_maker_fee_rate: 0.001
+    token_contract: tokencontract
+    evm_agent_contract: evmag.1dex
+  exsat:
+    bridge_extension_evm_address: exsat_bridge_extension_evm_address
+    bridge_contract: bridgecontract
+    btc_bridge_contract: btcbridgecontract
+    btc_chain_name: btcchainname
+  events:
+    log_new_acc: lognewacc
+    deposit_log: depositlog
+    withdraw_log: withdrawlog
+    log_withdraw: logwithdraw
+    emit_placed: emitplaced
+    emit_canceled: emitcanceled
+    emit_filled: emitfilled
+    create: create
+    log_deposit: logdeposit
+    log_send: logsend
+    set_min_amt: setminamt
+    set_pool_fee_rate: setpfeerate
+    create_token: "createtoken"
+    add_xsat_chain: addxsatchain
+    map_xsat: "mapxsat"
+
+evm:
+  ethscan:
+    endpoint: "https://sepolia.etherscan.io/api"
+    api_key: "1234567890"
+  exsat_network:
+    currency_symbol: ""
+    network_url: ""
+    chain_id: 
+    network_name: "exSat"
+    block_explorer_url: ""
+
+faucet:
+  enabled: false
+  evm_rpc_url: ""
+  usdt_token_address: ""
+  token_owner: ""
+  token_owner_private_key: ""
+  amount:  0
+
+trading_competition:
+  begin_time: "2025-03-05T00:00:00Z"
+  end_time: "2025-03-15T00:00:00Z"
+  daily_points: [1,2,3]
+  accumulated_points: [1,2,3]
+  faucet_points: 100
+  blacklist: [""]
+
+telegram_bot:
+  token: "1234567890"
+  chat_id: "1234567890"
+
+monitor:
+  deposit_withdraw_timeout: 10m
+
+
+invitation:
+  host: "https://xxx.xxx.xxx"
