@@ -31,3 +31,9 @@ type UserPointsConfParam struct {
 	OrderMinValue       uint64 `json:"order_min_value" url:"order_min_value"`
 	MaxInviteLinkCount  uint   `json:"max_invite_link_count" url:"max_invite_link_count"`
 }
+
+type UserPointsPairListParam struct {
+	ListParam
+
+	Pair string `json:"pair" url:"pair"`
+}

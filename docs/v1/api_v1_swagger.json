@@ -1184,6 +1184,9 @@
                 "buyer": {
                     "type": "string"
                 },
+                "buyer_permission": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -1194,6 +1197,9 @@
                     "type": "string"
                 },
                 "seller": {
+                    "type": "string"
+                },
+                "seller_permission": {
                     "type": "string"
                 },
                 "side": {

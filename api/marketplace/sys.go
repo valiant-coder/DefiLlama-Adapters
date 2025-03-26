@@ -24,7 +24,7 @@ func getSystemInfo(c *gin.Context) {
 		PayCPU: entity.PayCPU{
 			Account: config.Conf().Eos.PayerAccount,
 		},
-		VaultEVMAddress: config.Conf().Eos.OneDex.VaultEVMAddress,
+		VaultEVMAddress: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
 		VaultEOSAddress: config.Conf().Eos.OneDex.BridgeContract,
 		TokenContract:   config.Conf().Eos.OneDex.TokenContract,
 		AppContract:     config.Conf().Eos.CdexConfig.AppContract,

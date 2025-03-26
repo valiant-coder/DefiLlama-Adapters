@@ -66,7 +66,9 @@ func (s *UserInvitationService) GetUserInvitationLinks(ctx context.Context, para
 
 func (s *UserInvitationService) CreateUILink(ctx context.Context, uid string, params *data.UILinkParam) error {
 	userInvitation, err := s.repo.GetUserInvitation(ctx, uid)
-	if err != nil {
+	if err != nil && !db.IsNotFound(err) {
+
+		log.Logger().Error("get user invitation error ->", err)
 		return err
 	}
 
@@ -74,6 +76,15 @@ func (s *UserInvitationService) CreateUILink(ctx context.Context, uid string, pa
 	if err != nil {
 
 		return err
+	}
+	if userInvitation == nil {
+
+		// 创建邀请链接
+		userInvitation = &db.UserInvitation{
+			UID:        uid,
+			MaxPercent: invitationConf.InvitePercent,
+		}
+
 	}
 
 	// 检查百分比
@@ -98,9 +109,9 @@ func (s *UserInvitationService) CreateUILink(ctx context.Context, uid string, pa
 	return nil
 }
 
-func (s *UserInvitationService) DeleteInvitationLink(ctx context.Context, linkCode string) error {
+func (s *UserInvitationService) DeleteInvitationLink(ctx context.Context, code string) error {
 	// 获取邀请链接
-	userInviteLink, err := s.repo.GetUserInviteLink(ctx, linkCode)
+	userInviteLink, err := s.repo.GetUserInviteLink(ctx, code)
 	if err != nil {
 
 		log.Logger().Error("get user invite link error ->", err)
@@ -114,4 +125,95 @@ func (s *UserInvitationService) DeleteInvitationLink(ctx context.Context, linkCo
 		return err
 	}
 	return nil
+}
+
+func (s *UserInvitationService) GetInvitationLinkByCode(ctx context.Context, code string) (*db.UserInviteLink, error) {
+	link, err := s.repo.GetUserInviteLink(ctx, code)
+	if err != nil {
+		log.Logger().Error(code, "get user invite link error ->", err)
+		return nil, err
+	}
+	return link, nil
+}
+
+func (s *UserInvitationService) BindInvitationLink(ctx context.Context, uid, code string) error {
+	link, err := s.repo.GetUserInviteLink(ctx, code)
+	if err != nil {
+
+		log.Logger().Error(code, "get user invite link error ->", err)
+		return err
+	}
+
+	// 查看当前用户是否已经绑定邀请链接
+	invitation, _ := s.repo.GetUserInvitation(ctx, uid)
+	if invitation != nil && len(invitation.InviteCode) > 0 {
+
+		log.Logger().Error(uid, "already bind invitation link ->", err)
+		return err
+	}
+
+	inviter, err := s.repo.GetUser(ctx, link.UID)
+	if err != nil {
+
+		log.Logger().Error(link.UID, "get user error ->", err)
+		return err
+	}
+
+	// check owner
+	if inviter.UID == uid {
+
+		log.Logger().Error(uid, "cannot bind your own invitation link ->", err)
+		return err
+	}
+
+	conf, err := s.repo.GetUserPointsConf(ctx)
+	if err != nil {
+
+		log.Logger().Error("get user points conf error ->", err)
+		return err
+	}
+
+	// TODO: 判断用户状态
+
+	err = s.repo.Transaction(ctx, func(repo *db.Repo) error {
+
+		// 创建邀请链接
+		if invitation == nil {
+			invitation = &db.UserInvitation{
+				UID:           uid,
+				MaxPercent:    conf.InvitePercent,
+				Inviter:       inviter.UID,
+				InviteCode:    link.Code,
+				InvitePercent: link.Percent,
+			}
+
+			if e := repo.Insert(ctx, invitation); e != nil {
+
+				log.Logger().Error(uid, "create user invitation error ->", e)
+				return e
+			}
+		} else {
+
+			invitation.Inviter = inviter.UID
+			invitation.InviteCode = link.Code
+			invitation.InvitePercent = link.Percent
+
+			if e := repo.Update(ctx, invitation); e != nil {
+
+				log.Logger().Error(uid, "update user invitation error ->", e)
+				return e
+			}
+		}
+
+		// 更新邀请人邀请信息
+		if e := repo.UpdateUIInviteCount(ctx, inviter.UID); e != nil {
+
+			log.Logger().Error(inviter.UID, "update user invitation invite count error ->", e)
+			return e
+		}
+
+		return nil
+	})
+
+	return err
 }

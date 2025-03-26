@@ -12,7 +12,6 @@ import (
 	"exapp-go/internal/errno"
 	"exapp-go/pkg/utils"
 
-	"github.com/rotisserie/eris"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
@@ -39,7 +38,7 @@ func (s *AdminServices) Login(ctx context.Context, req *entity_admin.ReqLogin) (
 	loginKey := fmt.Sprintf(loginKeyPrefix, key)
 	err = s.repo.Redis().Set(ctx, loginKey, admin.ID, time.Minute*5).Err()
 	if err != nil {
-		return nil, eris.Wrap(err, "redis set err")
+		return nil, err
 	}
 	return &entity_admin.RespLogin{
 		Key:          key,
@@ -51,7 +50,7 @@ func (s *AdminServices) Auth(ctx context.Context, req *entity_admin.ReqAuth) (st
 	var adminID uint
 	err := s.repo.Redis().Get(ctx, fmt.Sprintf(loginKeyPrefix, req.Key)).Scan(&adminID)
 	if err != nil {
-		return "", eris.Wrap(err, "redis get err")
+		return "", err
 	}
 
 	var admin *db.Admin
@@ -69,7 +68,7 @@ func (s *AdminServices) Auth(ctx context.Context, req *entity_admin.ReqAuth) (st
 
 	ok, err := utils.VerifyGoogleAuth(admin.GoogleAuthSecret, req.GoogleVerifyCode)
 	if err != nil {
-		return "", eris.Wrap(err, "google verify err")
+		return "", err
 	}
 	if !ok {
 		return "", errno.DefaultParamsError("Incorrect verification code")
