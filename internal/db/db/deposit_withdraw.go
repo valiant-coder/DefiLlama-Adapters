@@ -40,7 +40,7 @@ type DepositRecord struct {
 	Amount         decimal.Decimal `gorm:"column:amount;type:decimal(36,18);not null"`
 	Fee            decimal.Decimal `gorm:"column:fee;type:decimal(36,18);not null"`
 	Status         DepositStatus   `gorm:"column:status;type:tinyint(3);not null"`
-	TxHash         string          `gorm:"column:tx_hash;type:varchar(255);not null"`
+	TxHash         string          `gorm:"column:tx_hash;type:varchar(255);not null;uniqueIndex:idx_tx_hash"`
 	Time           time.Time       `gorm:"column:time;type:timestamp;not null"`
 	BlockNumber    uint64          `gorm:"column:block_number;type:bigint(20);default:0"`
 }
@@ -66,6 +66,12 @@ func (r *Repo) GetDepositRecords(ctx context.Context, uid string, queryParams *q
 func (r *Repo) GetDepositRecordBySourceTxID(ctx context.Context, sourceTxID string) (*DepositRecord, error) {
 	var record DepositRecord
 	err := r.WithContext(ctx).Where("source_tx_id = ?", sourceTxID).First(&record).Error
+	return &record, err
+}
+
+func (r *Repo) GetDepositRecordByTxHash(ctx context.Context, txHash string) (*DepositRecord, error) {
+	var record DepositRecord
+	err := r.WithContext(ctx).Where("tx_hash = ?", txHash).First(&record).Error
 	return &record, err
 }
 
