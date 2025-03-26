@@ -6,12 +6,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type RespGetDepositWithdrawal struct {
+type RespGetDepositWithdrawalTotal struct {
 	Symbol string          `json:"symbol"`
 	Amount decimal.Decimal `json:"amount"`
 }
 
-func (r *RespGetDepositWithdrawal) Fill(a *db.DepositRecord) *RespGetDepositWithdrawal {
+func (r *RespGetDepositWithdrawalTotal) FillDepositRecord(a *db.DepositRecord) *RespGetDepositWithdrawalTotal {
+	r.Symbol = a.Symbol
+	r.Amount = a.Amount
+	return r
+}
+
+func (r *RespGetDepositWithdrawalTotal) FillWithdrawRecord(a *db.WithdrawRecord) *RespGetDepositWithdrawalTotal {
 	r.Symbol = a.Symbol
 	r.Amount = a.Amount
 	return r

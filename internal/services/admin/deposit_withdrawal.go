@@ -36,16 +36,31 @@ func (s *AdminServices) GetTransactionsRecord(ctx context.Context, params *query
 	return record, total, nil
 }
 
-func (s *AdminServices) GetDepositAmountTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespGetDepositWithdrawal, error) {
+func (s *AdminServices) GetDepositAmountTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespGetDepositWithdrawalTotal, error) {
 
 	records, err := s.repo.GetDepositAmountTotal(ctx, startTime, endTime)
 	if err != nil {
 		return nil, err
 	}
 
-	var resp []*entity_admin.RespGetDepositWithdrawal
+	var resp []*entity_admin.RespGetDepositWithdrawalTotal
 	for _, record := range records {
-		resp = append(resp, new(entity_admin.RespGetDepositWithdrawal).Fill(record))
+		resp = append(resp, new(entity_admin.RespGetDepositWithdrawalTotal).FillDepositRecord(record))
+	}
+
+	return resp, nil
+}
+
+func (s *AdminServices) GetWithdrawAmountTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespGetDepositWithdrawalTotal, error) {
+
+	records, err := s.repo.GetWithdrawAmountTotal(ctx, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*entity_admin.RespGetDepositWithdrawalTotal
+	for _, record := range records {
+		resp = append(resp, new(entity_admin.RespGetDepositWithdrawalTotal).FillWithdrawRecord(record))
 	}
 
 	return resp, nil

@@ -307,3 +307,18 @@ func (r *Repo) GetDepositAmountTotal(ctx context.Context, startTime, endTime str
 
 	return record, nil
 }
+
+func (r *Repo) GetWithdrawAmountTotal(ctx context.Context, startTime, endTime string) ([]*WithdrawRecord, error) {
+	var record []*WithdrawRecord
+
+	err := r.DB.Raw(`SELECT symbol, SUM(amount) AS amount 
+		FROM withdraw_records 
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY symbol
+		ORDER BY amount DESC`, startTime, endTime).Scan(&record).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return record, nil
+}

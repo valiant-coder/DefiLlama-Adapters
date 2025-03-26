@@ -70,3 +70,20 @@ func TestGetDepositAmountTotal(t *testing.T) {
 
 	fmt.Println(len(record))
 }
+
+func TestGetWithdrawAmountTotal(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+
+	r := New()
+	record, err := r.GetWithdrawAmountTotal(context.Background(), "2024-10-01 00:00:00", "2025-04-01 23:59:59")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, v := range record {
+		fmt.Println(v.Symbol, v.Amount)
+	}
+
+	fmt.Println(len(record))
+}
