@@ -274,6 +274,7 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 		Synced:       req.Synced,
 		DeviceID:     req.DeviceID,
 		AAGuid:       req.AAGuid,
+		Storage:      req.Storage,
 	}
 	if err := s.repo.CreateCredentialIfNotExist(ctx, &newUserCredential); err != nil {
 		return err

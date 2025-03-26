@@ -48,6 +48,7 @@ type UserCredential struct {
 	Synced       bool   `json:"synced"`
 	EOSAccount   string `json:"eos_account,omitempty"`
 	UID          string `json:"uid"`
+	Storage      string `json:"storage"`
 }
 
 func ToUserCredential(credential db.UserCredential) UserCredential {

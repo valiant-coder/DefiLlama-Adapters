@@ -43,33 +43,27 @@ func (r *RespUser) Fill(a *db.UserList) *RespUser {
 }
 
 type RespPasskey struct {
-	UID            string      `json:"id"`
-	CredentialID   string      `json:"credential_id"`
-	PublicKey      string      `json:"public_key"`
-	Name           string      `json:"name"`
-	LastUsedAt     entity.Time `json:"last_used_at"`
-	LastUsedIP     string      `json:"last_used_ip"`
-	Synced         bool        `json:"synced"`
-	EOSAccount     string      `json:"eos_account"`
-	EOSPermissions string      `json:"eos_permissions"`
-	DeviceID       string      `json:"device_id"`
-	BlockNumber    uint64      `json:"block_number"`
-	AAGuid         string      `json:"aaguid"`
+	Name       string      `json:"name"`
+	IsAuth     bool        `json:"is_auto"`
+	Storage    string      `json:"storage"`
+	Synced     bool        `json:"synced"`
+	LastUsedAt entity.Time `json:"last_used_at"`
+	LastUsedIP string      `json:"last_used_ip"`
+	SignupAt   entity.Time `json:"signin_at"`
 }
 
 func (r *RespPasskey) Fill(a *db.UserCredential) *RespPasskey {
-	r.UID = a.UID
-	r.CredentialID = a.CredentialID
-	r.PublicKey = a.PublicKey
 	r.Name = a.Name
+	r.IsAuth = false
+	r.Storage = a.Storage
+	r.Synced = a.Synced
+	r.SignupAt = entity.Time(a.CreatedAt)
 	r.LastUsedAt = entity.Time(a.LastUsedAt)
 	r.LastUsedIP = a.LastUsedIP
-	r.Synced = a.Synced
-	r.EOSAccount = a.EOSAccount
-	r.EOSPermissions = a.EOSPermissions
-	r.DeviceID = a.DeviceID
-	r.BlockNumber = a.BlockNumber
-	r.AAGuid = a.AAGuid
+
+	if a.EOSAccount != "" {
+		r.IsAuth = true
+	}
 	return r
 }
 
