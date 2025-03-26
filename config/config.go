@@ -169,21 +169,20 @@ type HyperionConfig struct {
 }
 
 type OneDexConfig struct {
-	VaultEVMAddress          string  `yaml:"vault_evm_address"`
-	BridgeContract           string  `yaml:"bridge_contract"`
-	BridgeContractEVMAddress string  `yaml:"bridge_contract_evm_address"`
-	Actor                    string  `yaml:"actor"`
-	ActorPrivateKey          string  `yaml:"actor_private_key"`
-	AppTakerFeeRate          float64 `yaml:"app_taker_fee_rate"`
-	AppMakerFeeRate          float64 `yaml:"app_maker_fee_rate"`
-	TokenContract            string  `yaml:"token_contract"`
-	EVMAgentContract         string  `yaml:"evm_agent_contract"`
+	BridgeContract   string  `yaml:"bridge_contract"`
+	Actor            string  `yaml:"actor"`
+	ActorPrivateKey  string  `yaml:"actor_private_key"`
+	AppTakerFeeRate  float64 `yaml:"app_taker_fee_rate"`
+	AppMakerFeeRate  float64 `yaml:"app_maker_fee_rate"`
+	TokenContract    string  `yaml:"token_contract"`
+	EVMAgentContract string  `yaml:"evm_agent_contract"`
 }
 
 type ExsatConfig struct {
-	BridgeContract    string `yaml:"bridge_contract"`
-	BTCBridgeContract string `yaml:"btc_bridge_contract"`
-	BTCChainName      string `yaml:"btc_chain_name"`
+	BridgeExtensionEVMAddress string `yaml:"bridge_extension_evm_address"`
+	BridgeContract            string `yaml:"bridge_contract"`
+	BTCBridgeContract         string `yaml:"btc_bridge_contract"`
+	BTCChainName              string `yaml:"btc_chain_name"`
 }
 
 type CdexConfig struct {
