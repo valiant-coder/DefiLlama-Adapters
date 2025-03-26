@@ -85,7 +85,7 @@ func getPointsConf(c *gin.Context) {
 // @Router /user/points/conf [put]
 func updatePointsConf(c *gin.Context) {
 	var param data.UserPointsConfParam
-	if err := c.ShouldBind(&param); err != nil {
+	if err := c.ShouldBindJSON(&param); err != nil {
 		api.Error(c, err)
 		return
 	}

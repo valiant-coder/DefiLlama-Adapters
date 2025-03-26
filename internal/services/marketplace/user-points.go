@@ -61,15 +61,6 @@ func (s *UserPointsService) GetUserPointsConf(ctx context.Context) (*db.UserPoin
 func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *data.UserPointsConfParam) error {
 
 	userPointsConf, _ := s.repo.GetUserPointsConf(ctx)
-
-	log.Logger().Info("update points conf ->", params.BaseTradePoints)
-	log.Logger().Info("update points conf ->", params.MakerWeight)
-	log.Logger().Info("update points conf ->", params.TakerWeight)
-	log.Logger().Info("update points conf ->", params.FirstTradeRate)
-	log.Logger().Info("update points conf ->", params.MaxPerTradePoints)
-	log.Logger().Info("update points conf ->", params.InvitePercent)
-	log.Logger().Info("update points conf ->", params.InviteRebatePercent)
-
 	if userPointsConf == nil {
 
 		userPointsConf = &db.UserPointsConf{}
@@ -142,5 +133,6 @@ func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *da
 		return err
 	}
 
+	s.repo.SaveCache(userPointsConf)
 	return nil
 }
