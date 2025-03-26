@@ -69,7 +69,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		sourceTxID = action.TrxID
 	} else {
 		chianName = "exsat"
-		depositAddress = s.oneDexCfg.VaultEVMAddress
+		depositAddress = s.exsatCfg.BridgeExtensionEVMAddress
 		sourceTxID, err = s.hyperionCli.GetEvmTxIDByEosTxID(action.TrxID)
 		if err != nil {
 			log.Printf("Get evm tx id by eos tx id failed: %v-%v", action.TrxID, err)

@@ -4,10 +4,10 @@ import (
 	"exapp-go/internal/errno"
 	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/rotisserie/eris"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -50,27 +50,15 @@ func Error(c *gin.Context, err error) {
 		resp := fail(t.Code(), err.Error())
 		returnJson(c, http.StatusBadRequest, resp)
 	default:
-		var targetErr *errno.ParamsError
-		if eris.As(err, &targetErr) {
-			resp := fail(targetErr.Code(), targetErr.Error())
-			returnJson(c, http.StatusBadRequest, resp)
-		} else {
-			fmt.Printf("unknown error: %v\n", err)
-			span := trace.SpanFromContext(c.Request.Context())
-			format := eris.NewDefaultStringFormat(eris.FormatOptions{
-				InvertOutput: true,
-				WithTrace:    true,
-				InvertTrace:  true,
-				WithExternal: true,
-			})
-			errString := eris.ToCustomString(err, format)
-			span.SetAttributes(attribute.String("unknown_error", errString))
-			resp := fail(http.StatusInternalServerError, "service internal error")
-			returnJson(c, http.StatusInternalServerError, resp)
-		}
-
+		fmt.Printf("unknown error: %v\n", err)
+		span := trace.SpanFromContext(c.Request.Context())
+		span.SetAttributes(
+			attribute.String("unknown_error", err.Error()),
+			attribute.String("stack_trace", string(debug.Stack())),
+		)
+		resp := fail(http.StatusInternalServerError, "service internal error")
+		returnJson(c, http.StatusInternalServerError, resp)
 	}
-
 }
 
 func OK(c *gin.Context, data interface{}) {
