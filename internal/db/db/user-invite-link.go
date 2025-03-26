@@ -108,12 +108,23 @@ func (r *Repo) CreateUserInviteLink(ctx context.Context, invitation *UserInvitat
 	err = r.Transaction(ctx, func(r *Repo) error {
 
 		// 创建邀请链接
-		if err := r.Create(link).Error; err != nil {
-			return err
+		if e := r.Insert(ctx, link); e != nil {
+			return e
 		}
-		// 更新Invitation 邀请数量
-		if err := r.UpdateUILinkCount(ctx, invitation.UID, false); err != nil {
-			return err
+
+		if invitation.ID == 0 {
+
+			invitation.LinkCount = 1
+			if e := r.Insert(ctx, invitation); e != nil {
+
+				return e
+			}
+		} else {
+
+			// 更新Invitation 邀请数量
+			if e := r.UpdateUILinkCount(ctx, invitation.UID, false); e != nil {
+				return e
+			}
 		}
 
 		return nil
