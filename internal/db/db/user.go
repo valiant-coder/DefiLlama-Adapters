@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -73,7 +74,6 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 	return r.DB.WithContext(ctx).Create(user).Error
 }
 
-
 func (r *Repo) UpdateUser(ctx context.Context, user *User) error {
 	return r.DB.WithContext(ctx).Model(&User{}).Where("id =?", user.ID).Updates(user).Error
 }
@@ -126,6 +126,26 @@ func (r *Repo) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) 
 	return "", "", nil
 }
 
+func (r *Repo) GetUIDByEOSAccountAndPermission(ctx context.Context, eosAccount, permission string) (string, error) {
+	var userCredential UserCredential
+	err := r.WithCache(fmt.Sprintf("uid_by_eos_account_and_permission_%s_%s", eosAccount, permission), 1*time.Hour).WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&userCredential).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			var user User
+			err = r.WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&user).Error
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return "", nil
+				}
+				return "", err
+			}
+			return user.UID, nil
+		}
+		return "", err
+	}
+	return userCredential.UID, nil
+}
+
 func (r *Repo) GetUserMaxBlockNumber(ctx context.Context) (uint64, error) {
 	var blockNumber *uint64
 	err := r.WithContext(ctx).Model(&User{}).Select("COALESCE(MAX(block_number), 0)").Scan(&blockNumber).Error
@@ -147,8 +167,8 @@ type UserCredential struct {
 	LastUsedAt     time.Time `gorm:"column:last_used_at;default:null;type:timestamp"`
 	LastUsedIP     string    `gorm:"column:last_used_ip;type:varchar(255)"`
 	Synced         bool      `gorm:"column:synced;type:tinyint(1);not null;default:0"`
-	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);index:idx_eos_account"`
-	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512)"`
+	EOSAccount     string    `gorm:"column:eos_account;type:varchar(255);index:idx_eos_account;index:idx_eos_account_permission"`
+	EOSPermissions string    `gorm:"column:eos_permissions;type:varchar(512);index:idx_eos_account_permission"`
 	DeviceID       string    `gorm:"column:device_id;default:null;type:varchar(255);index:idx_device_id"`
 	BlockNumber    uint64    `gorm:"column:block_number;default:0;type:bigint(20)"`
 	AAGuid         string    `gorm:"column:aaguid;type:varchar(255);default:null"`
