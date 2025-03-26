@@ -177,7 +177,7 @@ func (s *UserService) GetUserCredentials(ctx context.Context, uid string) ([]ent
 	var dst []entity.RespUserCredential
 	for _, v := range credentials {
 		dst = append(dst, entity.RespUserCredential{
-			UserCredential: entity.ToUserCredential(v),
+			UserCredential: entity.ToUserCredential(*v),
 			CreatedAt:      entity.Time(v.CreatedAt),
 			LastUsedAt:     entity.Time(v.LastUsedAt),
 			LastUsedIP:     v.LastUsedIP,
@@ -240,6 +240,7 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 		Synced:       req.Synced,
 		DeviceID:     req.DeviceID,
 		AAGuid:       req.AAGuid,
+		Storage:      req.Storage,
 	}
 	if err := s.repo.CreateCredentialIfNotExist(ctx, &newUserCredential); err != nil {
 		return err
@@ -280,7 +281,7 @@ func (s *UserService) DeleteUserCredential(ctx context.Context, uid string, cred
 	var targetCredential *db.UserCredential
 	for _, c := range credentials {
 		if c.CredentialID == credentialID {
-			targetCredential = &c
+			targetCredential = c
 			break
 		}
 	}

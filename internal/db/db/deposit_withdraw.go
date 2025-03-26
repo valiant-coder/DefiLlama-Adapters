@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -203,4 +205,67 @@ func (r *Repo) GetAllPendingWithdrawRecords(ctx context.Context) ([]*WithdrawRec
 		Where("status = ?", WithdrawStatusPending).
 		Find(&records).Error
 	return records, err
+}
+
+type TransactionsRecord struct {
+	ID             uint      ``
+	DepositAt      time.Time `json:"deposit_at"`
+	WithdrawAt     time.Time `json:"withdraw_at"`
+	Symbol         string    `json:"symbol"`
+	CoinName       string    `json:"coin_name"`
+	EVMAddress     string    `json:"evm_address"`
+	UID            string    `json:"uid"`
+	Fee            float64   `json:"fee"`
+	DepositChain   string    `json:"deposit_chain"`
+	WithdrawChain  string    `json:"withdraw_chain"`
+	DepositAmount  float64   `json:"deposit_amount"`
+	WithdrawAmount float64   `json:"withdraw_amount"`
+	TxHash         string    `json:"tx_hash"`
+}
+
+func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.QueryParams) ([]*TransactionsRecord, int64, error) {
+	var records []*TransactionsRecord
+
+	var whereConditions []string
+	var queryParams []interface{}
+
+	if recipient, ok := params.CustomQuery["recipient"]; ok {
+		whereConditions = append(whereConditions, "status = ?")
+		queryParams = append(queryParams, recipient[0].(string))
+	}
+
+	whereSQL := ""
+	if len(whereConditions) > 0 {
+		whereSQL = "WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	querySQL := fmt.Sprintf(`
+        SELECT id, created_at AS deposit_at, symbol, uid, fee, chain_name AS deposit_chain, amount AS deposit_amount, tx_hash FROM deposit_records %s
+        UNION ALL
+        SELECT id, created_at AS withdraw_at, symbol, uid, fee, chain_name AS withdraw_chain, amount AS withdraw_amount, tx_hash FROM withdraw_records %s
+        ORDER BY id DESC LIMIT ? OFFSET ?
+    `, whereSQL, whereSQL)
+
+	queryParams = append(queryParams, params.Limit, params.Offset)
+
+	err := r.Raw(querySQL, queryParams...).Scan(&records).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int64
+	countSQL := fmt.Sprintf(`
+        SELECT COUNT(*) FROM (
+            SELECT id FROM deposit_records %s
+            UNION ALL
+            SELECT id FROM withdraw_records %s
+        ) AS total_count
+    `, whereSQL, whereSQL)
+
+	err = r.Raw(countSQL, queryParams[:len(queryParams)-2]...).Scan(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return records, total, nil
 }

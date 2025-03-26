@@ -1,8 +1,6 @@
 package entity
 
-import (
-	"exapp-go/internal/db/db"
-)
+import "exapp-go/internal/db/db"
 
 type ReqFirstDeposit struct {
 	PublicKey string `json:"public_key" binding:"required"`

@@ -73,7 +73,7 @@ func Run(addr string, release bool) error {
 	)
 
 	registerJwtMiddleware()
-	
+
 	r.POST("/login", login)
 	r.POST("/auth", authMiddleware.LoginHandler)
 	r.POST("/auth/reset_password", resetPassword)
@@ -115,6 +115,11 @@ func Run(addr string, release bool) error {
 	authorized.GET("/admin_permission/:id", getAdminPermission)
 	authorized.POST("/admin_permission", createAdminPermission)
 	authorized.PUT("/admin_permission/:id", updateAdminPermission)
+
+	// user
+	authorized.GET("/users", queryUsers)
+	authorized.GET("/user_passkeys/:uid", getPasskeys)
+	authorized.GET("/user_transactions_records", getTransactionsRecord)
 
 	return r.Run(addr)
 
