@@ -1105,7 +1105,7 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "user-invitation"
                 ],
-                "summary": "Get invitation info",
+                "summary": "获取邀请信息",
                 "responses": {}
             }
         },
@@ -1121,7 +1121,7 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "user-invitation"
                 ],
-                "summary": "Create invitation link",
+                "summary": "创建邀请链接",
                 "parameters": [
                     {
                         "description": "create invitation link params",
@@ -1155,7 +1155,7 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "user-invitation"
                 ],
-                "summary": "Delete invitation link",
+                "summary": "删除邀请链接",
                 "parameters": [
                     {
                         "type": "string",
@@ -1184,7 +1184,7 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "user-invitation"
                 ],
-                "summary": "Get invitation links",
+                "summary": "获取邀请链接列表",
                 "parameters": [
                     {
                         "description": "request",
@@ -1218,7 +1218,7 @@ const docTemplatemarketplace = `{
                 "tags": [
                     "user-invitation"
                 ],
-                "summary": "Get invite users",
+                "summary": "获取邀请用户列表",
                 "parameters": [
                     {
                         "description": "request",
@@ -1246,17 +1246,6 @@ const docTemplatemarketplace = `{
                     "user-points"
                 ],
                 "summary": "获取积分信息",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.UPRecordListParam"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "points info",
@@ -2148,6 +2137,10 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "id_token": {
+                    "type": "string"
+                },
+                "invite_code": {
+                    "description": "Invite Code",
                     "type": "string"
                 },
                 "method": {
