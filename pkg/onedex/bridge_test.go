@@ -29,10 +29,9 @@ func TestBridgeClient_MappingAddress(t *testing.T) {
 		"",
 	)
 	resp, err := client.MappingAddress(context.Background(), MappingAddrRequest{
-		PermissionID:         0,
-		RecipientAddress:     "",
-		Remark:               "",
-		AssignDepositAddress: "",
+		PermissionID:     0,
+		RecipientAddress: "",
+		Remark:           "",
 	})
 	if err != nil {
 		t.Fatalf("Failed to mapping address: %v", err)

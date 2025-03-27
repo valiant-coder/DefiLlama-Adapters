@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
@@ -10,6 +11,7 @@ import (
 
 	eosgo "github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 )
 
 /*
@@ -35,8 +37,19 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 	}
 	go s.updateUserTokenBalance(data.Account, "active")
 
-	if data.AssetType == 2 || data.AssetType == 3 {
+	if data.AssetType == 2 {
 		log.Printf("Asset type is exsat, skip")
+		return nil
+	}
+
+	record, err := s.repo.GetDepositRecordByTxHash(ctx, action.TrxID)
+	if err == nil {
+		log.Printf("Deposit record already exists: %v", record)
+		return nil
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Printf("Get deposit record by tx hash failed: %v-%v", action.TrxID, err)
 		return nil
 	}
 
@@ -76,7 +89,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 			sourceTxID = action.TrxID
 		}
 	}
-	record := &db.DepositRecord{
+	newRecord := &db.DepositRecord{
 		Symbol:         asset.Symbol.Symbol,
 		UID:            uid,
 		Amount:         decimal.New(int64(asset.Amount), -int32(asset.Symbol.Precision)),
@@ -89,7 +102,7 @@ func (s *Service) handleDeposit(action hyperion.Action) error {
 		ChainName:      chianName,
 		BlockNumber:    uint64(action.BlockNum),
 	}
-	err = s.repo.UpsertDepositRecord(ctx, record)
+	err = s.repo.UpsertDepositRecord(ctx, newRecord)
 	if err != nil {
 		log.Printf("Create deposit record failed: %v-%v", data, err)
 		return nil

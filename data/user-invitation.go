@@ -3,18 +3,18 @@ package data
 type UserInvitationListParam struct {
 	ListParam
 
-	UID        string `json:"uid" url:"uid"`
-	Inviter    string `json:"inviter" url:"inviter"`
-	InviteCode string `json:"invite_code" url:"invite_code"`
+	UID        string `json:"uid" form:"uid"`
+	Inviter    string `json:"inviter" form:"inviter"`
+	InviteCode string `json:"invite_code" form:"invite_code"`
 }
 
 type UILinkListParam struct {
 	ListParam
 
-	UID  string `json:"uid" url:"uid"`
-	Code string `json:"code" url:"code"`
+	UID  string `json:"uid" form:"uid"`
+	Code string `json:"code" form:"code"`
 }
 
 type UILinkParam struct {
-	Percent uint `json:"percent" url:"percent"`
+	Percent uint `json:"percent" form:"percent"`
 }

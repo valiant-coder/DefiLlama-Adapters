@@ -27,10 +27,23 @@ func NewUserPointsService() *UserPointsService {
 
 func (s *UserPointsService) GetUserPoints(ctx context.Context, uid string) (*db.UserPoints, error) {
 	userPoints, err := s.repo.GetUserPoints(ctx, uid)
-	if err != nil {
+	if err != nil && !db.IsNotFound(err) {
 
 		log.Logger().Error(uid, "查询用户积分信息出错 -> ", err.Error())
 		return nil, err
+	}
+
+	// 如果用户积分信息不存在，则创建
+	if userPoints == nil {
+		userPoints = &db.UserPoints{
+			UID: uid,
+		}
+
+		err = s.repo.Insert(ctx, userPoints)
+		if err != nil {
+			log.Logger().Error(uid, "创建用户积分信息出错 -> ", err.Error())
+			return nil, err
+		}
 	}
 
 	return userPoints, nil
@@ -61,7 +74,6 @@ func (s *UserPointsService) GetUserPointsConf(ctx context.Context) (*db.UserPoin
 func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *data.UserPointsConfParam) error {
 
 	userPointsConf, _ := s.repo.GetUserPointsConf(ctx)
-
 	if userPointsConf == nil {
 
 		userPointsConf = &db.UserPointsConf{}
@@ -119,12 +131,21 @@ func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *da
 		userPointsConf.MaxInviteLinkCount = params.MaxInviteLinkCount
 	}
 
-	err := s.repo.SaveUserPointsConf(ctx, userPointsConf)
+	var err error
+	if userPointsConf.ID == 0 {
+
+		err = s.repo.Insert(ctx, userPointsConf)
+	} else {
+
+		err = s.repo.Update(ctx, userPointsConf)
+	}
+
 	if err != nil {
 
 		log.Logger().Error("更新积分配置信息出错 -> ", err)
 		return err
 	}
 
+	s.repo.SaveCache(userPointsConf)
 	return nil
 }

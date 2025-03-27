@@ -440,7 +440,7 @@ type ListHandler func(db *gorm.DB, param data.ListParamInterface) any
 // 需要使用模糊查询的属性，tag需要添加 fuzzy:"true"
 func List[T data.ListParamInterface, E any](param T, handlers ...ListHandler) (result ListResult[E], err error) {
 
-	db := repo.DB
+	db := repo.DB.Model(new(E))
 
 	// 额外处理
 	if len(handlers) > 0 && handlers[0] != nil {
