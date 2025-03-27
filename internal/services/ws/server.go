@@ -10,11 +10,12 @@ import (
 
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
+	"exapp-go/internal/types"
 	"exapp-go/pkg/nsqutil"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cast"
-	"github.com/zishang520/engine.io/types"
+	socketTypes "github.com/zishang520/engine.io/types"
 	"github.com/zishang520/socket.io/v2/socket"
 )
 
@@ -52,7 +53,7 @@ func NewServer(ctx context.Context) *Server {
 	c.SetPingTimeout(5 * time.Second)
 	c.SetMaxHttpBufferSize(1000000)
 	c.SetConnectTimeout(5 * time.Second)
-	c.SetCors(&types.Cors{
+	c.SetCors(&socketTypes.Cors{
 		Origin:      "*",
 		Credentials: true,
 	})
@@ -78,7 +79,7 @@ func NewServer(ctx context.Context) *Server {
 // Setup NSQ message handlers
 func (s *Server) setupNSQHandlers() {
 	if s.consumer != nil {
-		s.consumer.Consume(TopicCdexUpdates, fmt.Sprintf("%s#ephemeral", uuid.New().String()), s.handleNSQMessage)
+		s.consumer.Consume(string(types.TopicCdexUpdates), fmt.Sprintf("%s#ephemeral", uuid.New().String()), s.handleNSQMessage)
 	}
 }
 
@@ -164,7 +165,7 @@ func (s *Server) handleConnection(args ...interface{}) {
 			accountRoom := socket.Room(fmt.Sprintf("account:%s", account))
 			client.Join(accountRoom)
 		}
-		
+
 		// Add user to dedicated room
 		client.Emit("authenticated", map[string]interface{}{
 			"status":  "success",

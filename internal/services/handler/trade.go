@@ -38,7 +38,7 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 
 	// Asynchronously publish trade update
 	go s.publisher.PublishTradeUpdate(entity.DbTradeToTrade(*trade))
-
+	go s.publisher.PublishTradeDetail(entity.DBTradeToTradeDetail(*trade))
 	// Get or initialize kline map, use function scope to limit lock range
 	klineMap := func() map[ckhdb.KlineInterval]*ckhdb.Kline {
 		s.mu.Lock()

@@ -8,12 +8,9 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
+	"exapp-go/internal/types"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
-)
-
-const (
-	TopicActionSync = "cdex_action_sync"
 )
 
 type Service struct {
@@ -162,5 +159,5 @@ func (s *Service) Stop() error {
 }
 
 func (s *Service) publishAction(action hyperion.Action) error {
-	return s.publisher.Publish(TopicActionSync, action)
+	return s.publisher.Publish(string(types.TopicActionSync), action)
 }

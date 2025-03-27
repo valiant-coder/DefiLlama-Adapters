@@ -6,6 +6,7 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
+	"exapp-go/internal/types"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
 	"fmt"
@@ -22,7 +23,6 @@ import (
 )
 
 const (
-	TopicActionSync = "cdex_action_sync"
 
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
@@ -140,7 +140,7 @@ func (s *Service) Start(ctx context.Context) error {
 		log.Printf("init kline cache failed: %v", err)
 	}
 
-	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("%s#ephemeral", s.nsqChannel), s.HandleMessage)
+	err := s.consumer.Consume(string(types.TopicActionSync), fmt.Sprintf("%s#ephemeral", s.nsqChannel), s.HandleMessage)
 	if err != nil {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
