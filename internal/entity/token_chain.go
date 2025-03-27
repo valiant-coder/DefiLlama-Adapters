@@ -7,6 +7,7 @@ type Token struct {
 	Name         string  `json:"name"`
 	Decimals     uint8   `json:"decimals"`
 	EOSContract  string  `json:"eos_contract"`
+	EVMAddress   string  `json:"evm_address"`
 	SupportChain []Chain `json:"support_chain"`
 	IconUrl      string  `json:"icon_url"`
 
@@ -63,6 +64,7 @@ func TokenFromDB(token db.Token) Token {
 		Name:        token.Name,
 		Decimals:    token.Decimals,
 		EOSContract: token.EOSContractAddress,
+		EVMAddress:  token.EVMContractAddress,
 		IconUrl:     token.IconUrl,
 
 		SupportChain: chains,
