@@ -45,3 +45,9 @@ type RespOrdersCoinTotal struct {
 	Symbol string          `json:"symbol"`
 	Total  decimal.Decimal `json:"total"`
 }
+
+func (r *RespOrdersCoinTotal) Fill(a *db.OpenOrder) *RespOrdersCoinTotal {
+	r.Symbol = a.PoolBaseCoin
+	r.Total = a.ExecutedQuantity
+	return r
+}
