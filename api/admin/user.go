@@ -115,7 +115,7 @@ func getTransactionsRecord(c *gin.Context) {
 // @Produce json
 // @Param start_time query string false "2006-01-06 00:00:00"
 // @Param end_time query string false "2006-01-06 23:59:59"
-// @Success 200 {array} entity_admin.RespGetDepositWithdrawalTotal "Successful response"
+// @Success 200 {array} entity_admin.RespGetDepositWithdrawTotal "Successful response"
 // @Router /deposit_amount_total [get]
 func getDepositAmountTotal(c *gin.Context) {
 	startTime := c.Query("start_time")
@@ -137,7 +137,7 @@ func getDepositAmountTotal(c *gin.Context) {
 // @Produce json
 // @Param start_time query string false "2006-01-06 00:00:00"
 // @Param end_time query string false "2006-01-06 23:59:59"
-// @Success 200 {array} entity_admin.RespGetDepositWithdrawalTotal "Successful response"
+// @Success 200 {array} entity_admin.RespGetDepositWithdrawTotal "Successful response"
 // @Router /withdraw_amount_total [get]
 func getWithdrawAmountTotal(c *gin.Context) {
 	startTime := c.Query("start_time")
