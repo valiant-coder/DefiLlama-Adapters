@@ -280,3 +280,8 @@ func (r *Repo) ClearUnreadOrders(ctx context.Context, trader, permission string)
 	key := getUnreadOrdersKey(trader, permission)
 	return r.Redis().Del(ctx, key).Err()
 }
+
+func (r *Repo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]string, error) {
+
+	return nil, nil
+}

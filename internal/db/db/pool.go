@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -14,6 +15,7 @@ func init() {
 }
 
 type Pool struct {
+	gorm.Model
 	PoolID             uint64          `gorm:"column:pool_id;type:bigint(20);primaryKey;autoIncrement:false"`
 	BaseSymbol         string          `gorm:"column:base_symbol;type:varchar(255)"`
 	BaseContract       string          `gorm:"column:base_contract;type:varchar(255)"`

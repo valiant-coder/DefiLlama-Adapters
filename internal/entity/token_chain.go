@@ -26,7 +26,7 @@ func TokenFromDB(token db.Token) Token {
 			MinDepositAmount:  chain.MinDepositAmount.String(),
 			MinWithdrawAmount: chain.MinWithdrawAmount.String(),
 
-			WithdrawFee:       chain.WithdrawalFee.String(),
+			WithdrawFee:       chain.WithdrawFee.String(),
 			ExsatWithdrawFee:  chain.ExsatWithdrawFee.String(),
 			ExsatTokenAddress: chain.ExsatTokenAddress,
 		})

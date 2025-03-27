@@ -26,7 +26,6 @@ func (s *AdminServices) QueryAdmins(ctx context.Context, queryParams *queryparam
 		resp = append(resp, new(entity_admin.RespAdmin).Fill(admin))
 	}
 	return resp, total, nil
-
 }
 
 func (s *AdminServices) GetAdmin(ctx context.Context, name string) (*entity_admin.RespAdmin, error) {

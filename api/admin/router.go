@@ -118,9 +118,27 @@ func Run(addr string, release bool) error {
 
 	// user
 	authorized.GET("/users", queryUsers)
-	authorized.GET("/user_passkeys/:uid", getPasskeys)
+	authorized.GET("/user_passkeys/:uid", getUserPasskeys)
 	authorized.GET("/users_statis", getUsersStatis)
-	authorized.GET("/user_transactions_records", getTransactionsRecord)
+
+	// transactions
+	authorized.GET("/transactions_records", getTransactionsRecord)
+	authorized.GET("/deposit_amount_total", getDepositAmountTotal)
+	authorized.GET("/withdraw_amount_total", getWithdrawAmountTotal)
+
+	// token
+	authorized.GET("/tokens", queryTokens)
+	authorized.POST("/token", createToken)
+	authorized.PUT("/token/:id", updateToken)
+
+	// pool
+	authorized.GET("/pools", queryPools)
+	authorized.PUT("/pool/:pool_id", updatePool)
+	authorized.POST("/pool", createPool)
+
+	// open_order
+	authorized.GET("/open_orders", queryOpenOrders)
+	authorized.GET("/orders_coin_total", getOrdersCoinTotal)
 
 	return r.Run(addr)
 

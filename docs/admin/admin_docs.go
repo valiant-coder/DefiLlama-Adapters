@@ -600,6 +600,46 @@ const docTemplateadmin = `{
                 }
             }
         },
+        "/deposit_amount_total": {
+            "get": {
+                "description": "Get deposit amount total",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Get deposit amount total",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "2006-01-06 00:00:00",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "2006-01-06 23:59:59",
+                        "name": "end_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity_admin.RespGetDepositWithdrawTotal"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "tags": [
@@ -627,6 +667,143 @@ const docTemplateadmin = `{
                 }
             }
         },
+        "/pools": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pool"
+                ],
+                "summary": "query pool",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "base_symbol",
+                        "name": "base_symbol",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "base_contract",
+                        "name": "base_contract",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "quote_symbol",
+                        "name": "quote_symbol",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "quote_contract",
+                        "name": "quote_contract",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity_admin.RespPool"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/token": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "token"
+                ],
+                "summary": "create token",
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/entity_admin.ReqCreateToken"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/entity_admin.RespToken"
+                        }
+                    }
+                }
+            }
+        },
+        "/token/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "pool"
+                ],
+                "summary": "update pool",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pool_id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request body",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/entity_admin.ReqUpsertPool"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/entity_admin.RespPool"
+                        }
+                    }
+                }
+            }
+        },
         "/user-passkeys/{uid}": {
             "get": {
                 "security": [
@@ -635,7 +812,7 @@ const docTemplateadmin = `{
                     }
                 ],
                 "tags": [
-                    "admin"
+                    "user"
                 ],
                 "summary": "get user passkeys",
                 "responses": {
@@ -665,7 +842,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "transactions"
                 ],
                 "summary": "query transactions record",
                 "parameters": [
@@ -739,7 +916,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "user"
                 ],
                 "summary": "query users",
                 "parameters": [
@@ -772,6 +949,18 @@ const docTemplateadmin = `{
                         "description": "end_time",
                         "name": "end_time",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -781,6 +970,91 @@ const docTemplateadmin = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/entity_admin.RespUser"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users_statis": {
+            "get": {
+                "description": "Get users statis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get users statis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "month week day",
+                        "name": "time_dimension",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "add_user_count add_passkey_count add_evm_count add_deposit_count",
+                        "name": "data_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "amount",
+                        "name": "amount",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "users statis",
+                        "schema": {
+                            "$ref": "#/definitions/db.UsersStatis"
+                        }
+                    }
+                }
+            }
+        },
+        "/withdraw_amount_total": {
+            "get": {
+                "description": "Get withdraw amount total",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Get withdraw amount total",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "2006-01-06 00:00:00",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "2006-01-06 23:59:59",
+                        "name": "end_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity_admin.RespGetDepositWithdrawTotal"
                             }
                         }
                     }
@@ -802,6 +1076,17 @@ const docTemplateadmin = `{
                 "LoginMethodApple",
                 "LoginMethodTelegram",
                 "LoginMethodEVM"
+            ]
+        },
+        "db.PoolStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "PoolStatusClosed",
+                "PoolStatusOpen"
             ]
         },
         "db.TransactionsRecord": {
@@ -844,6 +1129,110 @@ const docTemplateadmin = `{
                     "type": "string"
                 },
                 "withdraw_chain": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.UsersStatis": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "period": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Chain": {
+            "type": "object",
+            "properties": {
+                "chain_id": {
+                    "type": "integer"
+                },
+                "chain_name": {
+                    "type": "string"
+                },
+                "exsat_token_address": {
+                    "type": "string"
+                },
+                "exsat_withdraw_fee": {
+                    "type": "string"
+                },
+                "min_deposit_amount": {
+                    "type": "string"
+                },
+                "min_withdraw_amount": {
+                    "type": "string"
+                },
+                "withdraw_fee": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TokenInfo": {
+            "type": "object",
+            "properties": {
+                "circulating_supply": {
+                    "type": "string"
+                },
+                "fully_diluted_market_cap": {
+                    "type": "string"
+                },
+                "historical_high": {
+                    "type": "string"
+                },
+                "historical_high_date": {
+                    "type": "string"
+                },
+                "historical_low": {
+                    "type": "string"
+                },
+                "historical_low_date": {
+                    "type": "string"
+                },
+                "intro": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TokenLink"
+                    }
+                },
+                "market_capitalization": {
+                    "type": "string"
+                },
+                "market_dominance": {
+                    "type": "string"
+                },
+                "maximum_supply": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                },
+                "total_supply": {
+                    "type": "string"
+                },
+                "volume": {
+                    "type": "string"
+                },
+                "volume_div_market_cap": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TokenLink": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -932,6 +1321,47 @@ const docTemplateadmin = `{
                     "type": "string"
                 },
                 "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity_admin.ReqCreateToken": {
+            "type": "object",
+            "properties": {
+                "block_num": {
+                    "type": "integer"
+                },
+                "chains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Chain"
+                    }
+                },
+                "decimals": {
+                    "type": "integer"
+                },
+                "eos_contract": {
+                    "type": "string"
+                },
+                "evm_contract": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "info": {
+                    "$ref": "#/definitions/entity.TokenInfo"
+                },
+                "max_supply": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "withdraw_fee": {
                     "type": "string"
                 }
             }
@@ -1037,6 +1467,45 @@ const docTemplateadmin = `{
                 }
             }
         },
+        "entity_admin.ReqUpsertPool": {
+            "type": "object",
+            "required": [
+                "base_contract",
+                "base_symbol",
+                "pool_id",
+                "quote_contract",
+                "quote_symbol",
+                "status",
+                "symbol",
+                "visible"
+            ],
+            "properties": {
+                "base_contract": {
+                    "type": "string"
+                },
+                "base_symbol": {
+                    "type": "string"
+                },
+                "pool_id": {
+                    "type": "integer"
+                },
+                "quote_contract": {
+                    "type": "string"
+                },
+                "quote_symbol": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.PoolStatus"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "visible": {
+                    "type": "boolean"
+                }
+            }
+        },
         "entity_admin.RespAdmin": {
             "type": "object",
             "properties": {
@@ -1086,6 +1555,17 @@ const docTemplateadmin = `{
                 }
             }
         },
+        "entity_admin.RespGetDepositWithdrawTotal": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        },
         "entity_admin.RespGoogleAuth": {
             "type": "object",
             "properties": {
@@ -1131,6 +1611,85 @@ const docTemplateadmin = `{
                 },
                 "synced": {
                     "type": "boolean"
+                }
+            }
+        },
+        "entity_admin.RespPool": {
+            "type": "object",
+            "properties": {
+                "base_contract": {
+                    "type": "string"
+                },
+                "base_symbol": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "quote_contract": {
+                    "type": "string"
+                },
+                "quote_symbol": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.PoolStatus"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "visible": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "entity_admin.RespToken": {
+            "type": "object",
+            "properties": {
+                "chains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Chain"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "decimals": {
+                    "type": "integer"
+                },
+                "eos_contract": {
+                    "type": "string"
+                },
+                "evm_contract": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "info": {
+                    "$ref": "#/definitions/entity.TokenInfo"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "withdraw_fee": {
+                    "type": "string"
                 }
             }
         },

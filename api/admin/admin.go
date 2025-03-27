@@ -2,10 +2,9 @@ package admin
 
 import (
 	"exapp-go/api"
+	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/internal/services/admin"
 	"exapp-go/pkg/queryparams"
-
-	entity_admin "exapp-go/internal/entity/admin"
 
 	"github.com/gin-gonic/gin"
 )
