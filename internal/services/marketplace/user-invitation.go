@@ -153,6 +153,7 @@ func (s *UserInvitationService) GetInvitationLinkByCode(ctx context.Context, cod
 }
 
 func (s *UserInvitationService) BindInvitationLink(ctx context.Context, uid, code string) error {
+	log.Logger().Info("bind invite link -> ", code)
 	link, err := s.repo.GetUserInviteLink(ctx, code)
 	if err != nil {
 		
