@@ -15,10 +15,10 @@ type UPRecordListParam struct {
 	Interval  int64 `json:"interval" form:"interval" ignore:"true"`
 }
 type UserPointsConfParam struct {
-	BaseTradePoints   uint   `json:"base_trade_points" form:"base_trade_points"`
-	MakerWeight       uint   `json:"maker_weight" form:"maker_weight"`
-	TakerWeight       uint   `json:"taker_weight" form:"taker_weight"`
-	FirstTradeRate    uint   `json:"first_trade_rate" form:"first_trade_rate"`
+	BaseTradePoints   uint64 `json:"base_trade_points" form:"base_trade_points"`
+	MakerWeight       uint64 `json:"maker_weight" form:"maker_weight"`
+	TakerWeight       uint64 `json:"taker_weight" form:"taker_weight"`
+	FirstTradeRate    uint64 `json:"first_trade_rate" form:"first_trade_rate"`
 	MaxPerTradePoints uint64 `json:"max_per_trade_points" form:"max_per_trade_points"`
 	
 	InvitePercent        uint   `json:"invite_percent" form:"invite_percent"`

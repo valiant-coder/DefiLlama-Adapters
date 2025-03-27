@@ -18,10 +18,10 @@ type UserPointsConf struct {
 	gorm.Model
 	
 	// 交易配置
-	BaseTradePoints   uint   `json:"base_trade_points" gorm:"column:base_trade_points;type:int(11);not null;default:0"`          // 基础交易积分
-	MakerWeight       uint   `json:"maker_weight" gorm:"column:maker_weight;type:int(11);not null;default:0"`                    // maker权重
-	TakerWeight       uint   `json:"taker_weight" gorm:"column:taker_weight;type:int(11);not null;default:0"`                    // taker权重
-	FirstTradeRate    uint   `json:"first_trade_rate" gorm:"column:first_trade_rate;type:int(11);not null;default:2"`            // 首次交易倍数
+	BaseTradePoints   uint64 `json:"base_trade_points" gorm:"column:base_trade_points;type:int(11);not null;default:0"`          // 基础交易积分
+	MakerWeight       uint64 `json:"maker_weight" gorm:"column:maker_weight;type:int(11);not null;default:0"`                    // maker权重
+	TakerWeight       uint64 `json:"taker_weight" gorm:"column:taker_weight;type:int(11);not null;default:0"`                    // taker权重
+	FirstTradeRate    uint64 `json:"first_trade_rate" gorm:"column:first_trade_rate;type:int(11);not null;default:2"`            // 首次交易倍数
 	MaxPerTradePoints uint64 `json:"max_per_trade_points" gorm:"column:max_per_trade_points;type:bigint(20);not null;default:0"` // 每笔最大交易积分
 	
 	// 邀请配置
