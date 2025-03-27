@@ -260,7 +260,11 @@ func (r *Repo) ExecSQL(ctx context.Context, sql string, values ...interface{}) (
 
 func (r *Repo) Transaction(ctx context.Context, f func(repo *Repo) error) (err error) {
 	return r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return f(&Repo{DB: tx})
+		return f(&Repo{
+			DB: tx,
+			redis: r.redis,
+			redisCluster: r.redisCluster,
+		})
 	})
 }
 
