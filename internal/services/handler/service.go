@@ -263,15 +263,15 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBTCDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateBTCWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader)] = s.handleEVMTraderMap
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {

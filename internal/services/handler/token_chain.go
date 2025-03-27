@@ -109,7 +109,7 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 		return nil
 	}
 
-	ondexTokens, err := onedex.GetOneDexSupportTokens(ctx, s.eosCfg.NodeURL, s.oneDexCfg.BridgeContract)
+	ondexTokens, err := onedex.GetOneDexSupportTokens(ctx, s.eosCfg.NodeURL, s.oneDexCfg.PortalContract)
 	if err != nil {
 		log.Printf("failed to get ondex tokens: %v", err)
 		return nil
