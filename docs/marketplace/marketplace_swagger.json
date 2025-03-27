@@ -2582,6 +2582,9 @@
                 "eos_contract": {
                     "type": "string"
                 },
+                "evm_address": {
+                    "type": "string"
+                },
                 "icon_url": {
                     "type": "string"
                 },
@@ -2695,9 +2698,6 @@
                 "buyer": {
                     "type": "string"
                 },
-                "buyer_permission": {
-                    "type": "string"
-                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -2708,9 +2708,6 @@
                     "type": "string"
                 },
                 "seller": {
-                    "type": "string"
-                },
-                "seller_permission": {
                     "type": "string"
                 },
                 "side": {
@@ -2724,13 +2721,16 @@
         "entity.TradeDetail": {
             "type": "object",
             "properties": {
+                "base_coin": {
+                    "type": "string"
+                },
                 "base_quantity": {
                     "type": "string"
                 },
-                "maker": {
-                    "type": "string"
+                "global_seq": {
+                    "type": "integer"
                 },
-                "maker_app_fee": {
+                "maker": {
                     "type": "string"
                 },
                 "maker_fee": {
@@ -2742,19 +2742,22 @@
                 "maker_order_id": {
                     "type": "integer"
                 },
+                "maker_permission": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },
                 "price": {
                     "type": "string"
                 },
+                "quote_coin": {
+                    "type": "string"
+                },
                 "quote_quantity": {
                     "type": "string"
                 },
                 "taker": {
-                    "type": "string"
-                },
-                "taker_app_fee": {
                     "type": "string"
                 },
                 "taker_fee": {
@@ -2768,6 +2771,9 @@
                 },
                 "taker_order_id": {
                     "type": "integer"
+                },
+                "taker_permission": {
+                    "type": "string"
                 },
                 "timestamp": {
                     "type": "string"
@@ -2930,7 +2936,6 @@
             "type": "string",
             "enum": [
                 "trade",
-                "trade_rebate",
                 "active",
                 "manual",
                 "invitation"
@@ -2939,12 +2944,10 @@
                 "UserPointsTypeActive": "活动",
                 "UserPointsTypeInvitation": "邀请",
                 "UserPointsTypeManual": "手动",
-                "UserPointsTypeTrade": "交易",
-                "UserPointsTypeTradeRebate": "交易返佣"
+                "UserPointsTypeTrade": "交易"
             },
             "x-enum-varnames": [
                 "UserPointsTypeTrade",
-                "UserPointsTypeTradeRebate",
                 "UserPointsTypeActive",
                 "UserPointsTypeManual",
                 "UserPointsTypeInvitation"

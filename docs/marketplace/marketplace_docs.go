@@ -2585,6 +2585,9 @@ const docTemplatemarketplace = `{
                 "eos_contract": {
                     "type": "string"
                 },
+                "evm_address": {
+                    "type": "string"
+                },
                 "icon_url": {
                     "type": "string"
                 },
@@ -2698,9 +2701,6 @@ const docTemplatemarketplace = `{
                 "buyer": {
                     "type": "string"
                 },
-                "buyer_permission": {
-                    "type": "string"
-                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -2711,9 +2711,6 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "seller": {
-                    "type": "string"
-                },
-                "seller_permission": {
                     "type": "string"
                 },
                 "side": {
@@ -2727,13 +2724,16 @@ const docTemplatemarketplace = `{
         "entity.TradeDetail": {
             "type": "object",
             "properties": {
+                "base_coin": {
+                    "type": "string"
+                },
                 "base_quantity": {
                     "type": "string"
                 },
-                "maker": {
-                    "type": "string"
+                "global_seq": {
+                    "type": "integer"
                 },
-                "maker_app_fee": {
+                "maker": {
                     "type": "string"
                 },
                 "maker_fee": {
@@ -2745,19 +2745,22 @@ const docTemplatemarketplace = `{
                 "maker_order_id": {
                     "type": "integer"
                 },
+                "maker_permission": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },
                 "price": {
                     "type": "string"
                 },
+                "quote_coin": {
+                    "type": "string"
+                },
                 "quote_quantity": {
                     "type": "string"
                 },
                 "taker": {
-                    "type": "string"
-                },
-                "taker_app_fee": {
                     "type": "string"
                 },
                 "taker_fee": {
@@ -2771,6 +2774,9 @@ const docTemplatemarketplace = `{
                 },
                 "taker_order_id": {
                     "type": "integer"
+                },
+                "taker_permission": {
+                    "type": "string"
                 },
                 "timestamp": {
                     "type": "string"
@@ -2933,7 +2939,6 @@ const docTemplatemarketplace = `{
             "type": "string",
             "enum": [
                 "trade",
-                "trade_rebate",
                 "active",
                 "manual",
                 "invitation"
@@ -2942,12 +2947,10 @@ const docTemplatemarketplace = `{
                 "UserPointsTypeActive": "活动",
                 "UserPointsTypeInvitation": "邀请",
                 "UserPointsTypeManual": "手动",
-                "UserPointsTypeTrade": "交易",
-                "UserPointsTypeTradeRebate": "交易返佣"
+                "UserPointsTypeTrade": "交易"
             },
             "x-enum-varnames": [
                 "UserPointsTypeTrade",
-                "UserPointsTypeTradeRebate",
                 "UserPointsTypeActive",
                 "UserPointsTypeManual",
                 "UserPointsTypeInvitation"
