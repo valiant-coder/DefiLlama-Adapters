@@ -124,6 +124,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 			s.eosCfg.Exsat.BTCBridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
+			s.eosCfg.OneDex.ActorPermission,
 		)
 
 		resp, err := btcBridgeClient.MappingAddress(ctx, onedex.BTCMappingAddrRequest{
@@ -149,6 +150,7 @@ func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string,
 			s.eosCfg.Exsat.BridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
+			s.eosCfg.OneDex.ActorPermission,
 		)
 
 		resp, err := bridgeClient.MappingAddress(ctx, onedex.MappingAddrRequest{
@@ -247,6 +249,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			s.eosCfg.Exsat.BTCBridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
+			s.eosCfg.OneDex.ActorPermission,
 		)
 
 		resp, err := btcBridgeClient.MappingAddress(ctx, onedex.BTCMappingAddrRequest{
@@ -272,6 +275,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			s.eosCfg.Exsat.BridgeContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
+			s.eosCfg.OneDex.ActorPermission,
 		)
 
 		resp, err := bridgeClient.MappingAddress(ctx, onedex.MappingAddrRequest{

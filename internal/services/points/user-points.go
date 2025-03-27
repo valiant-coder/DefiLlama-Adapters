@@ -8,6 +8,8 @@ import (
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/types"
 	"exapp-go/pkg/log"
+	"exapp-go/internal/entity"
+	"exapp-go/internal/types"
 	"exapp-go/pkg/nsqutil"
 
 	"github.com/nsqio/go-nsq"
@@ -27,8 +29,8 @@ type UserPointsService struct {
 
 // Base NSQ message structure
 type NSQMessage struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data"`
+	Type types.NSQMessageType `json:"type"`
+	Data json.RawMessage      `json:"data"`
 }
 
 func NewService() *UserPointsService {

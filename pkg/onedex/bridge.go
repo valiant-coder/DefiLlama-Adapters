@@ -23,15 +23,17 @@ type BridgeClient struct {
 	bridge string
 	actor  string
 	priv   string
+	permission string
 }
 
-func NewBridgeClient(endpoint string, bridge string, actor string, priv string) *BridgeClient {
+func NewBridgeClient(endpoint string, bridge string, actor string, priv string, permission string) *BridgeClient {
 	api := eos.New(endpoint)
 	return &BridgeClient{
-		api:    api,
-		bridge: bridge,
-		actor:  actor,
-		priv:   priv,
+		api:        api,
+		bridge:     bridge,
+		actor:      actor,
+		priv:       priv,
+		permission: permission,
 	}
 }
 
@@ -47,7 +49,7 @@ func (c *BridgeClient) MappingAddress(ctx context.Context, req MappingAddrReques
 		Account: eos.AN(c.bridge),
 		Name:    eos.ActN("mappingaddr"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AN(c.actor), Permission: eos.PN("active")},
+			{Actor: eos.AN(c.actor), Permission: eos.PN(c.permission)},
 		},
 		ActionData: eos.NewActionData(struct {
 			Actor                eos.AccountName `eos:"actor"`

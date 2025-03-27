@@ -43,8 +43,8 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	if data.Applicant != s.oneDexCfg.BridgeContract {
-		log.Printf("Applicant is not %s, skip", s.oneDexCfg.BridgeContract)
+	if data.Applicant != s.oneDexCfg.PortalContract {
+		log.Printf("Applicant is not %s, skip", s.oneDexCfg.PortalContract)
 		return nil
 	}
 

@@ -6,6 +6,7 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
+	"exapp-go/internal/types"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/nsqutil"
 	"fmt"
@@ -22,7 +23,6 @@ import (
 )
 
 const (
-	TopicActionSync = "cdex_action_sync"
 
 	// Redis keys
 	RedisKeyHandlerInstances = "cdex:handler:instances" // Hash table stores all handler instances
@@ -140,7 +140,7 @@ func (s *Service) Start(ctx context.Context) error {
 		log.Printf("init kline cache failed: %v", err)
 	}
 
-	err := s.consumer.Consume(TopicActionSync, fmt.Sprintf("%s#ephemeral", s.nsqChannel), s.HandleMessage)
+	err := s.consumer.Consume(string(types.TopicActionSync), fmt.Sprintf("%s#ephemeral", s.nsqChannel), s.HandleMessage)
 	if err != nil {
 		log.Printf("Consume action sync failed: %v", err)
 		return err
@@ -263,15 +263,15 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBTCDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateBTCWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader)] = s.handleEVMTraderMap
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.BridgeContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {

@@ -36,27 +36,9 @@ func (s *Service) newTrade(ctx context.Context, trade *ckhdb.Trade) error {
 	}
 	s.tradeCache[orderTag] = append(s.tradeCache[orderTag], trade)
 
-	// Pre-calculate buyer and seller info
-	var buyer, seller string
-	if trade.TakerIsBid {
-		buyer = trade.Taker
-		seller = trade.Maker
-	} else {
-		buyer = trade.Maker
-		seller = trade.Taker
-	}
-
 	// Asynchronously publish trade update
-	go s.publisher.PublishTradeUpdate(entity.Trade{
-		PoolID:   trade.PoolID,
-		Buyer:    buyer,
-		Seller:   seller,
-		Quantity: trade.BaseQuantity.String(),
-		Price:    trade.Price.String(),
-		TradedAt: entity.Time(trade.Time),
-		Side:     entity.TradeSide(map[bool]string{true: "buy", false: "sell"}[trade.TakerIsBid]),
-	})
-
+	go s.publisher.PublishTradeUpdate(entity.DbTradeToTrade(*trade))
+	go s.publisher.PublishTradeDetail(entity.DBTradeToTradeDetail(*trade))
 	// Get or initialize kline map, use function scope to limit lock range
 	klineMap := func() map[ckhdb.KlineInterval]*ckhdb.Kline {
 		s.mu.Lock()

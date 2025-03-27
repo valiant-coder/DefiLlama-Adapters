@@ -21,15 +21,17 @@ type BTCBridgeClient struct {
 	bridge string
 	actor  string
 	priv   string
+	permission string
 }
 
-func NewBTCBridgeClient(endpoint string, bridge string, actor string, priv string) *BTCBridgeClient {
+func NewBTCBridgeClient(endpoint string, bridge string, actor string, priv string, permission string) *BTCBridgeClient {
 	api := eos.New(endpoint)
 	return &BTCBridgeClient{
-		api:    api,
-		bridge: bridge,
-		actor:  actor,
-		priv:   priv,
+		api:        api,
+		bridge:     bridge,
+		actor:      actor,
+		priv:       priv,
+		permission: permission,
 	}
 }
 
@@ -45,7 +47,7 @@ func (c *BTCBridgeClient) MappingAddress(ctx context.Context, req BTCMappingAddr
 		Account: eos.AN(c.bridge),
 		Name:    eos.ActN("appaddrmap"),
 		Authorization: []eos.PermissionLevel{
-			{Actor: eos.AN(c.actor), Permission: eos.PN("active")},
+			{Actor: eos.AN(c.actor), Permission: eos.PN(c.permission)},
 		},
 		ActionData: eos.NewActionData(struct {
 			Actor                eos.AccountName `eos:"actor"`

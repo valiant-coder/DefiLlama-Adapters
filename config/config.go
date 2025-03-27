@@ -169,9 +169,10 @@ type HyperionConfig struct {
 }
 
 type OneDexConfig struct {
-	BridgeContract   string  `yaml:"bridge_contract"`
+	PortalContract   string  `yaml:"portal_contract"`
 	Actor            string  `yaml:"actor"`
 	ActorPrivateKey  string  `yaml:"actor_private_key"`
+	ActorPermission  string  `yaml:"actor_permission"`
 	AppTakerFeeRate  float64 `yaml:"app_taker_fee_rate"`
 	AppMakerFeeRate  float64 `yaml:"app_maker_fee_rate"`
 	TokenContract    string  `yaml:"token_contract"`

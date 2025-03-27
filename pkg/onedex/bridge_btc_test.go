@@ -12,6 +12,7 @@ func TestBTCBridgeClient_MappingAddress(t *testing.T) {
 		"brdgmng.xsat",
 		"asdfasdfasdf",
 		"",
+		"active",
 	)
 	resp, err := client.MappingAddress(context.Background(), BTCMappingAddrRequest{
 		RecipientAddress: "asdfasdfasdf",
@@ -30,6 +31,7 @@ func TestBTCBridgeClient_GetDepositAddress(t *testing.T) {
 		"brdgmng.xsat",
 		"",
 		"",
+		"active",
 	)
 	resp, err := client.GetDepositAddress(context.Background(), RequestBTCDepositAddress{
 		Remark:              "test3test3",

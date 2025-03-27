@@ -10,6 +10,7 @@ func TestBridgeClient_GetDepositAddress(t *testing.T) {
 		"",
 		"",
 		"",
+		"",
 	)
 	address, err := client.GetDepositAddress(context.Background(), RequestDepositAddress{
 		PermissionID: 0,
@@ -24,6 +25,7 @@ func TestBridgeClient_GetDepositAddress(t *testing.T) {
 
 func TestBridgeClient_MappingAddress(t *testing.T) {
 	client := NewBridgeClient("",
+		"",
 		"",
 		"",
 		"",
