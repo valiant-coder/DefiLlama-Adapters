@@ -21,15 +21,12 @@ type RespPool struct {
 func (r *RespPool) Fill(a *db.Pool) *RespPool {
 	r.BaseContract = a.BaseContract
 	r.BaseSymbol = a.BaseSymbol
-	r.ID = a.ID
 	r.PoolID = a.PoolID
 	r.QuoteContract = a.QuoteContract
 	r.QuoteSymbol = a.QuoteSymbol
 	r.Symbol = a.Symbol
 	r.Status = a.Status
 	r.Visible = a.Visible
-	r.UpdatedAt = a.UpdatedAt.Format("2006-01-02 15:04:05")
-	r.CreatedAt = a.CreatedAt.Format("2006-01-02 15:04:05")
 	return r
 }
 
