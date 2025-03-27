@@ -37,6 +37,7 @@ func (s *AdminServices) UpdatePool(ctx context.Context, req entity_admin.ReqUpse
 	pool.BaseSymbol = req.BaseSymbol
 	pool.QuoteContract = req.QuoteContract
 	pool.QuoteSymbol = req.QuoteSymbol
+	pool.Symbol = req.Symbol
 	pool.Visible = req.Visible
 	pool.Status = req.Status
 

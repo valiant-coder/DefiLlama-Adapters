@@ -11,6 +11,7 @@ type RespPool struct {
 	BaseContract  string        `json:"base_contract"`
 	QuoteSymbol   string        `json:"quote_symbol"`
 	QuoteContract string        `json:"quote_contract"`
+	Symbol        string        `json:"symbol"`
 	Status        db.PoolStatus `json:"status"`
 	Visible       bool          `json:"visible"`
 	CreatedAt     string        `json:"created_at"`
@@ -24,6 +25,7 @@ func (r *RespPool) Fill(a *db.Pool) *RespPool {
 	r.PoolID = a.PoolID
 	r.QuoteContract = a.QuoteContract
 	r.QuoteSymbol = a.QuoteSymbol
+	r.Symbol = a.Symbol
 	r.Status = a.Status
 	r.Visible = a.Visible
 	r.UpdatedAt = a.UpdatedAt.Format("2006-01-02 15:04:05")
@@ -37,6 +39,7 @@ type ReqUpsertPool struct {
 	BaseContract  string        `json:"base_contract" binding:"required"`
 	QuoteSymbol   string        `json:"quote_symbol" binding:"required"`
 	QuoteContract string        `json:"quote_contract" binding:"required"`
+	Symbol        string        `json:"symbol" binding:"required"`
 	Status        db.PoolStatus `json:"status" binding:"required"`
 	Visible       bool          `json:"visible" binding:"required"`
 }
