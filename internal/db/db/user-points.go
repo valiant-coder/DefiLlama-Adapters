@@ -3,14 +3,14 @@ package db
 import (
 	"context"
 	"exapp-go/internal/types"
-
+	
 	"gorm.io/gorm"
 )
 
 func init() {
-
+	
 	addMigrateFunc(func(r *Repo) error {
-
+		
 		return r.AutoMigrate(&UserPoints{})
 	})
 }
@@ -38,24 +38,20 @@ func (r *Repo) GetUserPoints(ctx context.Context, uid string) (*UserPoints, erro
 }
 
 func (r *Repo) IncreaseUserPoints(ctx context.Context, uid string, points uint64, pointsType types.UserPointsType) error {
-
+	
 	params := map[string]interface{}{
 		"balance": gorm.Expr("balance + ?", points),
 		"total":   gorm.Expr("total + ?", points),
 	}
-
+	
 	if pointsType == types.UserPointsTypeInvitation {
 		params["invitation"] = gorm.Expr("invitation + ?", points)
 	}
-
+	
 	if pointsType == types.UserPointsTypeTrade {
 		params["trade"] = gorm.Expr("trade + ?", points)
 	}
-
-	if pointsType == types.UserPointsTypeTradeRebate {
-		params["trade_rebate"] = gorm.Expr("trade_rebate + ?", points)
-	}
-
+	
 	r.DelCache(UserPointsRedisKey(uid))
 	return r.WithContext(ctx).DB.Model(&UserPoints{}).Where("uid = ?", uid).Updates(params).Error
 }
@@ -65,14 +61,14 @@ func (r *Repo) DecreaseUserPoints(ctx context.Context, uid string, points uint64
 }
 
 func (r *Repo) AddTradeUserPoints(ctx context.Context, uid, txId string, points, globalSeq uint64, pointsType types.UserPointsType) error {
-
+	
 	// 先查询当前积分信息
 	userPoints, e := r.GetUserPoints(ctx, uid)
 	if e != nil {
-
+		
 		return e
 	}
-
+	
 	balance := userPoints.Balance
 	// 先创建积分记录
 	record := &UserPointsRecord{
@@ -86,18 +82,18 @@ func (r *Repo) AddTradeUserPoints(ctx context.Context, uid, txId string, points,
 		SnapBalance: balance,
 		Remark:      "",
 	}
-
+	
 	// 插入积分记录
 	if e = r.Insert(ctx, record); e != nil {
-
+		
 		return e
 	}
-
+	
 	// 更新积分
 	if e = r.IncreaseUserPoints(ctx, uid, points, types.UserPointsTypeTrade); e != nil {
-
+		
 		return e
 	}
-
+	
 	return nil
 }

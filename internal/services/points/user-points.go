@@ -6,11 +6,12 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
-	"exapp-go/internal/types"
-	"exapp-go/pkg/log"
 	"exapp-go/internal/entity"
 	"exapp-go/internal/types"
+	"exapp-go/pkg/log"
 	"exapp-go/pkg/nsqutil"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/nsqio/go-nsq"
 	"github.com/robfig/cron/v3"
@@ -75,7 +76,7 @@ func (s *UserPointsService) HandleMessage(msg *nsq.Message) error {
 		return nil
 	}
 
-	var trade ckhdb.Trade
+	var trade entity.TradeDetail
 	if err := json.Unmarshal(nsqMsg.Data, &trade); err != nil {
 		log.Logger().Error("Failed to unmarshal trade data: %v", err)
 		return nil
@@ -110,7 +111,7 @@ func (s *UserPointsService) HandleMessage(msg *nsq.Message) error {
 	return nil
 }
 
-func (s *UserPointsService) SettlePoints(taker, maker string, trade ckhdb.Trade) (err error) {
+func (s *UserPointsService) SettlePoints(taker, maker string, trade entity.TradeDetail) (err error) {
 	// 先计算积分
 	conf, err := s.repo.GetUserPointsConf(s.ctx)
 	if err != nil {
@@ -120,7 +121,7 @@ func (s *UserPointsService) SettlePoints(taker, maker string, trade ckhdb.Trade)
 	}
 
 	// 读取交易对权重
-	pair, err := s.repo.GetUserPointsPair(s.ctx, trade.Symbol)
+	pair, err := s.repo.GetUserPointsPair(s.ctx, trade.PoolID)
 	if err != nil {
 
 		log.Logger().Error("get user points pair error ->", err)
@@ -128,7 +129,14 @@ func (s *UserPointsService) SettlePoints(taker, maker string, trade ckhdb.Trade)
 	}
 
 	basePoints := conf.BaseTradePoints
-	quantity := uint64(trade.QuoteQuantity.IntPart())
+	val, err := decimal.NewFromString(trade.QuoteQuantity)
+	if err != nil {
+
+		log.Logger().Error("new decimal from string error ->", err)
+		return
+	}
+
+	quantity := uint64(val.IntPart())
 	takerPoints := basePoints * conf.TakerWeight * pair.Coefficient * quantity
 	makerPoints := basePoints * conf.MakerWeight * pair.Coefficient * quantity
 
@@ -148,11 +156,11 @@ func (s *UserPointsService) SettlePoints(taker, maker string, trade ckhdb.Trade)
 	return
 }
 
-func (s *UserPointsService) SettlerInvitePoints(uid string, points uint64, trade ckhdb.Trade) (err error) {
+func (s *UserPointsService) SettlerInvitePoints(uid string, points uint64, trade entity.TradeDetail) (err error) {
 
 	err = s.repo.Transaction(s.ctx, func(repo *db.Repo) error {
 
-		if e := repo.AddTradeUserPoints(s.ctx, uid, trade.TxID, points, trade.GlobalSequence, types.UserPointsTypeTrade); e != nil {
+		if e := repo.AddTradeUserPoints(s.ctx, uid, trade.TxID, points, trade.GlobalSeq, types.UserPointsTypeTrade); e != nil {
 
 			log.Logger().Error(trade.TxID, "@", uid, "add trade user points error ->", e)
 			return e
@@ -166,7 +174,7 @@ func (s *UserPointsService) SettlerInvitePoints(uid string, points uint64, trade
 		}
 
 		// 查询邀请人
-		if e := repo.AddTradeUserPoints(s.ctx, invitation.Inviter, trade.TxID, points, trade.GlobalSequence, types.UserPointsTypeInvitation); e != nil {
+		if e := repo.AddTradeUserPoints(s.ctx, invitation.Inviter, trade.TxID, points, trade.GlobalSeq, types.UserPointsTypeInvitation); e != nil {
 
 			log.Logger().Error(trade.TxID, "@", invitation.Inviter, "add trade user points error ->", e)
 			return e
@@ -177,7 +185,7 @@ func (s *UserPointsService) SettlerInvitePoints(uid string, points uint64, trade
 	return
 }
 
-func (s *UserPointsService) Rebate(taker, maker string, trade ckhdb.Trade) (err error) {
+func (s *UserPointsService) Rebate(taker, maker string, trade entity.TradeDetail) (err error) {
 
 	return
 }
