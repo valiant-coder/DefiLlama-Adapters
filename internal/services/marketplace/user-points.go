@@ -27,10 +27,23 @@ func NewUserPointsService() *UserPointsService {
 
 func (s *UserPointsService) GetUserPoints(ctx context.Context, uid string) (*db.UserPoints, error) {
 	userPoints, err := s.repo.GetUserPoints(ctx, uid)
-	if err != nil {
+	if err != nil && !db.IsNotFound(err) {
 
 		log.Logger().Error(uid, "查询用户积分信息出错 -> ", err.Error())
 		return nil, err
+	}
+
+	// 如果用户积分信息不存在，则创建
+	if userPoints == nil {
+		userPoints = &db.UserPoints{
+			UID: uid,
+		}
+
+		err = s.repo.Insert(ctx, userPoints)
+		if err != nil {
+			log.Logger().Error(uid, "创建用户积分信息出错 -> ", err.Error())
+			return nil, err
+		}
 	}
 
 	return userPoints, nil

@@ -16,14 +16,8 @@ import (
 // @Success 200 {object} api.Response "points info"
 // @Router /user/points [get]
 func getPointsInfo(c *gin.Context) {
-	var param data.UPRecordListParam
-	if err := c.ShouldBindJSON(&param); err != nil {
-		api.Error(c, err)
-		return
-	}
-
 	service := marketplace.NewUserPointsService()
-	userPoints, err := service.GetUserPoints(c.Request.Context(), param.UID)
+	userPoints, err := service.GetUserPoints(c.Request.Context(), c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return
