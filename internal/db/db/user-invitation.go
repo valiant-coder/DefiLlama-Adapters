@@ -72,7 +72,7 @@ func (r *Repo) UpdateUILinkCount(ctx context.Context, uid string, isDelete bool)
 
 func (r *Repo) UpdateUIInviteCount(ctx context.Context, uid string) (err error) {
 	
-	// r.DelCache(UIRedisKey(uid))
+	r.DelCache(UIRedisKey(uid))
 	return r.WithContext(ctx).DB.Model(&UserInvitation{}).Where("uid = ?", uid).Update("invite_count", gorm.Expr("invite_count + 1")).Error
 }
 
