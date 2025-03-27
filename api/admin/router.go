@@ -134,6 +134,7 @@ func Run(addr string, release bool) error {
 	// pool
 	authorized.GET("/pools", queryPools)
 	authorized.PUT("/pool/:pool_id", updatePool)
+	authorized.POST("/pool", createPool)
 
 	return r.Run(addr)
 

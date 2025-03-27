@@ -46,3 +46,20 @@ func (s *AdminServices) UpdatePool(ctx context.Context, req entity_admin.ReqUpse
 
 	return new(entity_admin.RespPool).Fill(pool), nil
 }
+
+func (s *AdminServices) CreatePool(ctx context.Context, req *entity_admin.ReqUpsertPool) (*entity_admin.RespPool, error) {
+
+	pool := &db.Pool{
+		PoolID:        req.PoolID,
+		BaseContract:  req.BaseContract,
+		BaseSymbol:    req.BaseSymbol,
+		QuoteContract: req.QuoteContract,
+		QuoteSymbol:   req.QuoteSymbol,
+		Visible:       req.Visible,
+		Status:        req.Status,
+	}
+	if err := s.repo.CreatePoolIfNotExist(ctx, pool); err != nil {
+		return nil, err
+	}
+	return new(entity_admin.RespPool).Fill(pool), nil
+}

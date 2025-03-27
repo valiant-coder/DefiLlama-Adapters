@@ -37,3 +37,20 @@ func updatePool(c *gin.Context) {
 
 	api.OK(c, pool)
 }
+
+func createPool(c *gin.Context) {
+
+	var req entity_admin.ReqUpsertPool
+	if err := c.ShouldBindJSON(&req); err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	pool, err := admin.New().CreatePool(c.Request.Context(), &req)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, pool)
+}

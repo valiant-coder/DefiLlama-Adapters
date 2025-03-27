@@ -32,6 +32,7 @@ func (r *RespPool) Fill(a *db.Pool) *RespPool {
 }
 
 type ReqUpsertPool struct {
+	PoolID        uint64        `json:"pool_id" binding:"required"`
 	BaseSymbol    string        `json:"base_symbol" binding:"required"`
 	BaseContract  string        `json:"base_contract" binding:"required"`
 	QuoteSymbol   string        `json:"quote_symbol" binding:"required"`
