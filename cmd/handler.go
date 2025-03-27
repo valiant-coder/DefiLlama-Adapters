@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
+	
 	"github.com/urfave/cli/v2"
 )
 
@@ -22,15 +22,15 @@ var HandlerCmd = &cli.Command{
 			log.Printf("load config err: %v\n", err)
 			return err
 		}
-
+		
 		db.New()
-
+		
 		srv, err := handler.NewService()
 		if err != nil {
 			log.Printf("create handler service failed: %v\n", err)
 			return err
 		}
-
+		
 		ctx, cancel := context.WithCancel(context.Background())
 		go func() {
 			log.Println("handler service start ...")
@@ -38,21 +38,21 @@ var HandlerCmd = &cli.Command{
 				log.Printf("handler service start failed: %v\n", err)
 			}
 		}()
-
+		
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
+		
 		<-quit
 		cancel()
 		log.Println("stop handler service ...")
-
+		
 		if err := srv.Stop(ctx); err != nil {
 			log.Printf("handler service stop failed: %v\n", err)
 			return err
 		}
-
+		
 		log.Println("handler service stop success")
-
+		
 		return nil
 	},
 }

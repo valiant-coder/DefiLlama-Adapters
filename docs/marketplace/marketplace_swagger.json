@@ -1289,6 +1289,47 @@
                 "responses": {}
             }
         },
+        "/user/invites/{code}": {
+            "get": {
+                "description": "Get invite users by code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-invitation"
+                ],
+                "summary": "获取邀请链接用户列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.UserInvitationListParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "invite users",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/points": {
             "get": {
                 "description": "获取积分信息",
@@ -2334,6 +2375,9 @@
                 "public_key": {
                     "type": "string"
                 },
+                "storage": {
+                    "type": "string"
+                },
                 "synced": {
                     "type": "boolean"
                 },
@@ -2815,6 +2859,9 @@
                     "type": "string"
                 },
                 "public_key": {
+                    "type": "string"
+                },
+                "storage": {
                     "type": "string"
                 },
                 "synced": {

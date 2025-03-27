@@ -4,7 +4,7 @@ import (
 	"exapp-go/cmd"
 	"log"
 	"os"
-
+	
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,10 +33,11 @@ func main() {
 			cmd.CronCmd,
 			cmd.WebSocketCommand,
 			cmd.AdminApi,
+			cmd.UserPointsCmd,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-
+	
 }

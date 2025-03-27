@@ -3,14 +3,14 @@ package db
 import (
 	"context"
 	"exapp-go/internal/types"
-
+	
 	"gorm.io/gorm"
 )
 
 func init() {
-
+	
 	addMigrateFunc(func(r *Repo) error {
-
+		
 		return r.AutoMigrate(&UserPoints{})
 	})
 }
@@ -26,7 +26,7 @@ type UserPoints struct {
 }
 
 func UserPointsRedisKey(uid string) string {
-	return "user-points:detail:" + uid
+	return "points:detail:" + uid
 }
 
 func (p *UserPoints) RedisKey() string {
@@ -38,24 +38,24 @@ func (r *Repo) GetUserPoints(ctx context.Context, uid string) (*UserPoints, erro
 }
 
 func (r *Repo) IncreaseUserPoints(ctx context.Context, uid string, points uint64, pointsType types.UserPointsType) error {
-
+	
 	params := map[string]interface{}{
 		"balance": gorm.Expr("balance + ?", points),
 		"total":   gorm.Expr("total + ?", points),
 	}
-
+	
 	if pointsType == types.UserPointsTypeInvitation {
 		params["invitation"] = gorm.Expr("invitation + ?", points)
 	}
-
+	
 	if pointsType == types.UserPointsTypeTrade {
 		params["trade"] = gorm.Expr("trade + ?", points)
 	}
-
+	
 	if pointsType == types.UserPointsTypeTradeRebate {
 		params["trade_rebate"] = gorm.Expr("trade_rebate + ?", points)
 	}
-
+	
 	r.DelCache(UserPointsRedisKey(uid))
 	return r.WithContext(ctx).DB.Model(&UserPoints{}).Where("uid = ?", uid).Updates(params).Error
 }
