@@ -86,7 +86,7 @@ func TokenFromDB(token *db.Token) *RespToken {
 	}
 }
 
-type ReqUpsertToken struct {
+type ReqCreateToken struct {
 	IconUrl     string           `json:"icon_url"`
 	Symbol      string           `json:"symbol"`
 	Name        string           `json:"name"`
@@ -100,7 +100,7 @@ type ReqUpsertToken struct {
 	Info        entity.TokenInfo `json:"info"`
 }
 
-func DBFromToken(token *ReqUpsertToken) *db.Token {
+func DBFromCreateToken(token *ReqCreateToken) *db.Token {
 	chains := make([]db.ChainInfo, 0)
 	for _, chain := range token.Chains {
 		exsatWithdrawFee, _ := decimal.NewFromString(chain.ExsatWithdrawFee)
@@ -161,5 +161,42 @@ func DBFromToken(token *ReqUpsertToken) *db.Token {
 		BlockNum:           token.BlockNum,
 		Chains:             chains,
 		TokenInfo:          datatypes.NewJSONType(tokenInfo),
+	}
+}
+
+type ReqUpdateToken struct {
+	IconUrl string           `json:"icon_url"`
+	Info    entity.TokenInfo `json:"info"`
+}
+
+func DBFromUpdateToken(token *ReqUpdateToken) *db.Token {
+	links := make([]db.TokenLink, 0)
+	for _, link := range token.Info.Links {
+		links = append(links, db.TokenLink{
+			Name: link.Name,
+			Url:  link.Url,
+		})
+	}
+	tokenInfo := db.TokenInfo{
+		Rank:                  token.Info.Rank,
+		MarketCapitalization:  token.Info.MarketCapitalization,
+		FullyDilutedMarketCap: token.Info.FullyDilutedMarketCap,
+		MarketDominance:       token.Info.MarketDominance,
+		Volume:                token.Info.Volume,
+		VolumeDivMarketCap:    token.Info.VolumeDivMarketCap,
+		CirculatingSupply:     token.Info.CirculatingSupply,
+		TotalSupply:           token.Info.TotalSupply,
+		MaximumSupply:         token.Info.MaximumSupply,
+		IssueDate:             token.Info.IssueDate,
+		HistoricalHigh:        token.Info.HistoricalHigh,
+		HistoricalLow:         token.Info.HistoricalLow,
+		HistoricalHighDate:    token.Info.HistoricalHighDate,
+		HistoricalLowDate:     token.Info.HistoricalLowDate,
+		Links:                 links,
+		Intro:                 token.Info.Intro,
+	}
+	return &db.Token{
+		IconUrl:   token.IconUrl,
+		TokenInfo: datatypes.NewJSONType(tokenInfo),
 	}
 }

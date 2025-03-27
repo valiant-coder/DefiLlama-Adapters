@@ -20,6 +20,8 @@ import (
 // @Param login_method query string false "login_method"
 // @Param start_time query string false "start_time"
 // @Param end_time query string false "end_time"
+// @Param limit query int false "limit"
+// @Param offset query int false "offset"
 // @Success 200 {array} entity_admin.RespUser "Successful response"
 // @Router /users [get]
 func queryUsers(c *gin.Context) {

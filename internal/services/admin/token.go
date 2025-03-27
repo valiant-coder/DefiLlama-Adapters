@@ -22,8 +22,16 @@ func (s *AdminServices) QueryTokens(ctx context.Context, queryParams *queryparam
 	return resp, total, nil
 }
 
-func (s *AdminServices) CreateToken(ctx context.Context, req *entity_admin.ReqUpsertToken) (*entity_admin.RespToken, error) {
-	token := entity_admin.DBFromToken(req)
+func (s *AdminServices) CreateToken(ctx context.Context, req *entity_admin.ReqCreateToken) (*entity_admin.RespToken, error) {
+	token := entity_admin.DBFromCreateToken(req)
 	err := s.repo.InsertToken(ctx, token)
+	return entity_admin.TokenFromDB(token), err
+}
+
+func (s *AdminServices) UpdateToken(ctx context.Context, req *entity_admin.ReqUpdateToken, id uint) (*entity_admin.RespToken, error) {
+	token := entity_admin.DBFromUpdateToken(req)
+	token.ID = id
+
+	err := s.repo.Update(ctx, token)
 	return entity_admin.TokenFromDB(token), err
 }
