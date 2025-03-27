@@ -44,8 +44,21 @@ func (s *UserInvitationService) GetUserInviteUsers(ctx context.Context, uid stri
 	return userInvitation, nil
 }
 
-func (s *UserInvitationService) GetInviteUsers(ctx context.Context, params data.UserInvitationListParam) (*db.UserInvitationListRes, error) {
+func (s *UserInvitationService) GetInviteUsers(ctx context.Context, params data.UserInvitationListParam, uid string) (*db.UserInvitationListRes, error) {
 
+	params.Inviter = uid
+	userInvitations, err := s.repo.ListUserInvitation(params)
+	if err != nil {
+
+		return nil, err
+	}
+
+	return &userInvitations, nil
+}
+
+func (s *UserInvitationService) GetInviteUsersByCode(ctx context.Context, params data.UserInvitationListParam, code string) (*db.UserInvitationListRes, error) {
+
+	params.InviteCode = code
 	userInvitations, err := s.repo.ListUserInvitation(params)
 	if err != nil {
 

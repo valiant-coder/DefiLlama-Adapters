@@ -42,7 +42,7 @@ func getInviteUsers(c *gin.Context) {
 	}
 
 	service := marketplace.NewUserInvitationService()
-	result, err := service.GetInviteUsers(c.Request.Context(), param)
+	result, err := service.GetInviteUsers(c.Request.Context(), param, c.GetString("uid"))
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -161,4 +161,31 @@ func bindInvitationLink(c *gin.Context) {
 	}
 
 	api.OK(c, "success")
+}
+
+// @Summary 获取邀请链接用户列表
+// @Description Get invite users by code
+// @Tags user-invitation
+// @Accept json
+// @Produce json
+// @Param code path string true "code"
+// @Param request body data.UserInvitationListParam true "request"
+// @Success 200 {object} api.Response "invite users"
+// @Router /user/invites/{code} [get]
+func getInviteUsersByCode(c *gin.Context) {
+
+	var param data.UserInvitationListParam
+	if err := c.ShouldBindQuery(&param); err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	service := marketplace.NewUserInvitationService()
+	result, err := service.GetInviteUsersByCode(c.Request.Context(), param, c.Param("code"))
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.List(c, result.Array, result.Total)
 }
