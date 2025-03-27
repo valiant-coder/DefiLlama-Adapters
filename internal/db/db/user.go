@@ -112,7 +112,7 @@ func (r *Repo) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) 
 	if result.Error != nil {
 		return "", "", result.Error
 	}
-	if user.EVMAddress != "" {
+	if user.LoginMethod == LoginMethodEVM && user.EVMAddress != "" {
 		return user.EOSAccount, user.Permission, nil
 	}
 	credentials, err := r.GetUserCredentials(ctx, uid)
