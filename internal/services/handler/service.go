@@ -269,7 +269,6 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogSend)] = s.handleEOSSend
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.CreateToken)] = s.handleCreateToken
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
 }
@@ -356,7 +355,7 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return "eos-account-action"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")
-	case s.eosCfg.Events.CreateToken, s.eosCfg.Events.AddXSATChain, s.eosCfg.Events.MapXSAT:
+	case s.eosCfg.Events.AddXSATChain, s.eosCfg.Events.MapXSAT:
 		return "token-chain-action"
 	default:
 		return ""

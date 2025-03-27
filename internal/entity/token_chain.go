@@ -64,7 +64,7 @@ func TokenFromDB(token db.Token) Token {
 		Name:        token.Name,
 		Decimals:    token.Decimals,
 		EOSContract: token.EOSContractAddress,
-		EVMAddress:  token.EVMContractAddress,
+		EVMAddress:  token.ExsatTokenAddress,
 		IconUrl:     token.IconUrl,
 
 		SupportChain: chains,

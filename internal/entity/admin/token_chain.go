@@ -11,14 +11,14 @@ import (
 type RespToken struct {
 	ID uint `json:"id"`
 	//
-	IconUrl     string         `json:"icon_url"`
-	Symbol      string         `json:"symbol"`
-	Name        string         `json:"name"`
-	Decimals    uint8          `json:"decimals"`
-	EVMContract string         `json:"evm_contract"`
-	EOSContract string         `json:"eos_contract"`
-	WithdrawFee string         `json:"withdraw_fee"`
-	Chains      []entity.Chain `json:"chains"`
+	IconUrl           string         `json:"icon_url"`
+	Symbol            string         `json:"symbol"`
+	Name              string         `json:"name"`
+	Decimals          uint8          `json:"decimals"`
+	ExsatTokenAddress string         `json:"exsat_token_address"`
+	EOSContract       string         `json:"eos_contract"`
+	WithdrawFee       string         `json:"withdraw_fee"`
+	Chains            []entity.Chain `json:"chains"`
 	//
 	Info      entity.TokenInfo `json:"info"`
 	CreatedAt string           `json:"created_at"`
@@ -73,11 +73,11 @@ func TokenFromDB(token *db.Token) *RespToken {
 	return &RespToken{
 		ID:          token.ID,
 		IconUrl:     token.IconUrl,
-		Symbol:      token.Symbol,
-		Name:        token.Name,
-		Decimals:    token.Decimals,
-		EVMContract: token.EVMContractAddress,
-		EOSContract: token.EOSContractAddress,
+		Symbol:            token.Symbol,
+		Name:              token.Name,
+		Decimals:          token.Decimals,
+		ExsatTokenAddress: token.ExsatTokenAddress,
+		EOSContract:       token.EOSContractAddress,
 
 		Chains:    chains,
 		Info:      info,
@@ -153,7 +153,7 @@ func DBFromCreateToken(token *ReqCreateToken) *db.Token {
 		Symbol:             token.Symbol,
 		Name:               token.Name,
 		Decimals:           token.Decimals,
-		EVMContractAddress: token.EVMContract,
+		ExsatTokenAddress:  token.EVMContract,
 		EOSContractAddress: token.EOSContract,
 		IconUrl:            token.IconUrl,
 		MaxSupply:          maxSupply,

@@ -251,7 +251,6 @@ type EventConfig struct {
 	SetPoolFeeRate string `yaml:"set_pool_fee_rate"`
 
 	// token-chain events
-	CreateToken  string `yaml:"create_token"`
 	AddXSATChain string `yaml:"add_xsat_chain"`
 	MapXSAT      string `yaml:"map_xsat"`
 
@@ -272,7 +271,6 @@ func DefaultEventConfig() EventConfig {
 		LogSend:        "logsend",
 		SetMinAmt:      "setminamt",
 		SetPoolFeeRate: "setpfeerate",
-		CreateToken:    "createtoken",
 		AddXSATChain:   "addxsatchain",
 		MapXSAT:        "mapxsat",
 		LogNewTrader:   "lognewtrader",
