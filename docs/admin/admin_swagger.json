@@ -521,497 +521,6 @@
                 }
             }
         },
-        "/api/v1/balances": {
-            "get": {
-                "description": "Get user balances",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get user balances",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "eos account name",
-                        "name": "account",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "user balances",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.UserBalance"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/depth": {
-            "get": {
-                "description": "Get order book by pool id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "depth"
-                ],
-                "summary": "Get depth",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "0.00000001 ~ 10000",
-                        "name": "precision",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "order depth",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Depth"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/history-orders": {
-            "get": {
-                "description": "Get history orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get history orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "eos account name",
-                        "name": "trader",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "0 buy 1 sell",
-                        "name": "side",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "0 market 1limit",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "status",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "history orders",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Order"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/klines": {
-            "get": {
-                "description": "Get kline data by pool id and interval",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "kline"
-                ],
-                "summary": "Get kline data",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool id",
-                        "name": "pool_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            "1m",
-                            "5m",
-                            "15m",
-                            "30m",
-                            "1h",
-                            "4h",
-                            "1d",
-                            "1w",
-                            "1M"
-                        ],
-                        "type": "string",
-                        "description": "interval",
-                        "name": "interval",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "start timestamp",
-                        "name": "start",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "end timestamp",
-                        "name": "end",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "kline data",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Kline"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/latest-trades": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get latest trades",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trade"
-                ],
-                "summary": "Get latest trades",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit count",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "trade list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Trade"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/open-orders": {
-            "get": {
-                "description": "Get open orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get open orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id",
-                        "name": "pool_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "eos account name",
-                        "name": "trader",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "0 buy 1 sell",
-                        "name": "side",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "open order list",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.OpenOrder"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/clear-unread": {
-            "post": {
-                "description": "Clear all unread orders for a trader",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Clear all unread orders",
-                "parameters": [
-                    {
-                        "description": "Request to clear all unread orders",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqClearAllUnreadOrders"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/read": {
-            "post": {
-                "description": "Mark order as read and remove notification dot",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Mark order as read",
-                "parameters": [
-                    {
-                        "description": "Request to mark order as read",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqMakeOrderAsRead"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/v1/orders/{id}": {
-            "get": {
-                "description": "Get history order detail",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Get history order detail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool_id+order_id+side,ps:0-1-0 pool_id = 0,order_id = 1,side = buy",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "history order detail",
-                        "schema": {
-                            "$ref": "#/definitions/entity.OrderDetail"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/pools": {
-            "get": {
-                "description": "Get a list of all trading pools",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pools"
-                ],
-                "summary": "List all trading pools",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "base coin",
-                        "name": "base_coin",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "quote coin",
-                        "name": "quote_coin",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "pool info",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.PoolStats"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/pools/{symbolOrId}": {
-            "get": {
-                "description": "Get detailed information about a specific trading pool",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pools"
-                ],
-                "summary": "Get pool details",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "pool symbol or pool id",
-                        "name": "symbolOrId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Pool"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/unread-orders": {
-            "get": {
-                "description": "Check if user has any unread completed orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "order"
-                ],
-                "summary": "Check for unread orders",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "trader eos account name",
-                        "name": "trader",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Response for unread status",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespUnreadOrder"
-                        }
-                    }
-                }
-            }
-        },
         "/auth": {
             "post": {
                 "tags": [
@@ -1088,467 +597,64 @@
                 }
             }
         },
-        "/credentials": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get user credentials",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get user credentials",
-                "responses": {
-                    "200": {
-                        "description": "user credentials",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.RespUserCredential"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create user credentials",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Create user credentials",
-                "parameters": [
-                    {
-                        "description": "create user credential params",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserCredential"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/credentials/{credential_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete user credential by credential_id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Delete user credential",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "credential id",
-                        "name": "credential_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/deposit": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Deposit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "deposit"
-                ],
-                "summary": "Deposit",
-                "parameters": [
-                    {
-                        "description": "deposit params",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqDeposit"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespDeposit"
-                        }
-                    }
-                }
-            }
-        },
-        "/deposit-history": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get deposit history",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "deposit"
-                ],
-                "summary": "Get deposit history",
-                "responses": {
-                    "200": {
-                        "description": "deposit records",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.RespDepositRecord"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/eos/pay-cpu": {
-            "post": {
-                "description": "pay cpu for user tx",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "eos"
-                ],
-                "summary": "pay cpu",
-                "parameters": [
-                    {
-                        "description": "signed tx",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqPayCPU"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "txid",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespPayCPU"
-                        }
-                    }
-                }
-            }
-        },
-        "/faucet": {
-            "post": {
-                "description": "Claim faucet",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "faucet"
-                ],
-                "summary": "Claim faucet",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqClaimFaucet"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "txid",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespClaimFaucet"
-                        }
-                    }
-                }
-            }
-        },
-        "/first-deposit": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "First deposit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "deposit"
-                ],
-                "summary": "First deposit",
-                "parameters": [
-                    {
-                        "description": "first deposit params",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqFirstDeposit"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespFirstDeposit"
-                        }
-                    }
-                }
-            }
-        },
         "/login": {
             "post": {
-                "description": "Login",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
-                "summary": "Login",
+                "summary": "login",
                 "parameters": [
                     {
-                        "description": "login params",
-                        "name": "req",
+                        "description": "request body",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entity.ReqUserLogin"
+                            "$ref": "#/definitions/entity_admin.ReqLogin"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/entity_admin.RespLogin"
+                        }
                     }
                 }
             }
         },
-        "/sub-accounts": {
+        "/user-passkeys/{uid}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get all sub-accounts for the user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "user"
+                    "admin"
                 ],
-                "summary": "Get sub-accounts",
+                "summary": "get user passkeys",
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespGetSubAccounts"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add a new sub-account for the user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Add sub-account",
-                "parameters": [
-                    {
-                        "description": "add sub-account params",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqAddSubAccount"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespAddSubAccount"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a sub-account by name",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Delete sub-account",
-                "parameters": [
-                    {
-                        "description": "delete sub-account params",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqDeleteSubAccount"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespDeleteSubAccount"
-                        }
-                    }
-                }
-            }
-        },
-        "/support-tokens": {
-            "get": {
-                "description": "Get support tokens",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "token"
-                ],
-                "summary": "Get support tokens",
-                "responses": {
-                    "200": {
-                        "description": "token list",
+                        "description": "Successful response",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Token"
+                                "$ref": "#/definitions/entity_admin.RespPasskey"
                             }
                         }
                     }
                 }
             }
         },
-        "/sys-trade-info": {
+        "/user_transactions_records": {
             "get": {
-                "description": "Get system trade information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "system"
-                ],
-                "summary": "Get system trade information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.SysTradeInfo"
-                        }
+                "security": [
+                    {
+                        "ApiKeyAuth": []
                     }
-                }
-            }
-        },
-        "/system-info": {
-            "get": {
-                "description": "Get system information",
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -1556,213 +662,122 @@
                     "application/json"
                 ],
                 "tags": [
-                    "system"
+                    "admin"
                 ],
-                "summary": "Get system information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.SystemInfo"
-                        }
-                    }
-                }
-            }
-        },
-        "/token/{symbol}": {
-            "get": {
-                "description": "Get token info",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "token"
-                ],
-                "summary": "Get token info",
+                "summary": "query transactions record",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "coin symbol,ps BTC",
+                        "description": "symbol",
                         "name": "symbol",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "token info",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Token"
-                        }
-                    }
-                }
-            }
-        },
-        "/trade-competition/accumulated-ranking": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get top 20 users accumulated profit ranking for specified time range, and current user's ranking and profit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trade competition"
-                ],
-                "summary": "Get user accumulated profit ranking",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "begin timestamp",
-                        "name": "begin",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "end timestamp",
-                        "name": "end",
-                        "in": "query",
-                        "required": true
+                        "type": "string",
+                        "description": "chain_name",
+                        "name": "chain_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "uid",
+                        "name": "uid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "tx_hash",
+                        "name": "tx_hash",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "login_method",
+                        "name": "login_method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "start_time",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "end_time",
+                        "name": "end_time",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserProfitRank"
-                        }
-                    }
-                }
-            }
-        },
-        "/trade-competition/day-ranking": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get top 20 users profit ranking for specified date, and current user's ranking and profit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trade competition"
-                ],
-                "summary": "Get user daily profit ranking",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "UTC0 timezone date start timestamp",
-                        "name": "timestamp",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserProfitRank"
-                        }
-                    }
-                }
-            }
-        },
-        "/trade-competition/total-trade-stats": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get total trade stats",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "trade competition"
-                ],
-                "summary": "Get total trade stats",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.TotalTradeStats"
-                        }
-                    }
-                }
-            }
-        },
-        "/user-info": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get user info",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get user info",
-                "responses": {
-                    "200": {
-                        "description": "user info",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespUserInfo"
-                        }
-                    }
-                }
-            }
-        },
-        "/withdrawal-history": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get withdrawal history",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "withdrawal"
-                ],
-                "summary": "Get withdrawal history",
-                "responses": {
-                    "200": {
-                        "description": "withdrawal records",
+                        "description": "Successful response",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.RespWithdrawRecord"
+                                "$ref": "#/definitions/db.TransactionsRecord"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "query users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "username",
+                        "name": "username",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "uid",
+                        "name": "uid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "login_method",
+                        "name": "login_method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "start_time",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "end_time",
+                        "name": "end_time",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity_admin.RespUser"
                             }
                         }
                     }
@@ -1771,1201 +786,61 @@
         }
     },
     "definitions": {
-        "entity.Chain": {
-            "type": "object",
-            "properties": {
-                "chain_id": {
-                    "type": "integer"
-                },
-                "chain_name": {
-                    "type": "string"
-                },
-                "exsat_token_address": {
-                    "type": "string"
-                },
-                "exsat_withdraw_fee": {
-                    "type": "string"
-                },
-                "min_deposit_amount": {
-                    "type": "string"
-                },
-                "min_withdraw_amount": {
-                    "type": "string"
-                },
-                "withdraw_fee": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Depth": {
-            "type": "object",
-            "properties": {
-                "asks": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "bids": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "precision": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.ExsatNetwork": {
-            "type": "object",
-            "properties": {
-                "block_explorer_url": {
-                    "type": "string"
-                },
-                "chain_id": {
-                    "type": "integer"
-                },
-                "currency_symbol": {
-                    "type": "string"
-                },
-                "network_name": {
-                    "type": "string"
-                },
-                "network_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Kline": {
-            "type": "object",
-            "properties": {
-                "close": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "high": {
-                    "type": "number"
-                },
-                "interval": {
-                    "type": "string"
-                },
-                "low": {
-                    "type": "number"
-                },
-                "open": {
-                    "type": "number"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "timestamp": {
-                    "type": "string"
-                },
-                "turnover": {
-                    "type": "number"
-                },
-                "volume": {
-                    "type": "number"
-                }
-            }
-        },
-        "entity.LockBalance": {
-            "type": "object",
-            "properties": {
-                "balance": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.OpenOrder": {
-            "type": "object",
-            "properties": {
-                "avg_price": {
-                    "type": "string"
-                },
-                "base_coin_precision": {
-                    "type": "integer"
-                },
-                "executed_amount": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "order_amount": {
-                    "type": "string"
-                },
-                "order_cid": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "type": "integer"
-                },
-                "order_price": {
-                    "type": "string"
-                },
-                "order_time": {
-                    "type": "string"
-                },
-                "order_total": {
-                    "type": "string"
-                },
-                "pool_base_coin": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_quote_coin": {
-                    "type": "string"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                },
-                "quote_coin_precision": {
-                    "type": "integer"
-                },
-                "side": {
-                    "description": "0 buy 1 sell",
-                    "type": "integer"
-                },
-                "trader": {
-                    "type": "string"
-                },
-                "type": {
-                    "description": "0 market 1 limit",
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.Order": {
-            "type": "object",
-            "properties": {
-                "avg_price": {
-                    "type": "string"
-                },
-                "base_coin_precision": {
-                    "type": "integer"
-                },
-                "executed_amount": {
-                    "type": "string"
-                },
-                "filled_total": {
-                    "type": "string"
-                },
-                "history": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "order_amount": {
-                    "type": "string"
-                },
-                "order_cid": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "type": "integer"
-                },
-                "order_price": {
-                    "type": "string"
-                },
-                "order_time": {
-                    "type": "string"
-                },
-                "order_total": {
-                    "type": "string"
-                },
-                "permission": {
-                    "type": "string"
-                },
-                "pool_base_coin": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_quote_coin": {
-                    "type": "string"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                },
-                "quote_coin_precision": {
-                    "type": "integer"
-                },
-                "side": {
-                    "description": "0 buy 1 sell",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "0 open 1partially_filled 2full_filled 3.canceled",
-                    "type": "integer"
-                },
-                "trader": {
-                    "type": "string"
-                },
-                "type": {
-                    "description": "0 market 1 limit",
-                    "type": "integer"
-                },
-                "unread": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "entity.OrderDetail": {
-            "type": "object",
-            "properties": {
-                "avg_price": {
-                    "type": "string"
-                },
-                "base_coin_precision": {
-                    "type": "integer"
-                },
-                "executed_amount": {
-                    "type": "string"
-                },
-                "filled_total": {
-                    "type": "string"
-                },
-                "history": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "order_amount": {
-                    "type": "string"
-                },
-                "order_cid": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "type": "integer"
-                },
-                "order_price": {
-                    "type": "string"
-                },
-                "order_time": {
-                    "type": "string"
-                },
-                "order_total": {
-                    "type": "string"
-                },
-                "permission": {
-                    "type": "string"
-                },
-                "pool_base_coin": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_quote_coin": {
-                    "type": "string"
-                },
-                "pool_symbol": {
-                    "type": "string"
-                },
-                "quote_coin_precision": {
-                    "type": "integer"
-                },
-                "side": {
-                    "description": "0 buy 1 sell",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "0 open 1partially_filled 2full_filled 3.canceled",
-                    "type": "integer"
-                },
-                "trader": {
-                    "type": "string"
-                },
-                "trades": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TradeDetail"
-                    }
-                },
-                "type": {
-                    "description": "0 market 1 limit",
-                    "type": "integer"
-                },
-                "unread": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "entity.PayCPU": {
-            "type": "object",
-            "properties": {
-                "account": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Pool": {
-            "type": "object",
-            "properties": {
-                "asking_time": {
-                    "type": "string"
-                },
-                "base_coin": {
-                    "type": "string"
-                },
-                "base_coin_precision": {
-                    "type": "integer"
-                },
-                "base_contract": {
-                    "type": "string"
-                },
-                "base_symbol": {
-                    "type": "string"
-                },
-                "maker_fee_rate": {
-                    "type": "number"
-                },
-                "max_flct": {
-                    "type": "integer"
-                },
-                "min_amount": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "pool_stats": {
-                    "$ref": "#/definitions/entity.PoolStats"
-                },
-                "price_precision": {
-                    "type": "integer"
-                },
-                "quote_coin": {
-                    "type": "string"
-                },
-                "quote_coin_precision": {
-                    "type": "integer"
-                },
-                "quote_contract": {
-                    "type": "string"
-                },
-                "quote_symbol": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                },
-                "symbol": {
-                    "type": "string"
-                },
-                "taker_fee_rate": {
-                    "type": "number"
-                },
-                "trading_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.PoolStats": {
-            "type": "object",
-            "properties": {
-                "base_coin": {
-                    "type": "string"
-                },
-                "change": {
-                    "type": "string"
-                },
-                "change_rate": {
-                    "type": "number"
-                },
-                "high": {
-                    "type": "string"
-                },
-                "last_price": {
-                    "type": "string"
-                },
-                "low": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "quote_coin": {
-                    "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
-                },
-                "trades": {
-                    "type": "integer"
-                },
-                "turnover": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "volume": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqAddSubAccount": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "description": "sub account name",
-                    "type": "string"
-                },
-                "permission": {
-                    "description": "eos permission",
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqClaimFaucet": {
-            "type": "object",
-            "properties": {
-                "deposit_address": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqClearAllUnreadOrders": {
-            "type": "object",
-            "properties": {
-                "trader": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqDeleteSubAccount": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqDeposit": {
-            "type": "object",
-            "required": [
-                "chain_name",
-                "symbol"
+        "db.LoginMethod": {
+            "type": "string",
+            "enum": [
+                "google",
+                "apple",
+                "telegram",
+                "evm"
             ],
-            "properties": {
-                "chain_name": {
-                    "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            }
+            "x-enum-varnames": [
+                "LoginMethodGoogle",
+                "LoginMethodApple",
+                "LoginMethodTelegram",
+                "LoginMethodEVM"
+            ]
         },
-        "entity.ReqFirstDeposit": {
-            "type": "object",
-            "required": [
-                "chain_name",
-                "public_key",
-                "symbol"
-            ],
-            "properties": {
-                "chain_name": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqMakeOrderAsRead": {
+        "db.TransactionsRecord": {
             "type": "object",
             "properties": {
-                "id": {
+                "coin_name": {
                     "type": "string"
                 },
-                "trader": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqPayCPU": {
-            "type": "object",
-            "required": [
-                "single_signed_transaction"
-            ],
-            "properties": {
-                "public_key": {
-                    "type": "string"
-                },
-                "single_signed_transaction": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqUserLogin": {
-            "type": "object",
-            "properties": {
-                "id_token": {
-                    "type": "string"
-                },
-                "method": {
-                    "description": "google,apple,telegram",
-                    "type": "string"
-                },
-                "telegram_data": {
-                    "$ref": "#/definitions/entity.TelegramData"
-                },
-                "user_name": {
-                    "description": "for apple",
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespAddSubAccount": {
-            "type": "object",
-            "properties": {
-                "api_key": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespClaimFaucet": {
-            "type": "object",
-            "properties": {
-                "tx_hash": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespDeleteSubAccount": {
-            "type": "object",
-            "properties": {
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "entity.RespDeposit": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespDepositRecord": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "string"
-                },
-                "chain_name": {
-                    "type": "string"
-                },
-                "deposit_address": {
-                    "type": "string"
+                "deposit_amount": {
+                    "type": "number"
                 },
                 "deposit_at": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "source_tx_id": {
+                "deposit_chain": {
                     "type": "string"
                 },
-                "status": {
-                    "description": "0 pending 1success 2 fail",
-                    "type": "integer"
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespFirstDeposit": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespGetSubAccounts": {
-            "type": "object",
-            "properties": {
-                "sub_accounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.SubAccountInfo"
-                    }
-                }
-            }
-        },
-        "entity.RespPayCPU": {
-            "type": "object",
-            "properties": {
-                "transaction_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespUnreadOrder": {
-            "type": "object",
-            "properties": {
-                "has_unread": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "entity.RespUserCredential": {
-            "type": "object",
-            "properties": {
-                "aaguid": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "credential_id": {
-                    "type": "string"
-                },
-                "device_id": {
-                    "type": "string"
-                },
-                "eos_account": {
-                    "type": "string"
-                },
-                "eos_permission": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "last_used_at": {
-                    "type": "string"
-                },
-                "last_used_ip": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "synced": {
-                    "type": "boolean"
-                },
-                "uid": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespUserInfo": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "passkeys": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.RespUserCredential"
-                    }
-                },
-                "uid": {
-                    "type": "string"
-                },
-                "user_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespWithdrawRecord": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "string"
-                },
-                "chain_name": {
-                    "type": "string"
-                },
-                "completed_at": {
+                "evm_address": {
                     "type": "string"
                 },
                 "fee": {
-                    "type": "string"
+                    "type": "number"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "recipient": {
-                    "type": "string"
-                },
-                "send_tx_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "description": "0 pending 1success 2 fail",
-                    "type": "integer"
-                },
                 "symbol": {
                     "type": "string"
+                },
+                "tx_hash": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "withdraw_amount": {
+                    "type": "number"
                 },
                 "withdraw_at": {
                     "type": "string"
-                }
-            }
-        },
-        "entity.SubAccountInfo": {
-            "type": "object",
-            "properties": {
-                "api_key": {
-                    "type": "string"
                 },
-                "eos_account": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "permission": {
-                    "type": "string"
-                },
-                "public_keys": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "entity.SysTradeInfo": {
-            "type": "object",
-            "properties": {
-                "total_trades": {
-                    "type": "integer"
-                },
-                "total_user_count": {
-                    "type": "integer"
-                },
-                "total_volume": {
-                    "type": "number"
-                }
-            }
-        },
-        "entity.SystemInfo": {
-            "type": "object",
-            "properties": {
-                "dex_contract": {
-                    "type": "string"
-                },
-                "exsat_network": {
-                    "$ref": "#/definitions/entity.ExsatNetwork"
-                },
-                "pay_cpu": {
-                    "$ref": "#/definitions/entity.PayCPU"
-                },
-                "token_contract": {
-                    "type": "string"
-                },
-                "trading_competition": {
-                    "$ref": "#/definitions/entity.TradingCompetition"
-                },
-                "vault_eos_address": {
-                    "type": "string"
-                },
-                "vault_evm_address": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TelegramData": {
-            "type": "object",
-            "properties": {
-                "auth_date": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "hash": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "photo_url": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Token": {
-            "type": "object",
-            "properties": {
-                "decimals": {
-                    "type": "integer"
-                },
-                "eos_contract": {
-                    "type": "string"
-                },
-                "icon_url": {
-                    "type": "string"
-                },
-                "info": {
-                    "$ref": "#/definitions/entity.TokenInfo"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "support_chain": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Chain"
-                    }
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TokenInfo": {
-            "type": "object",
-            "properties": {
-                "circulating_supply": {
-                    "type": "string"
-                },
-                "fully_diluted_market_cap": {
-                    "type": "string"
-                },
-                "historical_high": {
-                    "type": "string"
-                },
-                "historical_high_date": {
-                    "type": "string"
-                },
-                "historical_low": {
-                    "type": "string"
-                },
-                "historical_low_date": {
-                    "type": "string"
-                },
-                "intro": {
-                    "type": "string"
-                },
-                "issue_date": {
-                    "type": "string"
-                },
-                "links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TokenLink"
-                    }
-                },
-                "market_capitalization": {
-                    "type": "string"
-                },
-                "market_dominance": {
-                    "type": "string"
-                },
-                "maximum_supply": {
-                    "type": "string"
-                },
-                "rank": {
-                    "type": "string"
-                },
-                "total_supply": {
-                    "type": "string"
-                },
-                "volume": {
-                    "type": "string"
-                },
-                "volume_div_market_cap": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TokenLink": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TotalTradeStats": {
-            "type": "object",
-            "properties": {
-                "total_points_issued": {
-                    "type": "integer"
-                },
-                "total_trade_user": {
-                    "type": "integer"
-                },
-                "total_trade_volume": {
-                    "type": "number"
-                },
-                "user_claimed_faucet": {
-                    "type": "boolean"
-                },
-                "user_points": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.Trade": {
-            "type": "object",
-            "properties": {
-                "buyer": {
-                    "type": "string"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "string"
-                },
-                "seller": {
-                    "type": "string"
-                },
-                "side": {
-                    "$ref": "#/definitions/entity.TradeSide"
-                },
-                "traded_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TradeDetail": {
-            "type": "object",
-            "properties": {
-                "base_quantity": {
-                    "type": "string"
-                },
-                "maker": {
-                    "type": "string"
-                },
-                "maker_app_fee": {
-                    "type": "string"
-                },
-                "maker_fee": {
-                    "type": "string"
-                },
-                "maker_order_cid": {
-                    "type": "string"
-                },
-                "maker_order_id": {
-                    "type": "integer"
-                },
-                "pool_id": {
-                    "type": "integer"
-                },
-                "price": {
-                    "type": "string"
-                },
-                "quote_quantity": {
-                    "type": "string"
-                },
-                "taker": {
-                    "type": "string"
-                },
-                "taker_app_fee": {
-                    "type": "string"
-                },
-                "taker_fee": {
-                    "type": "string"
-                },
-                "taker_is_bid": {
-                    "type": "boolean"
-                },
-                "taker_order_cid": {
-                    "type": "string"
-                },
-                "taker_order_id": {
-                    "type": "integer"
-                },
-                "timestamp": {
-                    "type": "string"
-                },
-                "tx_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TradeSide": {
-            "type": "string",
-            "enum": [
-                "buy",
-                "sell"
-            ],
-            "x-enum-varnames": [
-                "TradeSideBuy",
-                "TradeSideSell"
-            ]
-        },
-        "entity.TradingCompetition": {
-            "type": "object",
-            "properties": {
-                "accumulated_points": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "begin_time": {
-                    "type": "string"
-                },
-                "daily_points": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "end_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserBalance": {
-            "type": "object",
-            "properties": {
-                "balance": {
-                    "type": "string"
-                },
-                "coin": {
-                    "type": "string"
-                },
-                "depositing": {
-                    "type": "string"
-                },
-                "locked": {
-                    "type": "string"
-                },
-                "locks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.LockBalance"
-                    }
-                },
-                "usdt_price": {
-                    "type": "string"
-                },
-                "withdrawing": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserCredential": {
-            "type": "object",
-            "properties": {
-                "aaguid": {
-                    "type": "string"
-                },
-                "credential_id": {
-                    "type": "string"
-                },
-                "device_id": {
-                    "type": "string"
-                },
-                "eos_account": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "public_key": {
-                    "type": "string"
-                },
-                "synced": {
-                    "type": "boolean"
-                },
-                "uid": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserProfit": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "point": {
-                    "type": "integer"
-                },
-                "profit": {
-                    "type": "string"
-                },
-                "rank": {
-                    "type": "integer"
-                },
-                "uid": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserProfitRank": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.UserProfit"
-                    }
-                },
-                "point": {
-                    "type": "integer"
-                },
-                "rank": {
-                    "type": "integer"
-                },
-                "user_profit": {
+                "withdraw_chain": {
                     "type": "string"
                 }
             }
@@ -3226,6 +1101,70 @@
                     "type": "boolean"
                 },
                 "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity_admin.RespPasskey": {
+            "type": "object",
+            "properties": {
+                "is_auto": {
+                    "type": "boolean"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "last_used_ip": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "signin_at": {
+                    "type": "string"
+                },
+                "storage": {
+                    "type": "string"
+                },
+                "synced": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "entity_admin.RespUser": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "first_reposit_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_reposit_at": {
+                    "type": "string"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "last_withdraw_at": {
+                    "type": "string"
+                },
+                "login_method": {
+                    "$ref": "#/definitions/db.LoginMethod"
+                },
+                "passkey_count": {
+                    "type": "integer"
+                },
+                "security_level": {
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
