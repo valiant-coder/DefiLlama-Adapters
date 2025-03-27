@@ -22,12 +22,17 @@ func (s *AdminServices) QueryOpenOrders(ctx context.Context, queryParams *queryp
 	return resp, total, nil
 }
 
-func (s *AdminServices) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersCoinTotal, int64, error) {
+func (s *AdminServices) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersCoinTotal, error) {
 
-	_, err := s.repo.GetOrdersCoinTotal(ctx, startTime, endTime)
+	orders, err := s.repo.GetOrdersCoinTotal(ctx, startTime, endTime)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	return nil, 0, nil
+	var resp []*entity_admin.RespOrdersCoinTotal
+	for _, order := range orders {
+		resp = append(resp, new(entity_admin.RespOrdersCoinTotal).Fill(order))
+	}
+
+	return resp, nil
 }
