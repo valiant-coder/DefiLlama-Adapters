@@ -50,7 +50,7 @@ type ChainInfo struct {
 
 	DepositByBTCBridge bool `json:"deposit_by_btc_bridge"`
 
-	WithdrawalFee     decimal.Decimal `json:"withdrawal_fee"`
+	WithdrawFee       decimal.Decimal `json:"withdraw_fee"`
 	MinWithdrawAmount decimal.Decimal `json:"min_withdraw_amount"`
 	MinDepositAmount  decimal.Decimal `json:"min_deposit_amount"`
 

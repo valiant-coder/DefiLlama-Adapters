@@ -164,7 +164,7 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 			PermissionID:       permissionID,
 			DepositByBTCBridge: depositByBTCBridge,
 
-			WithdrawalFee:     token.WithdrawFee,
+			WithdrawFee:       token.WithdrawFee,
 			MinWithdrawAmount: token.WithdrawFee,
 			MinDepositAmount:  token.WithdrawFee,
 

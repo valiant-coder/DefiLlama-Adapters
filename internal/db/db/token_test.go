@@ -23,7 +23,7 @@ func TestRepo_InsertToken(t *testing.T) {
 			{
 				ChainID:               64,
 				ChainName:             "btc",
-				WithdrawalFee:         decimal.NewFromFloat(0.0001),
+				WithdrawFee:           decimal.NewFromFloat(0.0001),
 				MinWithdrawAmount:     decimal.NewFromFloat(0.0001),
 				MinDepositAmount:      decimal.NewFromFloat(0.0001),
 				ExsatMinDepositAmount: decimal.NewFromFloat(0.0001),
@@ -33,7 +33,7 @@ func TestRepo_InsertToken(t *testing.T) {
 			{
 				ChainName:             "eos",
 				ChainID:               110,
-				WithdrawalFee:         decimal.NewFromFloat(0),
+				WithdrawFee:           decimal.NewFromFloat(0),
 				MinWithdrawAmount:     decimal.NewFromFloat(0.0001),
 				MinDepositAmount:      decimal.NewFromFloat(0.0001),
 				ExsatMinDepositAmount: decimal.NewFromFloat(0.0001),
