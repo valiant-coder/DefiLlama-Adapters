@@ -2527,6 +2527,9 @@ const docTemplatemarketplace = `{
                 "app_contract": {
                     "type": "string"
                 },
+                "evm_agent_contract": {
+                    "type": "string"
+                },
                 "exsat_network": {
                     "$ref": "#/definitions/entity.ExsatNetwork"
                 },
