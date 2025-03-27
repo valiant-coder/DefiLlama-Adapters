@@ -82,7 +82,7 @@ func getUsersStatis(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
-// @tags user
+// @tags transactions
 // @Security ApiKeyAuth
 // @Summary query transactions record
 // @Accept json
@@ -108,7 +108,7 @@ func getTransactionsRecord(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
-// @Tags User
+// @Tags transactions
 // @Summary Get deposit amount total
 // @Description Get deposit amount total
 // @Accept json
@@ -130,7 +130,7 @@ func getDepositAmountTotal(c *gin.Context) {
 	api.List(c, resp, 0)
 }
 
-// @Tags User
+// @Tags transactions
 // @Summary Get withdraw amount total
 // @Description Get withdraw amount total
 // @Accept json
