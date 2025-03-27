@@ -131,6 +131,10 @@ func Run(addr string, release bool) error {
 	authorized.POST("/token", createToken)
 	authorized.PUT("/token/:id", updateToken)
 
+	// pool
+	authorized.GET("/pools", queryPools)
+	authorized.PUT("/pool/:pool_id", updatePool)
+
 	return r.Run(addr)
 
 }
