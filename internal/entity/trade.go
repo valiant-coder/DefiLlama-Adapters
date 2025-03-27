@@ -33,9 +33,7 @@ const (
 type Trade struct {
 	PoolID   uint64    `json:"pool_id"`
 	Buyer    string    `json:"buyer"`
-	BuyerPermission string `json:"buyer_permission"`
 	Seller   string    `json:"seller"`
-	SellerPermission string `json:"seller_permission"`
 	Quantity string    `json:"quantity"`
 	Price    string    `json:"price"`
 	TradedAt Time      `json:"traded_at"`
@@ -44,29 +42,22 @@ type Trade struct {
 
 func DbTradeToTrade(dbTrade ckhdb.Trade) Trade {
 	var buyer, seller string
-	var buyerPermission, sellerPermission string
 	side := TradeSideBuy
 	if dbTrade.TakerIsBid {
 		buyer = dbTrade.Taker
 		seller = dbTrade.Maker
-		buyerPermission = dbTrade.TakerPermission
-		sellerPermission = dbTrade.MakerPermission
 	} else {
 		buyer = dbTrade.Maker
 		seller = dbTrade.Taker
 		side = TradeSideSell
-		buyerPermission = dbTrade.MakerPermission
-		sellerPermission = dbTrade.TakerPermission
 	}
 	return Trade{
-		PoolID:           dbTrade.PoolID,
-		Buyer:            buyer,
-		BuyerPermission:  buyerPermission,
-		Seller:           seller,
-		SellerPermission: sellerPermission,
-		Quantity:         dbTrade.BaseQuantity.String(),
-		Price:            dbTrade.Price.String(),
-		TradedAt:         Time(dbTrade.Time),
-		Side:             side,
+		PoolID:   dbTrade.PoolID,
+		Buyer:    buyer,
+		Seller:   seller,
+		Quantity: dbTrade.BaseQuantity.String(),
+		Price:    dbTrade.Price.String(),
+		TradedAt: Time(dbTrade.Time),
+		Side:     side,
 	}
 }
