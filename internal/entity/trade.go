@@ -4,23 +4,51 @@ import "exapp-go/internal/db/ckhdb"
 
 // Trade represents a trade record in the DEX
 type TradeDetail struct {
-	PoolID        uint64 `json:"pool_id"`
-	TxID          string `json:"tx_id"`
-	Taker         string `json:"taker" `
-	Maker         string `json:"maker"`
-	MakerOrderID  uint64 `json:"maker_order_id" `
-	MakerOrderCID string `json:"maker_order_cid"`
-	TakerOrderID  uint64 `json:"taker_order_id"`
-	TakerOrderCID string `json:"taker_order_cid"`
-	Price         string `json:"price"`
-	TakerIsBid    bool   `json:"taker_is_bid"`
-	BaseQuantity  string `json:"base_quantity"`
-	QuoteQuantity string `json:"quote_quantity"`
-	TakerFee      string `json:"taker_fee"`
-	TakerAppFee   string `json:"taker_app_fee"`
-	MakerFee      string `json:"maker_fee"`
-	MakerAppFee   string `json:"maker_app_fee"`
-	Timestamp     Time   `json:"timestamp"`
+	PoolID          uint64 `json:"pool_id"`
+	BaseCoin        string `json:"base_coin"`
+	QuoteCoin       string `json:"quote_coin"`
+	TxID            string `json:"tx_id"`
+	Taker           string `json:"taker"`
+	TakerPermission string `json:"taker_permission"`
+	Maker           string `json:"maker"`
+	MakerPermission string `json:"maker_permission"`
+	MakerOrderID    uint64 `json:"maker_order_id"`
+	MakerOrderCID   string `json:"maker_order_cid"`
+	TakerOrderID    uint64 `json:"taker_order_id"`
+	TakerOrderCID   string `json:"taker_order_cid"`
+	Price           string `json:"price"`
+	TakerIsBid      bool   `json:"taker_is_bid"`
+	BaseQuantity    string `json:"base_quantity"`
+	QuoteQuantity   string `json:"quote_quantity"`
+	TakerFee        string `json:"taker_fee"`
+	MakerFee        string `json:"maker_fee"`
+	Timestamp       Time   `json:"timestamp"`
+	GlobalSeq       uint64 `json:"global_seq"`
+}
+
+func DBTradeToTradeDetail(trade ckhdb.Trade) TradeDetail {
+	return TradeDetail{
+		PoolID:          trade.PoolID,
+		BaseCoin:        trade.BaseCoin,
+		QuoteCoin:       trade.QuoteCoin,
+		TxID:            trade.TxID,
+		Taker:           trade.Taker,
+		TakerPermission: trade.TakerPermission,
+		Maker:           trade.Maker,
+		MakerPermission: trade.MakerPermission,
+		MakerOrderID:    trade.MakerOrderID,
+		MakerOrderCID:   trade.MakerOrderCID,
+		TakerOrderID:    trade.TakerOrderID,
+		TakerOrderCID:   trade.TakerOrderCID,
+		Price:           trade.Price.String(),
+		TakerIsBid:      trade.TakerIsBid,
+		BaseQuantity:    trade.BaseQuantity.String(),
+		QuoteQuantity:   trade.QuoteQuantity.String(),
+		TakerFee:        trade.TakerFee.Add(trade.TakerAppFee).String(),
+		MakerFee:        trade.MakerFee.Add(trade.MakerAppFee).String(),
+		Timestamp:       Time(trade.Time),
+		GlobalSeq:       trade.GlobalSequence,
+	}
 }
 
 type TradeSide string

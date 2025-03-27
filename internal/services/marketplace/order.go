@@ -104,7 +104,10 @@ func (s *OrderService) GetOrderDetail(ctx context.Context, id string) (entity.Or
 	if err != nil {
 		return entity.OrderDetail{}, err
 	}
-	orderDetail.Trades = entity.TradeDetailFromDB(trades)
+	orderDetail.Trades = make([]entity.TradeDetail, 0, len(trades))
+	for _, trade := range trades {
+		orderDetail.Trades = append(orderDetail.Trades, entity.DBTradeToTradeDetail(trade))
+	}
 	return orderDetail, nil
 }
 
