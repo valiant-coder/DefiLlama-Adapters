@@ -3,26 +3,21 @@ package marketplace
 import (
 	"context"
 	"errors"
-	"exapp-go/config"
 	"exapp-go/data"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/log"
-	"exapp-go/pkg/nsqutil"
 )
 
 type UserInvitationService struct {
 	repo    *db.Repo
 	ckhRepo *ckhdb.ClickHouseRepo
-	nsqPub  *nsqutil.Publisher
 }
 
 func NewUserInvitationService() *UserInvitationService {
-	nsqConf := config.Conf().Nsq
 	return &UserInvitationService{
 		repo:    db.New(),
 		ckhRepo: ckhdb.New(),
-		nsqPub:  nsqutil.NewPublisher(nsqConf.Nsqds),
 	}
 }
 
