@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @tags admin
+// @tags pool
 // @Security ApiKeyAuth
 // @Summary query pool
 // @Accept json

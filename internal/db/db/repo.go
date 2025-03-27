@@ -174,7 +174,7 @@ func (r *Repo) checkAndReconnect() error {
 
 	sqlDB, err := r.DB.DB()
 	if err != nil {
-		return fmt.Errorf("Failed to get database instance: %w", err)
+		return fmt.Errorf("failed to get database instance: %w", err)
 	}
 
 	if err := sqlDB.PingContext(context.Background()); err != nil {
@@ -183,7 +183,7 @@ func (r *Repo) checkAndReconnect() error {
 		mysqlCfg := config.Conf().Mysql
 		newDB, err := dbConnect(mysqlCfg.User, mysqlCfg.Pass, mysqlCfg.Host, mysqlCfg.Port, mysqlCfg.Database, mysqlCfg.Loc)
 		if err != nil {
-			return fmt.Errorf("Database reconnection failed: %w", err)
+			return fmt.Errorf("database reconnection failed: %w", err)
 		}
 		r.DB = newDB
 	}

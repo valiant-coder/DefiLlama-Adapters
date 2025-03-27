@@ -40,3 +40,8 @@ func (r *RespOpenOrder) Fill(a *db.OpenOrder) *RespOpenOrder {
 	r.Status = a.Status
 	return r
 }
+
+type RespOrdersCoinTotal struct {
+	Symbol string          `json:"symbol"`
+	Total  decimal.Decimal `json:"total"`
+}

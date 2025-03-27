@@ -19,3 +19,16 @@ func queryOpenOrders(c *gin.Context) {
 	api.List(c, resp, total)
 
 }
+
+func getOrdersCoinTotal(c *gin.Context) {
+	startTime := c.Query("start_time")
+	endTime := c.Query("end_time")
+
+	resp, total, err := admin.New().GetOrdersCoinTotal(c.Request.Context(), startTime, endTime)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.List(c, resp, total)
+}

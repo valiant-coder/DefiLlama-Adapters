@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-// @tags admin
+// @tags user
 // @Security ApiKeyAuth
 // @Summary query users
 // @Accept json
@@ -35,7 +35,7 @@ func queryUsers(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
-// @tags admin
+// @tags user
 // @Security ApiKeyAuth
 // @Summary get user passkeys
 // @Success 200 {array} entity_admin.RespPasskey "Successful response"
@@ -57,9 +57,9 @@ func getUserPasskeys(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
+// @Tags user
 // @Summary Get users statis
 // @Description Get users statis
-// @Tags depth
 // @Accept json
 // @Produce json
 // @Param time_dimension query string true "month week day"
@@ -82,7 +82,7 @@ func getUsersStatis(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
-// @tags admin
+// @tags user
 // @Security ApiKeyAuth
 // @Summary query transactions record
 // @Accept json
@@ -108,9 +108,9 @@ func getTransactionsRecord(c *gin.Context) {
 	api.List(c, resp, total)
 }
 
+// @Tags User
 // @Summary Get deposit amount total
 // @Description Get deposit amount total
-// @Tags Deposit
 // @Accept json
 // @Produce json
 // @Param start_time query string false "2006-01-06 00:00:00"
@@ -130,9 +130,9 @@ func getDepositAmountTotal(c *gin.Context) {
 	api.List(c, resp, 0)
 }
 
+// @Tags User
 // @Summary Get withdraw amount total
 // @Description Get withdraw amount total
-// @Tags Deposit
 // @Accept json
 // @Produce json
 // @Param start_time query string false "2006-01-06 00:00:00"
