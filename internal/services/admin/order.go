@@ -2,15 +2,32 @@ package admin
 
 import (
 	"context"
-	ckhdb "exapp-go/internal/db/ckhdb"
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/pkg/queryparams"
 )
 
-func (s *AdminServices) QueryHistoryOrders(ctx context.Context, queryParams *queryparams.QueryParams) ([]*entity_admin.RespHistoryOrder, int64, error) {
-	var orders []*ckhdb.HistoryOrder
+func (s *AdminServices) QueryHistoryOrders(ctx context.Context, params *queryparams.QueryParams) ([]*entity_admin.RespHistoryOrder, int64, error) {
 
-	total, err := s.ckhdbRepo.Query(ctx, &orders, queryParams)
+	if poolBaseCoin := params.Query.Values["pool_base_coin"]; poolBaseCoin != nil {
+		params.CustomQuery["pool_base_coin"] = []interface{}{poolBaseCoin}
+	}
+	if poolSymbol := params.Query.Values["pool_symbol"]; poolSymbol != nil {
+		params.CustomQuery["pool_symbol"] = []interface{}{poolSymbol}
+	}
+	if app := params.Query.Values["app"]; app != nil {
+		params.CustomQuery["app"] = []interface{}{app}
+	}
+	if trader := params.Query.Values["trader"]; trader != nil {
+		params.CustomQuery["trader"] = []interface{}{trader}
+	}
+	if startTime := params.Query.Values["start_time"]; startTime != nil {
+		params.CustomQuery["start_time"] = []interface{}{startTime}
+	}
+	if endTime := params.Query.Values["end_time"]; endTime != nil {
+		params.CustomQuery["end_time"] = []interface{}{endTime}
+	}
+
+	orders, total, err := s.ckhdbRepo.QueryHistoryOrdersList(ctx, params)
 	if err != nil {
 		return nil, 0, err
 	}
