@@ -1,43 +1,46 @@
 package entity_admin
 
 import (
-	"exapp-go/internal/db/db"
+	"exapp-go/internal/db/ckhdb"
 
 	"github.com/shopspring/decimal"
 )
 
-type RespOpenOrder struct {
-	CreatedAt        string          `json:"created_at"`
-	CompleteAt       string          `json:"complete_at"`
-	Symbol           string          `json:"symbol"`
-	Name             string          `json:"name"`
-	EVMContract      string          `json:"evm_contract"`
-	Trader           string          `json:"trader"`
-	Fee              string          `json:"fee"`
-	PoolSymbol       string          `json:"pool_symbol"`
-	PoolContract     string          `json:"pool_contract"`
-	Price            decimal.Decimal `json:"price"`
+type RespHistoryOrder struct {
+	OrderID      uint64 `json:"order_id"`
+	CreatedAt    int64  `json:"created_at"`
+	CompleteAt   int64  `json:"complete_at"`
+	PoolBaseCoin string `json:"pool_base_coin"`
+	// Name
+	Trader string `json:"trader"`
+	//
+	PoolSymbol string `json:"pool_symbol"`
+	//
 	OriginalQuantity decimal.Decimal `json:"original_quantity"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity"`
-	TxID             string          `json:"tx_id"`
-	Status           db.OrderStatus  `json:"status"`
+	Price            decimal.Decimal `json:"price"`
+	AvgPrice         decimal.Decimal `json:"avg_price"`
+	TxID             TxID            `json:"tx_id"`
 }
 
-func (r *RespOpenOrder) Fill(a *db.OpenOrder) *RespOpenOrder {
-	r.CreatedAt = a.CreatedAt.Format("2006-01-02 15:04:05")
-	// r.CompleteAt = a.CompleteAt.Format("2006-01-02 15:04:05")
-	// r.Symbol = a.Symbol
-	// r.Name = a.Name
-	// r.EVMContractAddress = a.EVMContractAddress
+type TxID struct {
+	CreateTxID string `json:"create_tx_id"`
+	CancelTxID string `json:"cancel_tx_id"`
+}
+
+func (r *RespHistoryOrder) Fill(a *ckhdb.HistoryOrder) *RespHistoryOrder {
+	r.CreatedAt = a.CreatedAt.Unix()
+	r.CompleteAt = a.CanceledAt.Unix()
 	r.Trader = a.Trader
-	// r.Fee = a.Fee
 	r.PoolSymbol = a.PoolSymbol
-	// r.PoolContract = a.PoolContract
 	r.Price = a.Price
 	r.OriginalQuantity = a.OriginalQuantity
 	r.ExecutedQuantity = a.ExecutedQuantity
-	r.TxID = a.TxID
-	r.Status = a.Status
+	r.TxID = TxID{
+		CreateTxID: a.CancelTxID,
+		CancelTxID: a.CancelTxID,
+	}
+
 	return r
 }
 
@@ -46,7 +49,7 @@ type RespOrdersCoinTotal struct {
 	Total  decimal.Decimal `json:"total"`
 }
 
-func (r *RespOrdersCoinTotal) Fill(a *db.OpenOrder) *RespOrdersCoinTotal {
+func (r *RespOrdersCoinTotal) Fill(a *ckhdb.HistoryOrder) *RespOrdersCoinTotal {
 	r.Symbol = a.PoolBaseCoin
 	r.Total = a.ExecutedQuantity
 	return r

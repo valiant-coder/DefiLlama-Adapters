@@ -101,3 +101,26 @@ func (r *ClickHouseRepo) GetOrder(ctx context.Context, poolID uint64, orderID ui
 	}
 	return &order, nil
 }
+
+func (r *ClickHouseRepo) QueryHistoryOrdersList(ctx context.Context, queryParams *queryparams.QueryParams) ([]*HistoryOrder, error) {
+	orders := []*HistoryOrder{}
+
+	queryParams.TableName = "history_orders"
+
+	return orders, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
+	var orders []*HistoryOrder
+
+	err := r.DB.Raw(`SELECT pool_base_coin, SUM(executed_quantity) AS executed_quantity 
+		FROM history_order
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_base_coin
+		ORDER BY executed_quantity DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}

@@ -137,7 +137,7 @@ func Run(addr string, release bool) error {
 	authorized.POST("/pool", createPool)
 
 	// open_order
-	authorized.GET("/open_orders", queryOpenOrders)
+	authorized.GET("/history_orders", queryHistoryQrders)
 	authorized.GET("/orders_coin_total", getOrdersCoinTotal)
 
 	return r.Run(addr)
