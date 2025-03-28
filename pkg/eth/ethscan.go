@@ -109,6 +109,57 @@ func (c *EthScanClient) GetTokenBalancesByAddress(ctx context.Context, address s
 		}
 	}
 
+	nativeBalance, err := c.GetNativeTokenBalanceByAddress(ctx, address)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenBalances = append(tokenBalances, TokenBalance{
+		TokenAddress:  "0x0000000000000000000000000000000000000000",
+		TokenSymbol:   "BTC",
+		TokenName:     "Bitcoin",
+		TokenDecimals: 18,
+		Balance:       decimal.RequireFromString(nativeBalance).Shift(-18),
+		Type:          "native",
+	})
+
 	return tokenBalances, nil
 }
 
+/*
+https://scan2.exactsat.io/api/v2/addresses/xxx
+*/
+
+type NativeTokenBalance struct {
+	CoinBalance string `json:"coin_balance"`
+}
+
+func (c *EthScanClient) GetNativeTokenBalanceByAddress(ctx context.Context, address string) (string, error) {
+	url := fmt.Sprintf("%s/api/v2/addresses/%s", c.Endpoint, address)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("x-api-key", c.ApiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var response NativeTokenBalance
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return "", err
+	}
+
+	return response.CoinBalance, nil
+}
