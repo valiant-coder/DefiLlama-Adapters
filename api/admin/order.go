@@ -32,3 +32,16 @@ func getOrdersCoinTotal(c *gin.Context) {
 
 	api.List(c, resp, 0)
 }
+
+func getOrdersSymbolTotal(c *gin.Context) {
+	startTime := c.Query("start_time")
+	endTime := c.Query("end_time")
+
+	resp, err := admin.New().GetOrdersSymbolTotal(c.Request.Context(), startTime, endTime)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.List(c, resp, 0)
+}

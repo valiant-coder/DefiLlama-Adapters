@@ -53,3 +53,18 @@ func (s *AdminServices) GetOrdersCoinTotal(ctx context.Context, startTime, endTi
 
 	return resp, nil
 }
+
+func (s *AdminServices) GetOrdersSymbolTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersSymbolTotal, error) {
+
+	orders, err := s.ckhdbRepo.GetOrdersSymbolTotal(ctx, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*entity_admin.RespOrdersSymbolTotal
+	for _, order := range orders {
+		resp = append(resp, new(entity_admin.RespOrdersSymbolTotal).Fill(order))
+	}
+
+	return resp, nil
+}

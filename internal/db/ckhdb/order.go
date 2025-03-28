@@ -254,3 +254,18 @@ func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endT
 
 	return orders, nil
 }
+
+func (r *ClickHouseRepo) GetOrdersSymbolTotal(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
+	var orders []*HistoryOrder
+
+	err := r.DB.Raw(`SELECT pool_symbol, SUM(executed_quantity) AS executed_quantity 
+		FROM history_orders
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_symbol
+		ORDER BY executed_quantity DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}

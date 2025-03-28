@@ -25,6 +25,22 @@ func TestGetOrdersCoinTotal(t *testing.T) {
 	}
 }
 
+func TestGetOrdersSymbolTotal(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	ckhRepo := New()
+
+	orders, err := ckhRepo.GetOrdersSymbolTotal(context.Background(), "2024-10-01", "2025-10-31")
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, ororder := range orders {
+		fmt.Println(ororder.PoolSymbol, ororder.ExecutedQuantity)
+	}
+}
+
 func TestQueryHistoryOrdersList(t *testing.T) {
 
 	utils.WorkInProjectPath("exapp-go")

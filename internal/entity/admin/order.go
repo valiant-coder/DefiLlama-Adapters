@@ -49,12 +49,23 @@ func (r *RespHistoryOrder) Fill(a *ckhdb.HistoryOrderForm) *RespHistoryOrder {
 }
 
 type RespOrdersCoinTotal struct {
+	Coin  string          `json:"coin"`
+	Total decimal.Decimal `json:"total"`
+}
+
+func (r *RespOrdersCoinTotal) Fill(a *ckhdb.HistoryOrder) *RespOrdersCoinTotal {
+	r.Coin = a.PoolBaseCoin
+	r.Total = a.ExecutedQuantity
+	return r
+}
+
+type RespOrdersSymbolTotal struct {
 	Symbol string          `json:"symbol"`
 	Total  decimal.Decimal `json:"total"`
 }
 
-func (r *RespOrdersCoinTotal) Fill(a *ckhdb.HistoryOrder) *RespOrdersCoinTotal {
-	r.Symbol = a.PoolBaseCoin
+func (r *RespOrdersSymbolTotal) Fill(a *ckhdb.HistoryOrder) *RespOrdersSymbolTotal {
+	r.Symbol = a.PoolSymbol
 	r.Total = a.ExecutedQuantity
 	return r
 }
