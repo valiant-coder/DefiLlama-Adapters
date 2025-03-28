@@ -101,6 +101,8 @@ eos:
     bridge_contract: bridgecontract
     btc_bridge_contract: btcbridgecontract
     btc_chain_name: btcchainname
+    erc2o_contract: erc2o.xsat
+
   events:
     log_new_acc: lognewacc
     deposit_log: depositlog

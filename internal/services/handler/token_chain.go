@@ -6,12 +6,55 @@ import (
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/eos/onedex"
 	"exapp-go/pkg/hyperion"
+	"fmt"
 	"log"
 	"strings"
 
+	"github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
 )
+
+func (s *Service) createToken(ctx context.Context, coin string) error {
+
+	coins := strings.Split(coin, "-")
+	if len(coins) != 2 {
+		return fmt.Errorf("invalid coin: %s", coin)
+	}
+	contract := coins[0]
+	symbol := coins[1]
+
+	client := eos.New(s.eosCfg.NodeURL)
+	ondexTokens, err := onedex.GetEvmEosTokenMapping(ctx, client, s.exsatCfg.ERC2oContract)
+	if err != nil {
+		log.Printf("failed to get ondex tokens: %v", err)
+		return nil
+	}
+
+	for _, token := range ondexTokens {
+		if token.Symbol != symbol || token.TokenContract != contract {
+			continue
+		}
+		newToken := &db.Token{
+			EOSContractAddress: token.TokenContract,
+			ExsatTokenAddress:  token.ExsatTokenAddress,
+			Symbol:             token.Symbol,
+			Name:               token.Symbol,
+			Decimals:           token.Precision,
+			ExsatDecimals:      token.Erc20Precision,
+		}
+
+		if err := s.repo.UpsertToken(ctx, newToken); err != nil {
+			log.Printf("failed to upsert token: %v", err)
+			return nil
+		}
+
+		break
+
+	}
+	return nil
+
+}
 
 func (s *Service) handleAddXSATChain(action hyperion.Action) error {
 	ctx := context.Background()

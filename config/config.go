@@ -184,6 +184,7 @@ type ExsatConfig struct {
 	BridgeContract            string `yaml:"bridge_contract"`
 	BTCBridgeContract         string `yaml:"btc_bridge_contract"`
 	BTCChainName              string `yaml:"btc_chain_name"`
+	ERC2oContract             string `yaml:"erc2o_contract"`
 }
 
 type CdexConfig struct {
