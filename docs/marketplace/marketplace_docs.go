@@ -2588,7 +2588,10 @@ const docTemplatemarketplace = `{
                 "eos_contract": {
                     "type": "string"
                 },
-                "evm_address": {
+                "exsat_decimals": {
+                    "type": "integer"
+                },
+                "exsat_token_address": {
                     "type": "string"
                 },
                 "icon_url": {
