@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
-	"exapp-go/pkg/cdex"
+	"exapp-go/pkg/eos/cdex"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"fmt"

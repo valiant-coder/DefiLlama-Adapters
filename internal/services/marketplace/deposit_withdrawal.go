@@ -6,7 +6,7 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
-	"exapp-go/pkg/onedex"
+	"exapp-go/pkg/eos/onedex"
 	"exapp-go/pkg/queryparams"
 	"fmt"
 	"log"

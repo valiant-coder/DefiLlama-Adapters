@@ -9,6 +9,24 @@ import (
 	"github.com/eoscanada/eos-go/system"
 )
 
+type AccountManager struct {
+	eosClient *eos.API
+	config    *Config
+}
+
+type Config struct {
+	ChainID         string // chain id
+	URL             string // EOS api url
+	BaseAccountName string // base account name
+	CreatorAccount  string // creator account
+	CreatorPrivKey  string // creator private key
+}
+
+type AccountKeys struct {
+	SocialPrivKey string // social private key
+	HashPrivKey   string // hash private key
+}
+
 func NewAccountManager(config *Config) (*AccountManager, error) {
 	api := eos.New(config.URL)
 	api.SetSigner(eos.NewKeyBag())
@@ -19,7 +37,6 @@ func NewAccountManager(config *Config) (*AccountManager, error) {
 		config:    config,
 	}, nil
 }
-
 
 // GenerateAccount creates an EOS account with 2/2 multisig permissions
 func (am *AccountManager) GenerateAccount(ctx context.Context, accountName string) (*AccountKeys, error) {
@@ -158,7 +175,7 @@ func (am *AccountManager) SignAndPushRecoveryTx(
 		if action.Account != eos.AN("eosio") || action.Name != eos.ActN("updateauth") {
 			return fmt.Errorf("invalid action: expected eosio:updateauth")
 		}
-		
+
 		auth, ok := action.ActionData.Data.(system.UpdateAuth)
 		if !ok {
 			return fmt.Errorf("invalid action data type")
@@ -169,7 +186,7 @@ func (am *AccountManager) SignAndPushRecoveryTx(
 		}
 
 		authority := auth.Auth
-	
+
 		if authority.Threshold != 2 || len(authority.Keys) != 3 {
 			return fmt.Errorf("invalid multisig configuration")
 		}
@@ -193,11 +210,10 @@ func (am *AccountManager) SignAndPushRecoveryTx(
 		return fmt.Errorf("parse social private key error: %w", err)
 	}
 
-	signedTx, err = am.eosClient.Signer.Sign(ctx, signedTx, []byte(am.config.ChainID),sp.PublicKey())
+	signedTx, err = am.eosClient.Signer.Sign(ctx, signedTx, []byte(am.config.ChainID), sp.PublicKey())
 	if err != nil {
 		return fmt.Errorf("sign transaction with social key error: %w", err)
 	}
-
 
 	packed, err := signedTx.Pack(eos.CompressionNone)
 	if err != nil {
