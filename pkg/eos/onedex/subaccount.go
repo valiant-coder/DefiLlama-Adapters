@@ -3,7 +3,6 @@ package onedex
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
@@ -33,8 +32,6 @@ func GetSubaccountBalances(ctx context.Context, client *eos.API, account, permis
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(string(response.Rows))
 
 	var balances []*Balance
 	err = json.Unmarshal(response.Rows, &balances)
