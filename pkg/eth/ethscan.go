@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
+	"golang.org/x/sync/errgroup"
 )
 
 type EthScanClient struct {
@@ -70,60 +72,105 @@ type TokenBalanceResponse struct {
 }
 
 func (c *EthScanClient) GetTokenBalancesByAddress(ctx context.Context, address string) ([]TokenBalance, error) {
-
-	url := fmt.Sprintf("%s/api/v2/addresses/%s/token-balances", c.Endpoint, address)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return nil, err
+	type result struct {
+		tokenBalances []TokenBalance
+		nativeBalance string
+		err           error
 	}
 
-	req.Header.Set("x-api-key", c.ApiKey)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	g, ctx := errgroup.WithContext(ctxWithTimeout)
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
+	tokenCh := make(chan result, 1)
+	nativeCh := make(chan result, 1)
 
-	var response []TokenBalanceResponse
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	tokenBalances := make([]TokenBalance, len(response))
-	for i, balance := range response {
-		tokenBalances[i] = TokenBalance{
-			TokenAddress:  balance.Token.Address,
-			TokenSymbol:   balance.Token.Symbol,
-			TokenName:     balance.Token.Name,
-			TokenDecimals: cast.ToInt32(balance.Token.Decimals),
-			Balance:       decimal.RequireFromString(balance.Value).Shift(-cast.ToInt32(balance.Token.Decimals)),
-			Type:          balance.Token.Type,
+	g.Go(func() error {
+		url := fmt.Sprintf("%s/api/v2/addresses/%s/token-balances", c.Endpoint, address)
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			tokenCh <- result{err: err}
+			return err
 		}
-	}
+		req.Header.Set("x-api-key", c.ApiKey)
 
-	nativeBalance, err := c.GetNativeTokenBalanceByAddress(ctx, address)
-	if err != nil {
+		var resp *http.Response
+		for retries := 0; retries < 3; retries++ {
+			resp, err = http.DefaultClient.Do(req)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Duration(retries+1) * 100 * time.Millisecond)
+		}
+		if err != nil {
+			tokenCh <- result{err: fmt.Errorf("failed to get token balances after retries: %v", err)}
+			return err
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			tokenCh <- result{err: err}
+			return err
+		}
+
+		var response []TokenBalanceResponse
+		if err = json.Unmarshal(body, &response); err != nil {
+			tokenCh <- result{err: err}
+			return err
+		}
+
+		tokenBalances := make([]TokenBalance, 0, len(response))
+		for _, balance := range response {
+			decimals := cast.ToInt32(balance.Token.Decimals)
+			tokenBalances = append(tokenBalances, TokenBalance{
+				TokenAddress:  balance.Token.Address,
+				TokenSymbol:   balance.Token.Symbol,
+				TokenName:     balance.Token.Name,
+				TokenDecimals: decimals,
+				Balance:       decimal.RequireFromString(balance.Value).Shift(-decimals),
+				Type:          balance.Token.Type,
+			})
+		}
+		tokenCh <- result{tokenBalances: tokenBalances}
+		return nil
+	})
+
+	g.Go(func() error {
+		nativeBalance, err := c.GetNativeTokenBalanceByAddress(ctx, address)
+		if err != nil {
+			nativeCh <- result{err: err}
+			return err
+		}
+		nativeCh <- result{nativeBalance: nativeBalance}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
-	tokenBalances = append(tokenBalances, TokenBalance{
+	tokenResult := <-tokenCh
+	if tokenResult.err != nil {
+		return nil, tokenResult.err
+	}
+
+	nativeResult := <-nativeCh
+	if nativeResult.err != nil {
+		return nil, nativeResult.err
+	}
+
+	tokenResult.tokenBalances = append(tokenResult.tokenBalances, TokenBalance{
 		TokenAddress:  "0x0000000000000000000000000000000000000000",
 		TokenSymbol:   "BTC",
 		TokenName:     "Bitcoin",
 		TokenDecimals: 18,
-		Balance:       decimal.RequireFromString(nativeBalance).Shift(-18),
+		Balance:       decimal.RequireFromString(nativeResult.nativeBalance).Shift(-18),
 		Type:          "native",
 	})
 
-	return tokenBalances, nil
+	return tokenResult.tokenBalances, nil
 }
 
 /*
