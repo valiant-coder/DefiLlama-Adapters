@@ -414,6 +414,11 @@ func (s *Service) handleMatchOrder(action hyperion.Action) error {
 	} else {
 		s.openOrderBuffer.Delete(poolID, cast.ToUint64(data.EV.MakerOrderID), makerOrder.IsBid)
 
+		if makerOrder.ExecutedQuantity.GreaterThan(decimal.Zero) && makerOrder.ExecutedQuantity.LessThan(makerOrder.OriginalQuantity) {
+			makerOrder.Status = db.OrderStatusPartiallyFilled
+		}
+
+
 		historyOrder := ckhdb.HistoryOrder{
 			App:                makerOrder.App,
 			PoolID:             makerOrder.PoolID,

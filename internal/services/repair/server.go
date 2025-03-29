@@ -4,7 +4,7 @@ import (
 	"context"
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
-	"exapp-go/pkg/cdex"
+	"exapp-go/pkg/eos/cdex"
 	"log"
 	"time"
 

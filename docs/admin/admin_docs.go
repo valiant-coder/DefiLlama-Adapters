@@ -610,7 +610,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Deposit"
+                    "transactions"
                 ],
                 "summary": "Get deposit amount total",
                 "parameters": [
@@ -681,7 +681,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "pool"
                 ],
                 "summary": "query pool",
                 "parameters": [
@@ -812,7 +812,7 @@ const docTemplateadmin = `{
                     }
                 ],
                 "tags": [
-                    "admin"
+                    "user"
                 ],
                 "summary": "get user passkeys",
                 "responses": {
@@ -842,7 +842,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "transactions"
                 ],
                 "summary": "query transactions record",
                 "parameters": [
@@ -916,7 +916,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "user"
                 ],
                 "summary": "query users",
                 "parameters": [
@@ -986,7 +986,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "depth"
+                    "user"
                 ],
                 "summary": "Get users statis",
                 "parameters": [
@@ -1031,7 +1031,7 @@ const docTemplateadmin = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Deposit"
+                    "transactions"
                 ],
                 "summary": "Get withdraw amount total",
                 "parameters": [
@@ -1476,6 +1476,7 @@ const docTemplateadmin = `{
                 "quote_contract",
                 "quote_symbol",
                 "status",
+                "symbol",
                 "visible"
             ],
             "properties": {
@@ -1496,6 +1497,9 @@ const docTemplateadmin = `{
                 },
                 "status": {
                     "$ref": "#/definitions/db.PoolStatus"
+                },
+                "symbol": {
+                    "type": "string"
                 },
                 "visible": {
                     "type": "boolean"
@@ -1633,6 +1637,9 @@ const docTemplateadmin = `{
                 },
                 "status": {
                     "$ref": "#/definitions/db.PoolStatus"
+                },
+                "symbol": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

@@ -43,8 +43,8 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	if data.Applicant != s.oneDexCfg.BridgeContract {
-		log.Printf("Applicant is not %s, skip", s.oneDexCfg.BridgeContract)
+	if data.Applicant != s.oneDexCfg.PortalContract {
+		log.Printf("Applicant is not %s, skip", s.oneDexCfg.PortalContract)
 		return nil
 	}
 
@@ -62,16 +62,8 @@ func (s *Service) handleBridgeDeposit(action hyperion.Action) error {
 		return nil
 	}
 
-	var targetChain db.ChainInfo
-	for _, chain := range token.Chains {
-		if chain.ChainName == data.ChainName {
-			targetChain = chain
-			break
-		}
-	}
-
-	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(targetChain.ExsatTokenDecimals))
-	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(targetChain.ExsatTokenDecimals))
+	depositAmount := decimal.RequireFromString(data.DepositAmount).Shift(-int32(token.ExsatDecimals))
+	depositFee := decimal.RequireFromString(data.DepositFee).Shift(-int32(token.ExsatDecimals))
 
 	depositTime, err := utils.ParseTime(action.Timestamp)
 	if err != nil {

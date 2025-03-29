@@ -444,9 +444,9 @@ func (s *UserService) getEvmUserAvailableBalances(ctx context.Context, evmAddres
 	// Using lowercase addresses to make the lookup case-insensitive
 	evmToTokenMap := make(map[string]*db.Token)
 	for i := range tokens {
-		if tokens[i].EVMContractAddress != "" {
+		if tokens[i].ExsatTokenAddress != "" {
 			// Store with lowercase key for case-insensitive lookup
-			evmToTokenMap[strings.ToLower(tokens[i].EVMContractAddress)] = &tokens[i]
+			evmToTokenMap[strings.ToLower(tokens[i].ExsatTokenAddress)] = &tokens[i]
 		}
 	}
 

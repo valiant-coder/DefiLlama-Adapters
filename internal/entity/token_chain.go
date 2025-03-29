@@ -3,12 +3,14 @@ package entity
 import "exapp-go/internal/db/db"
 
 type Token struct {
-	Symbol       string  `json:"symbol"`
-	Name         string  `json:"name"`
-	Decimals     uint8   `json:"decimals"`
-	EOSContract  string  `json:"eos_contract"`
-	SupportChain []Chain `json:"support_chain"`
-	IconUrl      string  `json:"icon_url"`
+	Symbol            string  `json:"symbol"`
+	Name              string  `json:"name"`
+	Decimals          uint8   `json:"decimals"`
+	EOSContract       string  `json:"eos_contract"`
+	ExsatTokenAddress string  `json:"exsat_token_address"`
+	ExsatDecimals     uint8   `json:"exsat_decimals"`
+	SupportChain      []Chain `json:"support_chain"`
+	IconUrl           string  `json:"icon_url"`
 
 	Info TokenInfo `json:"info"`
 }
@@ -59,11 +61,13 @@ func TokenFromDB(token db.Token) Token {
 		Intro:                 tokenData.Intro,
 	}
 	return Token{
-		Symbol:      token.Symbol,
-		Name:        token.Name,
-		Decimals:    token.Decimals,
-		EOSContract: token.EOSContractAddress,
-		IconUrl:     token.IconUrl,
+		Symbol:            token.Symbol,
+		Name:              token.Name,
+		Decimals:          token.Decimals,
+		EOSContract:       token.EOSContractAddress,
+		ExsatTokenAddress: token.ExsatTokenAddress,
+		ExsatDecimals:     token.ExsatDecimals,
+		IconUrl:           token.IconUrl,
 
 		SupportChain: chains,
 		Info:         info,

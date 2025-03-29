@@ -169,9 +169,10 @@ type HyperionConfig struct {
 }
 
 type OneDexConfig struct {
-	BridgeContract   string  `yaml:"bridge_contract"`
+	PortalContract   string  `yaml:"portal_contract"`
 	Actor            string  `yaml:"actor"`
 	ActorPrivateKey  string  `yaml:"actor_private_key"`
+	ActorPermission  string  `yaml:"actor_permission"`
 	AppTakerFeeRate  float64 `yaml:"app_taker_fee_rate"`
 	AppMakerFeeRate  float64 `yaml:"app_maker_fee_rate"`
 	TokenContract    string  `yaml:"token_contract"`
@@ -183,6 +184,7 @@ type ExsatConfig struct {
 	BridgeContract            string `yaml:"bridge_contract"`
 	BTCBridgeContract         string `yaml:"btc_bridge_contract"`
 	BTCChainName              string `yaml:"btc_chain_name"`
+	ERC2oContract             string `yaml:"erc2o_contract"`
 }
 
 type CdexConfig struct {
@@ -250,7 +252,6 @@ type EventConfig struct {
 	SetPoolFeeRate string `yaml:"set_pool_fee_rate"`
 
 	// token-chain events
-	CreateToken  string `yaml:"create_token"`
 	AddXSATChain string `yaml:"add_xsat_chain"`
 	MapXSAT      string `yaml:"map_xsat"`
 
@@ -271,7 +272,6 @@ func DefaultEventConfig() EventConfig {
 		LogSend:        "logsend",
 		SetMinAmt:      "setminamt",
 		SetPoolFeeRate: "setpfeerate",
-		CreateToken:    "createtoken",
 		AddXSATChain:   "addxsatchain",
 		MapXSAT:        "mapxsat",
 		LogNewTrader:   "lognewtrader",

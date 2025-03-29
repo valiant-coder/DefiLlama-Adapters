@@ -3,26 +3,21 @@ package marketplace
 import (
 	"context"
 	"errors"
-	"exapp-go/config"
 	"exapp-go/data"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/pkg/log"
-	"exapp-go/pkg/nsqutil"
 )
 
 type UserInvitationService struct {
 	repo    *db.Repo
 	ckhRepo *ckhdb.ClickHouseRepo
-	nsqPub  *nsqutil.Publisher
 }
 
 func NewUserInvitationService() *UserInvitationService {
-	nsqConf := config.Conf().Nsq
 	return &UserInvitationService{
 		repo:    db.New(),
 		ckhRepo: ckhdb.New(),
-		nsqPub:  nsqutil.NewPublisher(nsqConf.Nsqds),
 	}
 }
 
@@ -153,6 +148,7 @@ func (s *UserInvitationService) GetInvitationLinkByCode(ctx context.Context, cod
 }
 
 func (s *UserInvitationService) BindInvitationLink(ctx context.Context, uid, code string) error {
+	log.Logger().Info("bind invite link -> ", code)
 	link, err := s.repo.GetUserInviteLink(ctx, code)
 	if err != nil {
 		

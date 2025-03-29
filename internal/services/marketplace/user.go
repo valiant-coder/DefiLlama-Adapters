@@ -7,6 +7,7 @@ import (
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/types"
 	"exapp-go/pkg/log"
 	"exapp-go/pkg/nsqutil"
 	"exapp-go/pkg/oauth2"
@@ -248,10 +249,10 @@ func (s *UserService) CreateUserCredential(ctx context.Context, req entity.UserC
 
 	go func() {
 		msg := struct {
-			Type string      `json:"type"`
-			Data interface{} `json:"data"`
+			Type types.NSQMessageType `json:"type"`
+			Data interface{}          `json:"data"`
 		}{
-			Type: "new_user_credential",
+			Type: types.MsgTypeUserCredential,
 			Data: entity.ToUserCredential(newUserCredential),
 		}
 		err := s.nsqPub.Publish("cdex_updates", msg)
@@ -291,4 +292,12 @@ func (s *UserService) DeleteUserCredential(ctx context.Context, uid string, cred
 	}
 
 	return s.repo.DeleteUserCredential(ctx, targetCredential)
+}
+
+func (s *UserService) GetEosAccountByPubkey(ctx context.Context, pubkey string) (string, error) {
+	credential, err := s.repo.GetUserCredentialByPubkey(ctx, pubkey)
+	if err != nil {
+		return "", err
+	}
+	return credential.EOSAccount, nil
 }

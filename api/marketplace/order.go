@@ -32,6 +32,10 @@ func getOpenOrders(c *gin.Context) {
 			api.Error(c, err)
 			return
 		}
+		if eosAccount == "" {
+			api.OK(c, make([]entity.OpenOrder, 0))
+			return
+		}
 		queryParams.Add("trader", eosAccount)
 		queryParams.Add("permission", permission)
 	}

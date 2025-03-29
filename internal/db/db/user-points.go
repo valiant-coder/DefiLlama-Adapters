@@ -52,14 +52,48 @@ func (r *Repo) IncreaseUserPoints(ctx context.Context, uid string, points uint64
 		params["trade"] = gorm.Expr("trade + ?", points)
 	}
 	
-	if pointsType == types.UserPointsTypeTradeRebate {
-		params["trade_rebate"] = gorm.Expr("trade_rebate + ?", points)
-	}
-	
 	r.DelCache(UserPointsRedisKey(uid))
 	return r.WithContext(ctx).DB.Model(&UserPoints{}).Where("uid = ?", uid).Updates(params).Error
 }
 
 func (r *Repo) DecreaseUserPoints(ctx context.Context, uid string, points uint64) error {
 	return r.WithContext(ctx).DB.Model(&UserPoints{}).Where("uid = ?", uid).Update("balance", gorm.Expr("balance - ?", points)).Error
+}
+
+func (r *Repo) AddTradeUserPoints(ctx context.Context, uid, txId string, points, globalSeq uint64, pointsType types.UserPointsType) error {
+	
+	// 先查询当前积分信息
+	userPoints, e := r.GetUserPoints(ctx, uid)
+	if e != nil {
+		
+		return e
+	}
+	
+	balance := userPoints.Balance
+	// 先创建积分记录
+	record := &UserPointsRecord{
+		UID:         uid,
+		TxId:        txId,
+		GlobalSeq:   globalSeq,
+		Type:        types.UserPointsTypeTrade,
+		Method:      types.UserPointsMethodIn,
+		Points:      points,
+		Balance:     balance + points,
+		SnapBalance: balance,
+		Remark:      "",
+	}
+	
+	// 插入积分记录
+	if e = r.Insert(ctx, record); e != nil {
+		
+		return e
+	}
+	
+	// 更新积分
+	if e = r.IncreaseUserPoints(ctx, uid, points, types.UserPointsTypeTrade); e != nil {
+		
+		return e
+	}
+	
+	return nil
 }

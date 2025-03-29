@@ -69,6 +69,9 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 		existingUser.Username = user.Username
 		existingUser.Email = user.Email
 		existingUser.BlockNumber = user.BlockNumber
+		existingUser.EVMAddress = user.EVMAddress
+		existingUser.EOSAccount = user.EOSAccount
+		existingUser.Permission = user.Permission
 		*user = existingUser
 		return r.DB.WithContext(ctx).Save(user).Error
 	}
@@ -112,7 +115,7 @@ func (r *Repo) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) 
 	if result.Error != nil {
 		return "", "", result.Error
 	}
-	if user.EVMAddress != "" {
+	if user.LoginMethod == LoginMethodEVM && user.EVMAddress != "" {
 		return user.EOSAccount, user.Permission, nil
 	}
 	credentials, err := r.GetUserCredentials(ctx, uid)

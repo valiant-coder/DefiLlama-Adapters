@@ -3,6 +3,7 @@ package entity
 type SystemInfo struct {
 	Version            string             `json:"version"`
 	PayCPU             PayCPU             `json:"pay_cpu"`
+	EVMAgentContract   string             `json:"evm_agent_contract"`
 	VaultEVMAddress    string             `json:"vault_evm_address"`
 	VaultEOSAddress    string             `json:"vault_eos_address"`
 	TokenContract      string             `json:"token_contract"`

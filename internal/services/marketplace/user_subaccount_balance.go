@@ -4,7 +4,7 @@ import (
 	"context"
 	"exapp-go/config"
 	"exapp-go/internal/entity"
-	"exapp-go/pkg/onedex"
+	"exapp-go/pkg/eos/onedex"
 	"fmt"
 
 	"github.com/eoscanada/eos-go"

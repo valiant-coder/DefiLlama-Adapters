@@ -4,56 +4,56 @@ import (
 	"context"
 	"encoding/json"
 	"exapp-go/internal/db/db"
+	"exapp-go/pkg/eos/onedex"
 	"exapp-go/pkg/hyperion"
-	"exapp-go/pkg/onedex"
+	"fmt"
 	"log"
 	"strings"
 
-	eosgo "github.com/eoscanada/eos-go"
+	"github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cast"
 )
 
-func (s *Service) handleCreateToken(action hyperion.Action) error {
-	ctx := context.Background()
+func (s *Service) createToken(ctx context.Context, coin string) error {
 
-	var data struct {
-		Contract      string `json:"contract"`
-		MaximumSupply string `json:"maximum_supply"`
-		WithdrawFee   string `json:"withdraw_fee"`
+	coins := strings.Split(coin, "-")
+	if len(coins) != 2 {
+		return fmt.Errorf("invalid coin: %s", coin)
 	}
-	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
-		log.Printf("failed to unmarshal create token data: %v", err)
-		return nil
-	}
+	contract := coins[0]
+	symbol := coins[1]
 
-	maxSupplyAsset, err := eosgo.NewAssetFromString(data.MaximumSupply)
+	client := eos.New(s.eosCfg.NodeURL)
+	ondexTokens, err := onedex.GetEvmEosTokenMapping(ctx, client, s.exsatCfg.ERC2oContract)
 	if err != nil {
-		log.Printf("failed to parse maximum supply: %v", err)
+		log.Printf("failed to get ondex tokens: %v", err)
 		return nil
 	}
 
-	withdrawFeeAsset, err := eosgo.NewAssetFromString(data.WithdrawFee)
-	if err != nil {
-		log.Printf("failed to parse withdraw fee: %v", err)
-		return nil
-	}
+	for _, token := range ondexTokens {
+		if token.Symbol != symbol || token.TokenContract != contract {
+			continue
+		}
+		newToken := &db.Token{
+			EOSContractAddress: token.TokenContract,
+			ExsatTokenAddress:  token.ExsatTokenAddress,
+			Symbol:             token.Symbol,
+			Name:               token.Symbol,
+			Decimals:           token.Precision,
+			ExsatDecimals:      token.Erc20Precision,
+		}
 
-	token := &db.Token{
-		EOSContractAddress: data.Contract,
-		Symbol:             maxSupplyAsset.Symbol.Symbol,
-		Name:               maxSupplyAsset.Symbol.Symbol,
-		BlockNum:           action.BlockNum,
-		Decimals:           maxSupplyAsset.Symbol.Precision,
-		MaxSupply:          decimal.New(int64(maxSupplyAsset.Amount), -int32(maxSupplyAsset.Symbol.Precision)),
-		WithdrawFee:        decimal.New(int64(withdrawFeeAsset.Amount), -int32(withdrawFeeAsset.Symbol.Precision)),
-	}
+		if err := s.repo.UpsertToken(ctx, newToken); err != nil {
+			log.Printf("failed to upsert token: %v", err)
+			return nil
+		}
 
-	if err := s.repo.UpsertToken(ctx, token); err != nil {
-		log.Printf("failed to upsert token: %v", err)
-		return nil
+		break
+
 	}
 	return nil
+
 }
 
 func (s *Service) handleAddXSATChain(action hyperion.Action) error {
@@ -109,7 +109,7 @@ func (s *Service) handleMapXSAT(action hyperion.Action) error {
 		return nil
 	}
 
-	ondexTokens, err := onedex.GetOneDexSupportTokens(ctx, s.eosCfg.NodeURL, s.oneDexCfg.BridgeContract)
+	ondexTokens, err := onedex.GetOneDexSupportTokens(ctx, s.eosCfg.NodeURL, s.oneDexCfg.PortalContract)
 	if err != nil {
 		log.Printf("failed to get ondex tokens: %v", err)
 		return nil

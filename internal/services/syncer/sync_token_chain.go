@@ -40,10 +40,9 @@ func (s *Service) syncTokenChainHistories(ctx context.Context) error {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
 			Filter: fmt.Sprintf(
-				"%s:%s,%s:%s,%s:%s",
-				s.oneDexCfg.BridgeContract, s.eosCfg.Events.CreateToken,
-				s.oneDexCfg.BridgeContract, s.eosCfg.Events.AddXSATChain,
-				s.oneDexCfg.BridgeContract, s.eosCfg.Events.MapXSAT),
+				"%s:%s,%s:%s",
+				s.oneDexCfg.PortalContract, s.eosCfg.Events.AddXSATChain,
+				s.oneDexCfg.PortalContract, s.eosCfg.Events.MapXSAT),
 			Limit: s.hyperionCfg.BatchSize,
 			Sort:  "asc",
 			After: strconv.FormatUint(s.tokenChainLastBlockNum, 10),
@@ -76,15 +75,7 @@ func (s *Service) SyncTokenChain(ctx context.Context) (<-chan hyperion.Action, e
 	log.Printf("sync token histories done, last block number: %d", s.tokenChainLastBlockNum)
 	tokenActionCh, err := s.streamClient.SubscribeAction([]hyperion.ActionStreamRequest{
 		{
-			Contract:  s.oneDexCfg.BridgeContract,
-			Action:    s.eosCfg.Events.CreateToken,
-			Account:   "",
-			StartFrom: int64(s.tokenChainLastBlockNum) + 1,
-			ReadUntil: 0,
-			Filters:   []hyperion.RequestFilter{},
-		},
-		{
-			Contract:  s.oneDexCfg.BridgeContract,
+			Contract:  s.oneDexCfg.PortalContract,
 			Action:    s.eosCfg.Events.AddXSATChain,
 			Account:   "",
 			StartFrom: int64(s.tokenChainLastBlockNum) + 1,
@@ -92,7 +83,7 @@ func (s *Service) SyncTokenChain(ctx context.Context) (<-chan hyperion.Action, e
 			Filters:   []hyperion.RequestFilter{},
 		},
 		{
-			Contract:  s.oneDexCfg.BridgeContract,
+			Contract:  s.oneDexCfg.PortalContract,
 			Action:    s.eosCfg.Events.MapXSAT,
 			Account:   "",
 			StartFrom: int64(s.tokenChainLastBlockNum) + 1,

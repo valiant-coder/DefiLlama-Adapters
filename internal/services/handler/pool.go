@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"exapp-go/internal/db/ckhdb"
 	"exapp-go/internal/db/db"
-	"exapp-go/pkg/cdex"
+	"exapp-go/pkg/eos/cdex"
 	"exapp-go/pkg/hyperion"
 	"exapp-go/pkg/utils"
 	"fmt"
@@ -133,9 +133,11 @@ func (s *Service) handleCreatePool(action hyperion.Action) error {
 		return nil
 	}
 
+	go s.createToken(ctx, newPool.BaseCoin)
+	go s.createToken(ctx, newPool.QuoteCoin)
+
 	return nil
 }
-
 
 func (s *Service) handleSetMinAmt(action hyperion.Action) error {
 	ctx := context.Background()
@@ -154,8 +156,7 @@ func (s *Service) handleSetMinAmt(action hyperion.Action) error {
 		return nil
 	}
 
-
-	minAmount,err := decimal.NewFromString(setMinAmt.MinAmount)
+	minAmount, err := decimal.NewFromString(setMinAmt.MinAmount)
 	if err != nil {
 		log.Printf("failed to convert min amount to decimal: %v", err)
 		return nil
@@ -170,12 +171,10 @@ func (s *Service) handleSetMinAmt(action hyperion.Action) error {
 	return nil
 }
 
-
-
 func (s *Service) handleSetPoolFeeRate(action hyperion.Action) error {
 	ctx := context.Background()
 	var setPoolFeeRate struct {
-		PoolID    string `json:"pool_id"`
+		PoolID       string `json:"pool_id"`
 		TakerFeeRate string `json:"taker_fee_rate"`
 		MakerFeeRate string `json:"maker_fee_rate"`
 	}
@@ -190,13 +189,12 @@ func (s *Service) handleSetPoolFeeRate(action hyperion.Action) error {
 		return nil
 	}
 
-
 	if setPoolFeeRate.TakerFeeRate == "18446744073709551615" {
 		pool.TakerFeeRate = s.cdexCfg.DefaultPoolTakerFeeRate
 	} else {
 		pool.TakerFeeRate = cast.ToFloat64(setPoolFeeRate.TakerFeeRate) / 10000.0
 	}
-	
+
 	if setPoolFeeRate.MakerFeeRate == "18446744073709551615" {
 		pool.MakerFeeRate = s.cdexCfg.DefaultPoolMakerFeeRate
 	} else {
@@ -209,4 +207,4 @@ func (s *Service) handleSetPoolFeeRate(action hyperion.Action) error {
 		return nil
 	}
 	return nil
-}	
+}

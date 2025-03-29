@@ -3,6 +3,7 @@ package cron
 import (
 	"context"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/types"
 	"log"
 )
 
@@ -31,7 +32,7 @@ func (s *Service) SyncAndBroadcastPoolStats() {
 		log.Printf("failed to list pool stats: %v\n", err)
 		return
 	}
-	
+
 	for _, stat := range stats {
 		poolStats := entity.PoolStatusFromDB(stat)
 		if oldPoolStats, ok := poolStatsMap[poolStats.PoolID]; ok {
@@ -44,10 +45,10 @@ func (s *Service) SyncAndBroadcastPoolStats() {
 			poolStatsMap[poolStats.PoolID] = *poolStats
 		}
 		msg := struct {
-			Type string      `json:"type"`
-			Data interface{} `json:"data"`
+			Type types.NSQMessageType `json:"type"`
+			Data interface{}          `json:"data"`
 		}{
-			Type: "pool_stats_update",
+			Type: types.MsgTypePoolStatsUpdate,
 			Data: poolStats,
 		}
 

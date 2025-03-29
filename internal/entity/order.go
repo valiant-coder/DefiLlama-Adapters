@@ -156,29 +156,7 @@ type OrderDetail struct {
 	Trades []TradeDetail `json:"trades"`
 }
 
-func TradeDetailFromDB(trades []ckhdb.Trade) []TradeDetail {
-	var result []TradeDetail
-	for _, trade := range trades {
-		result = append(result, TradeDetail{
-			PoolID:        trade.PoolID,
-			TxID:          trade.TxID,
-			Taker:         trade.Taker,
-			Maker:         trade.Maker,
-			MakerOrderID:  trade.MakerOrderID,
-			MakerOrderCID: trade.MakerOrderCID,
-			TakerOrderID:  trade.TakerOrderID,
-			TakerOrderCID: trade.TakerOrderCID,
-			Price:         trade.Price.String(),
-			TakerIsBid:    trade.TakerIsBid,
-			BaseQuantity:  trade.BaseQuantity.String(),
-			QuoteQuantity: trade.QuoteQuantity.String(),
-			TakerFee:      trade.TakerFee.Add(trade.TakerAppFee).String(),
-			MakerFee:      trade.MakerFee.Add(trade.MakerAppFee).String(),
-			Timestamp:     Time(trade.Time),
-		})
-	}
-	return result
-}
+
 
 type ReqMakeOrderAsRead struct {
 	Trader string `json:"trader"`
@@ -188,7 +166,6 @@ type ReqMakeOrderAsRead struct {
 type RespUnreadOrder struct {
 	HasUnread bool `json:"has_unread"`
 }
-
 
 type ReqClearAllUnreadOrders struct {
 	Trader string `json:"trader"`

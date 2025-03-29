@@ -607,7 +607,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Deposit"
+                    "transactions"
                 ],
                 "summary": "Get deposit amount total",
                 "parameters": [
@@ -678,7 +678,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "pool"
                 ],
                 "summary": "query pool",
                 "parameters": [
@@ -809,7 +809,7 @@
                     }
                 ],
                 "tags": [
-                    "admin"
+                    "user"
                 ],
                 "summary": "get user passkeys",
                 "responses": {
@@ -839,7 +839,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "transactions"
                 ],
                 "summary": "query transactions record",
                 "parameters": [
@@ -913,7 +913,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "user"
                 ],
                 "summary": "query users",
                 "parameters": [
@@ -983,7 +983,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "depth"
+                    "user"
                 ],
                 "summary": "Get users statis",
                 "parameters": [
@@ -1028,7 +1028,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Deposit"
+                    "transactions"
                 ],
                 "summary": "Get withdraw amount total",
                 "parameters": [
@@ -1473,6 +1473,7 @@
                 "quote_contract",
                 "quote_symbol",
                 "status",
+                "symbol",
                 "visible"
             ],
             "properties": {
@@ -1493,6 +1494,9 @@
                 },
                 "status": {
                     "$ref": "#/definitions/db.PoolStatus"
+                },
+                "symbol": {
+                    "type": "string"
                 },
                 "visible": {
                     "type": "boolean"
@@ -1630,6 +1634,9 @@
                 },
                 "status": {
                     "$ref": "#/definitions/db.PoolStatus"
+                },
+                "symbol": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
