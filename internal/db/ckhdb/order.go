@@ -240,7 +240,7 @@ func (r *ClickHouseRepo) QueryHistoryOrdersList(ctx context.Context, params *que
 	return orders, total, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
+func (r *ClickHouseRepo) GetOrdersCoinQuantity(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
 	var orders []*HistoryOrder
 
 	err := r.DB.Raw(`SELECT pool_base_coin, SUM(executed_quantity) AS executed_quantity 
@@ -255,14 +255,14 @@ func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endT
 	return orders, nil
 }
 
-type OrdersSymbolTotal struct {
+type OrdersSymbolQuantity struct {
 	Symbol   string          `json:"symbol"`
 	Quantity decimal.Decimal `json:"quantity"`
 	Price    decimal.Decimal `json:"price"`
 }
 
-func (r *ClickHouseRepo) GetOrdersSymbolTotal(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolTotal, error) {
-	var orders []*OrdersSymbolTotal
+func (r *ClickHouseRepo) GetOrdersSymbolQuantity(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolQuantity, error) {
+	var orders []*OrdersSymbolQuantity
 
 	err := r.DB.Raw(`
 		SELECT pool_symbol as symbol,

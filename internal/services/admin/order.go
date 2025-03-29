@@ -39,31 +39,31 @@ func (s *AdminServices) QueryHistoryOrders(ctx context.Context, params *querypar
 	return resp, total, nil
 }
 
-func (s *AdminServices) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersCoinTotal, error) {
+func (s *AdminServices) GetOrdersCoinQuantity(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersCoinQuantity, error) {
 
-	orders, err := s.ckhdbRepo.GetOrdersCoinTotal(ctx, startTime, endTime)
+	orders, err := s.ckhdbRepo.GetOrdersCoinQuantity(ctx, startTime, endTime)
 	if err != nil {
 		return nil, err
 	}
 
-	var resp []*entity_admin.RespOrdersCoinTotal
+	var resp []*entity_admin.RespOrdersCoinQuantity
 	for _, order := range orders {
-		resp = append(resp, new(entity_admin.RespOrdersCoinTotal).Fill(order))
+		resp = append(resp, new(entity_admin.RespOrdersCoinQuantity).Fill(order))
 	}
 
 	return resp, nil
 }
 
-func (s *AdminServices) GetOrdersSymbolTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersSymbolTotal, error) {
+func (s *AdminServices) GetOrdersSymbolQuantity(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersSymbolQuantity, error) {
 
-	orders, err := s.ckhdbRepo.GetOrdersSymbolTotal(ctx, startTime, endTime)
+	orders, err := s.ckhdbRepo.GetOrdersSymbolQuantity(ctx, startTime, endTime)
 	if err != nil {
 		return nil, err
 	}
 
-	var resp []*entity_admin.RespOrdersSymbolTotal
+	var resp []*entity_admin.RespOrdersSymbolQuantity
 	for _, order := range orders {
-		resp = append(resp, new(entity_admin.RespOrdersSymbolTotal).Fill(order))
+		resp = append(resp, new(entity_admin.RespOrdersSymbolQuantity).Fill(order))
 	}
 
 	return resp, nil

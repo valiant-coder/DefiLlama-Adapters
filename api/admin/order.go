@@ -21,10 +21,14 @@ func queryHistoryQrders(c *gin.Context) {
 }
 
 func getOrdersCoinTotal(c *gin.Context) {
+
+}
+
+func getOrdersCoinQuantity(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersCoinTotal(c.Request.Context(), startTime, endTime)
+	resp, err := admin.New().GetOrdersCoinQuantity(c.Request.Context(), startTime, endTime)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -33,11 +37,11 @@ func getOrdersCoinTotal(c *gin.Context) {
 	api.List(c, resp, 0)
 }
 
-func getOrdersSymbolTotal(c *gin.Context) {
+func getOrdersSymbolQuantity(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersSymbolTotal(c.Request.Context(), startTime, endTime)
+	resp, err := admin.New().GetOrdersSymbolQuantity(c.Request.Context(), startTime, endTime)
 	if err != nil {
 		api.Error(c, err)
 		return

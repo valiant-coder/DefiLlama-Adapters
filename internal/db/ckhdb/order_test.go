@@ -15,7 +15,7 @@ func TestGetOrdersCoinTotal(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	orders, err := ckhRepo.GetOrdersCoinTotal(context.Background(), "2024-10-01", "2025-10-31")
+	orders, err := ckhRepo.GetOrdersCoinQuantity(context.Background(), "2024-10-01", "2025-10-31")
 	if err != nil {
 		t.Error(err)
 	}
@@ -31,7 +31,7 @@ func TestGetOrdersSymbolTotal(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	orders, err := ckhRepo.GetOrdersSymbolTotal(context.Background(), "2024-10-01", "2025-10-31")
+	orders, err := ckhRepo.GetOrdersSymbolQuantity(context.Background(), "2024-10-01", "2025-10-31")
 	if err != nil {
 		t.Error(err)
 	}
