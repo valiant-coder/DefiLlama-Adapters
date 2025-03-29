@@ -137,10 +137,11 @@ func Run(addr string, release bool) error {
 	authorized.POST("/pool", createPool)
 
 	// open_order
-	authorized.GET("/history_orders", queryHistoryQrders)
+	authorized.GET("/history_orders", queryHistoryOrders)
 	authorized.GET("/orders_coin_total", getOrdersCoinTotal)
 	authorized.GET("/orders_coin_quantity", getOrdersCoinQuantity)
 	authorized.GET("/orders_symbol_quantity", getOrdersSymbolQuantity)
+	authorized.GET("/orders_fee_total", getOrdersFeeTotal)
 	authorized.GET("/orders_coin_fee", getOrdersCoinFee)
 	authorized.GET("/orders_symbol_fee", getOrdersSymbolFee)
 

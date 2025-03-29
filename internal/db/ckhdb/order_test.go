@@ -15,6 +15,20 @@ func TestGetOrdersCoinTotal(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
+	total, err := ckhRepo.GetOrdersCoinTotal(context.Background(), "2024-10-01", "2025-10-31")
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(total)
+}
+
+func TestGetOrdersCoinQuantity(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	ckhRepo := New()
+
 	orders, err := ckhRepo.GetOrdersCoinQuantity(context.Background(), "2024-10-01", "2025-10-31")
 	if err != nil {
 		t.Error(err)
@@ -25,7 +39,7 @@ func TestGetOrdersCoinTotal(t *testing.T) {
 	}
 }
 
-func TestGetOrdersSymbolTotal(t *testing.T) {
+func TestGetOrdersSymbolQuantity(t *testing.T) {
 
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config.yaml")
@@ -66,6 +80,19 @@ func TestQueryHistoryOrdersList(t *testing.T) {
 	for _, order := range orders {
 		fmt.Println(*order)
 	}
+	fmt.Println(total)
+}
+
+func TestGetOrdersFeeTotal(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	ckhRepo := New()
+
+	total, err := ckhRepo.GetOrdersFeeTotal(context.Background(), "2024-10-01", "2025-10-31")
+	if err != nil {
+		t.Error(err)
+	}
+
 	fmt.Println(total)
 }
 

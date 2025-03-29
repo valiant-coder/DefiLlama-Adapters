@@ -240,6 +240,19 @@ func (r *ClickHouseRepo) QueryHistoryOrdersList(ctx context.Context, params *que
 	return orders, total, nil
 }
 
+func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) (decimal.Decimal, error) {
+	var total decimal.Decimal
+
+	err := r.DB.Raw(`SELECT SUM(executed_quantity * avg_price) AS total
+		FROM history_orders
+		WHERE created_at BETWEEN ? AND ?`, startTime, endTime).Scan(&total).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return total, nil
+}
+
 func (r *ClickHouseRepo) GetOrdersCoinQuantity(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
 	var orders []*HistoryOrder
 
@@ -277,6 +290,19 @@ func (r *ClickHouseRepo) GetOrdersSymbolQuantity(ctx context.Context, startTime,
 	}
 
 	return orders, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersFeeTotal(ctx context.Context, startTime, endTime string) (decimal.Decimal, error) {
+	var total decimal.Decimal
+
+	err := r.DB.Raw(`SELECT SUM(taker_fee + maker_fee) AS total 
+		FROM trades
+		WHERE created_at BETWEEN ? AND ?`, startTime, endTime).Scan(&total).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return total, nil
 }
 
 func (r *ClickHouseRepo) GetOrdersCoinFee(ctx context.Context, startTime, endTime string) ([]*HistoryOrderForm, error) {

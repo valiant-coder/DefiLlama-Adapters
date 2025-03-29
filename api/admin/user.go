@@ -127,7 +127,7 @@ func getDepositAmountTotal(c *gin.Context) {
 		return
 	}
 
-	api.List(c, resp, 0)
+	api.OK(c, resp)
 }
 
 // @Tags transactions
@@ -149,5 +149,5 @@ func getWithdrawAmountTotal(c *gin.Context) {
 		return
 	}
 
-	api.List(c, resp, 0)
+	api.OK(c, resp)
 }
