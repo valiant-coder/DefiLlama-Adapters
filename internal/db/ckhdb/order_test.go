@@ -37,7 +37,7 @@ func TestGetOrdersSymbolTotal(t *testing.T) {
 	}
 
 	for _, order := range orders {
-		fmt.Println(order.PoolSymbol, order.ExecutedQuantity)
+		fmt.Println(order.Symbol, order.Quantity, order.Price)
 	}
 }
 
@@ -97,6 +97,6 @@ func TestGetOrdersSymbolFee(t *testing.T) {
 	}
 
 	for _, order := range orders {
-		fmt.Println(order.PoolSymbol, order.Fee)
+		fmt.Println(order.Symbol, order.MakerFee, order.TakerFee)
 	}
 }

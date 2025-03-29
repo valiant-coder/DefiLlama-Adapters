@@ -60,13 +60,15 @@ func (r *RespOrdersCoinTotal) Fill(a *ckhdb.HistoryOrder) *RespOrdersCoinTotal {
 }
 
 type RespOrdersSymbolTotal struct {
-	Symbol string          `json:"symbol"`
-	Total  decimal.Decimal `json:"total"`
+	Symbol   string          `json:"symbol"`
+	Quantity decimal.Decimal `json:"quantity"`
+	Price    decimal.Decimal `json:"price"`
 }
 
-func (r *RespOrdersSymbolTotal) Fill(a *ckhdb.HistoryOrder) *RespOrdersSymbolTotal {
-	r.Symbol = a.PoolSymbol
-	r.Total = a.ExecutedQuantity
+func (r *RespOrdersSymbolTotal) Fill(a *ckhdb.OrdersSymbolTotal) *RespOrdersSymbolTotal {
+	r.Symbol = a.Symbol
+	r.Quantity = a.Quantity
+	r.Price = a.Price
 	return r
 }
 
@@ -82,12 +84,14 @@ func (r *RespOrdersCoinFee) Fill(a *ckhdb.HistoryOrderForm) *RespOrdersCoinFee {
 }
 
 type RespOrdersSymbolFee struct {
-	Symbol string          `json:"symbol"`
-	Fee    decimal.Decimal `json:"fee"`
+	Symbol    string          `json:"symbol"`
+	TaskerFee decimal.Decimal `json:"tasker_fee"`
+	MakerFee  decimal.Decimal `json:"maker_fee"`
 }
 
-func (r *RespOrdersSymbolFee) Fill(a *ckhdb.HistoryOrderForm) *RespOrdersSymbolFee {
-	r.Symbol = a.PoolSymbol
-	r.Fee = a.Fee
+func (r *RespOrdersSymbolFee) Fill(a *ckhdb.OrdersSymbolFee) *RespOrdersSymbolFee {
+	r.Symbol = a.Symbol
+	r.TaskerFee = a.TakerFee
+	r.MakerFee = a.MakerFee
 	return r
 }

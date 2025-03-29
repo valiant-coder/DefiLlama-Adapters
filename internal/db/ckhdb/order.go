@@ -255,14 +255,23 @@ func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endT
 	return orders, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersSymbolTotal(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
-	var orders []*HistoryOrder
+type OrdersSymbolTotal struct {
+	Symbol   string          `json:"symbol"`
+	Quantity decimal.Decimal `json:"quantity"`
+	Price    decimal.Decimal `json:"price"`
+}
 
-	err := r.DB.Raw(`SELECT pool_symbol, SUM(executed_quantity) AS executed_quantity 
+func (r *ClickHouseRepo) GetOrdersSymbolTotal(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolTotal, error) {
+	var orders []*OrdersSymbolTotal
+
+	err := r.DB.Raw(`
+		SELECT pool_symbol as symbol,
+		SUM(executed_quantity) AS quantity,
+		SUM(executed_quantity * avg_price) AS price
 		FROM history_orders
 		WHERE created_at BETWEEN ? AND ?
 		GROUP BY pool_symbol
-		ORDER BY executed_quantity DESC`, startTime, endTime).Scan(&orders).Error
+		ORDER BY quantity DESC`, startTime, endTime).Scan(&orders).Error
 	if err != nil {
 		return nil, err
 	}
@@ -285,14 +294,20 @@ func (r *ClickHouseRepo) GetOrdersCoinFee(ctx context.Context, startTime, endTim
 	return orders, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersSymbolFee(ctx context.Context, startTime, endTime string) ([]*HistoryOrderForm, error) {
-	var orders []*HistoryOrderForm
+type OrdersSymbolFee struct {
+	Symbol   string          `json:"symbol"`
+	TakerFee decimal.Decimal `json:"taker_fee"`
+	MakerFee decimal.Decimal `json:"maker_fee"`
+}
 
-	err := r.DB.Raw(`SELECT symbol AS pool_symbol, SUM(taker_fee + maker_fee) AS fee 
+func (r *ClickHouseRepo) GetOrdersSymbolFee(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolFee, error) {
+	var orders []*OrdersSymbolFee
+
+	err := r.DB.Raw(`SELECT symbol, SUM(taker_fee) AS taker_fee, SUM(maker_fee) AS maker_fee
 		FROM trades
 		WHERE created_at BETWEEN ? AND ?
-		GROUP BY pool_symbol
-		ORDER BY fee DESC`, startTime, endTime).Scan(&orders).Error
+		GROUP BY symbol
+		ORDER BY taker_fee DESC`, startTime, endTime).Scan(&orders).Error
 	if err != nil {
 		return nil, err
 	}
