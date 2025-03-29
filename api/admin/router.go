@@ -140,6 +140,8 @@ func Run(addr string, release bool) error {
 	authorized.GET("/history_orders", queryHistoryQrders)
 	authorized.GET("/orders_coin_total", getOrdersCoinTotal)
 	authorized.GET("/orders_symbol_total", getOrdersSymbolTotal)
+	authorized.GET("/orders_coin_fee", getOrdersCoinFee)
+	authorized.GET("/orders_symbol_fee", getOrdersSymbolFee)
 
 	return r.Run(addr)
 

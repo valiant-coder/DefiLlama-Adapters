@@ -68,3 +68,33 @@ func (s *AdminServices) GetOrdersSymbolTotal(ctx context.Context, startTime, end
 
 	return resp, nil
 }
+
+func (s *AdminServices) GetOrdersCoinFee(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersCoinFee, error) {
+
+	orders, err := s.ckhdbRepo.GetOrdersCoinFee(ctx, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*entity_admin.RespOrdersCoinFee
+	for _, order := range orders {
+		resp = append(resp, new(entity_admin.RespOrdersCoinFee).Fill(order))
+	}
+
+	return resp, nil
+}
+
+func (s *AdminServices) GetOrdersSymbolFee(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespOrdersSymbolFee, error) {
+
+	orders, err := s.ckhdbRepo.GetOrdersSymbolFee(ctx, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*entity_admin.RespOrdersSymbolFee
+	for _, order := range orders {
+		resp = append(resp, new(entity_admin.RespOrdersSymbolFee).Fill(order))
+	}
+
+	return resp, nil
+}

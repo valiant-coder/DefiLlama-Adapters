@@ -20,8 +20,8 @@ func TestGetOrdersCoinTotal(t *testing.T) {
 		t.Error(err)
 	}
 
-	for _, ororder := range orders {
-		fmt.Println(ororder.PoolBaseCoin, ororder.ExecutedQuantity)
+	for _, order := range orders {
+		fmt.Println(order.PoolBaseCoin, order.ExecutedQuantity)
 	}
 }
 
@@ -36,8 +36,8 @@ func TestGetOrdersSymbolTotal(t *testing.T) {
 		t.Error(err)
 	}
 
-	for _, ororder := range orders {
-		fmt.Println(ororder.PoolSymbol, ororder.ExecutedQuantity)
+	for _, order := range orders {
+		fmt.Println(order.PoolSymbol, order.ExecutedQuantity)
 	}
 }
 
@@ -63,8 +63,40 @@ func TestQueryHistoryOrdersList(t *testing.T) {
 		t.Error(err)
 	}
 
-	for _, ororder := range orders {
-		fmt.Println(*ororder)
+	for _, order := range orders {
+		fmt.Println(*order)
 	}
 	fmt.Println(total)
+}
+
+func TestGetOrdersCoinFee(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	ckhRepo := New()
+
+	orders, err := ckhRepo.GetOrdersCoinFee(context.Background(), "2024-10-01", "2025-10-31")
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, order := range orders {
+		fmt.Println(order.PoolBaseCoin, order.Fee)
+	}
+}
+
+func TestGetOrdersSymbolFee(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	ckhRepo := New()
+
+	orders, err := ckhRepo.GetOrdersSymbolFee(context.Background(), "2024-10-01", "2025-10-31")
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, order := range orders {
+		fmt.Println(order.PoolSymbol, order.Fee)
+	}
 }

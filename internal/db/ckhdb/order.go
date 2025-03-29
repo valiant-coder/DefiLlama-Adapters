@@ -269,3 +269,33 @@ func (r *ClickHouseRepo) GetOrdersSymbolTotal(ctx context.Context, startTime, en
 
 	return orders, nil
 }
+
+func (r *ClickHouseRepo) GetOrdersCoinFee(ctx context.Context, startTime, endTime string) ([]*HistoryOrderForm, error) {
+	var orders []*HistoryOrderForm
+
+	err := r.DB.Raw(`SELECT base_coin as pool_base_coin, SUM(taker_fee + maker_fee) AS fee 
+		FROM trades
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_base_coin
+		ORDER BY fee DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersSymbolFee(ctx context.Context, startTime, endTime string) ([]*HistoryOrderForm, error) {
+	var orders []*HistoryOrderForm
+
+	err := r.DB.Raw(`SELECT symbol AS pool_symbol, SUM(taker_fee + maker_fee) AS fee 
+		FROM trades
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_symbol
+		ORDER BY fee DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
