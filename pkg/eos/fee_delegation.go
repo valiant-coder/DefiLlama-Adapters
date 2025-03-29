@@ -99,16 +99,15 @@ func CheckIsLegitTransaction(signedTx string, payEosAccount, eosAccount string, 
 		return false
 	}
 
-	if tx.Actions[0].Authorization[0].Actor != eos.AN(payEosAccount) {
-		log.Printf("transaction account is not payer account")
+	
+	// first action must be pay account noop
+	if tx.Actions[0].Account != eos.AN(payEosAccount) || tx.Actions[0].Name != eos.ActN("noop") {
+		log.Printf("transaction first action is not payer noop")
 		return false
 	}
 
-	for _, action := range tx.Actions {
+	for _, action := range tx.Actions[1:] {
 		for _, authorization := range action.Authorization {
-			if authorization.Actor == eos.AN(payEosAccount) {
-				continue
-			}
 			if authorization.Actor != eos.AN(eosAccount) || authorization.Permission != eos.PN(permission) {
 				log.Printf("transaction authorization is not legit, actor: %s, permission: %s", authorization.Actor, authorization.Permission)
 				return false

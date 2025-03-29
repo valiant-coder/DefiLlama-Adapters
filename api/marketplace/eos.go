@@ -39,6 +39,20 @@ func payCPU(c *gin.Context) {
 		}
 	}
 
+	userService := marketplace.NewUserService()
+
+	eosAccount, err := userService.GetEosAccountByPubkey(c.Request.Context(), request.PublicKey)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	isLegit := pkeos.CheckIsLegitTransaction(request.SingleSignedTransaction, config.Conf().Eos.PayerAccount, eosAccount, "active")
+	if !isLegit {
+		api.Error(c, errno.DefaultParamsError("transaction is not legit"))
+		return
+	}
+
 	response, err := pkeos.SignAndBroadcastByPayer(
 		c.Request.Context(),
 		eos.New(config.Conf().Eos.NodeURL),

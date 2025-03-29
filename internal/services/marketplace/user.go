@@ -293,3 +293,11 @@ func (s *UserService) DeleteUserCredential(ctx context.Context, uid string, cred
 
 	return s.repo.DeleteUserCredential(ctx, targetCredential)
 }
+
+func (s *UserService) GetEosAccountByPubkey(ctx context.Context, pubkey string) (string, error) {
+	credential, err := s.repo.GetUserCredentialByPubkey(ctx, pubkey)
+	if err != nil {
+		return "", err
+	}
+	return credential.EOSAccount, nil
+}
