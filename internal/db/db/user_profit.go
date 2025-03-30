@@ -13,6 +13,7 @@ func init() {
 	addMigrateFunc(func(repo *Repo) error {
 		return repo.AutoMigrate(
 			&UserBalanceRecord{},
+			&UserCoinBalanceRecord{},
 			&UserDayProfitRecord{},
 			&UserAccumulatedProfitRecord{},
 		)
@@ -151,4 +152,26 @@ func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, be
 		Where("begin_time = ? AND end_time = ?", beginTime, endTime).
 		Find(&records).Error
 	return records, err
+}
+
+type UserCoinBalanceRecord struct {
+	gorm.Model
+	UID       string          `gorm:"column:uid;type:varchar(255);not null;uniqueIndex:idx_uid_time"`
+	Time      time.Time       `gorm:"column:time;type:timestamp;not null;uniqueIndex:idx_uid_time;index:idx_time"`
+	Account   string          `gorm:"column:account;type:varchar(255);not null;"`
+	Coin      string          `gorm:"column:coin;type:varchar(255);not null;"`
+	Amount    decimal.Decimal `gorm:"column:amount;type:decimal(20,6);not null;"`
+	IsEvmUser bool            `gorm:"column:is_evm_user;type:bool;not null;"`
+}
+
+func (r *Repo) BatchCreateUserCoinBalanceRecords(ctx context.Context, records []*UserCoinBalanceRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+	return r.DB.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "uid"}, {Name: "time"}},
+			DoUpdates: clause.AssignmentColumns([]string{"amount", "updated_at"}),
+		}).
+		CreateInBatches(records, 100).Error
 }
