@@ -62,8 +62,9 @@ func (s *Service) recordUserBalances() error {
 
 	// Use channel to collect results
 	type result struct {
-		record *db.UserBalanceRecord
-		err    error
+		record   *db.UserBalanceRecord
+		balances []*db.UserCoinBalanceRecord
+		err      error
 	}
 	resultChan := make(chan result, len(eosAccounts))
 
@@ -84,9 +85,9 @@ func (s *Service) recordUserBalances() error {
 	for i := 0; i < workerCount; i++ {
 		go func() {
 			for account := range taskChan {
-				usdtAmount, err := userService.CalculateTotalUSDTValueForUser(ctx, account.UID)
+				usdtAmount, balances, err := userService.CalculateTotalUSDTValueForUser(ctx, account.UID)
 				if err != nil {
-					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.EOSAccount, err)}
+					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.UID, err)}
 					continue
 				}
 
@@ -96,13 +97,35 @@ func (s *Service) recordUserBalances() error {
 					UID:        account.UID,
 					USDTAmount: usdtAmount,
 				}
-				resultChan <- result{record: record}
+
+				var coinRecord []*db.UserCoinBalanceRecord
+				for _, balance := range balances {
+					amount, err := decimal.NewFromString(balance.Balance)
+					if err != nil {
+						continue
+					}
+
+					coinRecord = append(coinRecord, &db.UserCoinBalanceRecord{
+						Time:      now,
+						Account:   account.EOSAccount,
+						UID:       account.UID,
+						Coin:      balance.Coin,
+						Amount:    amount,
+						IsEvmUser: balance.IsEvmUser,
+					})
+				}
+
+				resultChan <- result{
+					record:   record,
+					balances: coinRecord,
+				}
 			}
 		}()
 	}
 
 	// Collect results
 	var records []*db.UserBalanceRecord
+	var coinRecords []*db.UserCoinBalanceRecord
 	var errors []error
 	for i := 0; i < len(eosAccounts); i++ {
 		res := <-resultChan
@@ -111,13 +134,21 @@ func (s *Service) recordUserBalances() error {
 			continue
 		}
 		records = append(records, res.record)
+		coinRecords = append(coinRecords, res.balances...)
 	}
 
-	// Batch save records
+	// Batch save balance records
 	if len(records) > 0 {
 		if err := s.repo.BatchCreateUserBalanceRecords(ctx, records); err != nil {
 			log.Printf("Failed to batch save balance records: %v", err)
 			return err
+		}
+	}
+
+	// Batch save coin balance records
+	if len(records) > 0 {
+		if err := s.repo.BatchCreateUserCoinBalanceRecords(ctx, coinRecords); err != nil {
+			log.Printf("Failed to batch save coin balance records: %v", err)
 		}
 	}
 

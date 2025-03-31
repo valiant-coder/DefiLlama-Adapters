@@ -1,53 +1,97 @@
 package entity_admin
 
 import (
-	"exapp-go/internal/db/db"
+	"exapp-go/internal/db/ckhdb"
+	"exapp-go/internal/entity"
+	"fmt"
 
 	"github.com/shopspring/decimal"
 )
 
-type RespOpenOrder struct {
-	CreatedAt        string          `json:"created_at"`
-	CompleteAt       string          `json:"complete_at"`
-	Symbol           string          `json:"symbol"`
-	Name             string          `json:"name"`
-	EVMContract      string          `json:"evm_contract"`
+type RespHistoryOrder struct {
+	ID               string          `json:"id"`
+	CreatedAt        entity.Time     `json:"created_at"`
+	CompleteAt       entity.Time     `json:"complete_at"`
+	PoolBaseCoin     string          `json:"pool_base_coin"`
 	Trader           string          `json:"trader"`
-	Fee              string          `json:"fee"`
 	PoolSymbol       string          `json:"pool_symbol"`
-	PoolContract     string          `json:"pool_contract"`
-	Price            decimal.Decimal `json:"price"`
 	OriginalQuantity decimal.Decimal `json:"original_quantity"`
 	ExecutedQuantity decimal.Decimal `json:"executed_quantity"`
-	TxID             string          `json:"tx_id"`
-	Status           db.OrderStatus  `json:"status"`
+	Fee              decimal.Decimal `json:"fee"`
+	App              string          `json:"app"`
+	Price            decimal.Decimal `json:"price"`
+	TxIDs            string          `json:"tx_id"`
 }
 
-func (r *RespOpenOrder) Fill(a *db.OpenOrder) *RespOpenOrder {
-	r.CreatedAt = a.CreatedAt.Format("2006-01-02 15:04:05")
-	// r.CompleteAt = a.CompleteAt.Format("2006-01-02 15:04:05")
-	// r.Symbol = a.Symbol
-	// r.Name = a.Name
-	// r.EVMContractAddress = a.EVMContractAddress
+type TxID struct {
+	CreateTxID string `json:"create_tx_id"`
+	CancelTxID string `json:"cancel_tx_id"`
+}
+
+func (r *RespHistoryOrder) Fill(a *ckhdb.HistoryOrderForm) *RespHistoryOrder {
+	side := uint8(1)
+	if a.IsBid {
+		side = 0
+	}
+	r.ID = fmt.Sprintf("%d-%d-%d", a.PoolID, a.OrderID, side)
+	r.CreatedAt = entity.Time(a.CreatedAt)
+	r.CompleteAt = entity.Time(a.CompleteAt)
 	r.Trader = a.Trader
-	// r.Fee = a.Fee
+	r.PoolBaseCoin = a.PoolBaseCoin
 	r.PoolSymbol = a.PoolSymbol
-	// r.PoolContract = a.PoolContract
 	r.Price = a.Price
-	r.OriginalQuantity = a.OriginalQuantity
+	r.Fee = a.Fee
+	r.App = a.App
+	r.Price = a.Price
 	r.ExecutedQuantity = a.ExecutedQuantity
-	r.TxID = a.TxID
-	r.Status = a.Status
+	r.TxIDs = a.TxIDs
 	return r
 }
 
-type RespOrdersCoinTotal struct {
-	Symbol string          `json:"symbol"`
-	Total  decimal.Decimal `json:"total"`
+type RespOrdersCoinQuantity struct {
+	Coin     string          `json:"coin"`
+	Quantity decimal.Decimal `json:"quantity"`
 }
 
-func (r *RespOrdersCoinTotal) Fill(a *db.OpenOrder) *RespOrdersCoinTotal {
-	r.Symbol = a.PoolBaseCoin
-	r.Total = a.ExecutedQuantity
+func (r *RespOrdersCoinQuantity) Fill(a *ckhdb.HistoryOrder) *RespOrdersCoinQuantity {
+	r.Coin = a.PoolBaseCoin
+	r.Quantity = a.ExecutedQuantity
+	return r
+}
+
+type RespOrdersSymbolQuantity struct {
+	Symbol   string          `json:"symbol"`
+	Quantity decimal.Decimal `json:"quantity"`
+	Price    decimal.Decimal `json:"price"`
+}
+
+func (r *RespOrdersSymbolQuantity) Fill(a *ckhdb.OrdersSymbolQuantity) *RespOrdersSymbolQuantity {
+	r.Symbol = a.Symbol
+	r.Quantity = a.Quantity
+	r.Price = a.Price
+	return r
+}
+
+type RespOrdersCoinFee struct {
+	Coin string          `json:"coin"`
+	Fee  decimal.Decimal `json:"fee"`
+}
+
+func (r *RespOrdersCoinFee) Fill(a *ckhdb.HistoryOrderForm) *RespOrdersCoinFee {
+	r.Coin = a.PoolBaseCoin
+	r.Fee = a.Fee
+	return r
+}
+
+type RespOrdersSymbolFee struct {
+	Symbol    string          `json:"symbol"`
+	TaskerFee decimal.Decimal `json:"tasker_fee"`
+	MakerFee  decimal.Decimal `json:"maker_fee"`
+}
+
+func (r *RespOrdersSymbolFee) Fill(a *ckhdb.OrdersSymbolFee) *RespOrdersSymbolFee {
+	r.Symbol = a.Symbol
+	r.TaskerFee = a.TakerFee
+	r.MakerFee = a.MakerFee
 	return r
 }

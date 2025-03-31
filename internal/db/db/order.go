@@ -280,19 +280,3 @@ func (r *Repo) ClearUnreadOrders(ctx context.Context, trader, permission string)
 	key := getUnreadOrdersKey(trader, permission)
 	return r.Redis().Del(ctx, key).Err()
 }
-
-// GetOrdersCoinTotal returns the total amount of coins for each order
-func (r *Repo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) ([]*OpenOrder, error) {
-	var orders []*OpenOrder
-
-	err := r.DB.Raw(`SELECT pool_base_coin, SUM(executed_quantity) AS executed_quantity 
-		FROM open_orders
-		WHERE created_at BETWEEN ? AND ?
-		GROUP BY pool_base_coin
-		ORDER BY executed_quantity DESC`, startTime, endTime).Scan(&orders).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return orders, nil
-}
