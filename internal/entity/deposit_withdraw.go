@@ -2,16 +2,6 @@ package entity
 
 import "exapp-go/internal/db/db"
 
-type ReqFirstDeposit struct {
-	PublicKey string `json:"public_key" binding:"required"`
-	Symbol    string `json:"symbol" binding:"required"`
-	ChainName string `json:"chain_name" binding:"required"`
-}
-
-type RespFirstDeposit struct {
-	Address string `json:"address"`
-}
-
 type ReqDeposit struct {
 	Symbol    string `json:"symbol" binding:"required"`
 	PublicKey string `json:"public_key" binding:"required"`
