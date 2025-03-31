@@ -66,12 +66,12 @@ func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridge
 }
 
 func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req *entity.ReqDeposit) (entity.RespDeposit, error) {
-	passkey, err := s.repo.GetUserCredentialByPubkey(ctx, req.PublicKey)
+	passkey, err := s.repo.GetUserCredential(ctx, uid)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.RespDeposit{}, errno.DefaultParamsError("not found passkey")
+		}
 		return entity.RespDeposit{}, err
-	}
-	if passkey.EOSAccount != "" {
-		return entity.RespDeposit{}, errno.DefaultParamsError("fund blockchain account")
 	}
 
 	token, err := s.repo.GetToken(ctx, req.Symbol)
@@ -89,12 +89,20 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 
+	remark := fmt.Sprintf("topup-%s", uid)
 	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
 	if err != nil {
 		return entity.RespDeposit{}, err
 	}
-
-	remark := fmt.Sprintf("topup-%s", uid)
+	if len(depositAddress) > 0 {
+		for _, address := range depositAddress {
+			if address.Remark == remark {
+				return entity.RespDeposit{
+					Address: address.Address,
+				}, nil
+			}
+		}
+	}
 	if len(depositAddress) > 0 {
 		for _, address := range depositAddress {
 			if address.Remark == remark {
@@ -170,7 +178,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		s.eosCfg.OneDex.ActorPermission,
 	)
 	go func() {
-		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), req.PublicKey)
+		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), passkey.PublicKey)
 		if err != nil {
 			log.Printf("apply acc txid: %v", resp.TransactionID)
 		}

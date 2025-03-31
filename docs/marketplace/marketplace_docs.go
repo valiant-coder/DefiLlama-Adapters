@@ -2150,15 +2150,11 @@ const docTemplatemarketplace = `{
             "type": "object",
             "required": [
                 "chain_id",
-                "public_key",
                 "symbol"
             ],
             "properties": {
                 "chain_id": {
                     "type": "integer"
-                },
-                "public_key": {
-                    "type": "string"
                 },
                 "symbol": {
                     "type": "string"
@@ -2341,7 +2337,6 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "evm_address": {
-                    "description": "for evm user",
                     "type": "string"
                 },
                 "passkeys": {

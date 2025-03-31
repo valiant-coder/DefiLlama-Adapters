@@ -34,7 +34,6 @@ type RespUserInfo struct {
 	Passkeys []RespUserCredential `json:"passkeys"`
 	Email    string               `json:"email"`
 
-	// for evm user
 	EVMAddress string `json:"evm_address"`
 	EOSAccount string `json:"eos_account"`
 	Permission string `json:"permission"`
