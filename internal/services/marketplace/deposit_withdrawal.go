@@ -11,6 +11,7 @@ import (
 	"exapp-go/pkg/queryparams"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/spf13/cast"
@@ -112,15 +113,39 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}()
 		signupClient := onedex.NewSignupClient(
 			s.eosCfg.NodeURL,
+			s.eosCfg.OneDex.SignUpContract,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
 			s.eosCfg.OneDex.ActorPermission,
 		)
-		resp, err := signupClient.ApplyAcc(context.Background(), cast.ToUint64(uid), passkey.PublicKey)
+		pubkey, err := signupClient.GetPubkeyByUID(context.Background(), uid)
 		if err != nil {
-			log.Printf("apply acc txid: %v", resp.TransactionID)
+			return
 		}
-		log.Printf("apply acc txid: %v", resp.TransactionID)
+		if strings.EqualFold(pubkey, passkey.PublicKey) {
+			log.Printf("pubkey already applied")
+			return
+		}
+
+		maxRetries := 3
+		for i := 0; i < maxRetries; i++ {
+			resp, err := signupClient.ApplyAcc(context.Background(), cast.ToUint64(uid), pubkey)
+			if err != nil {
+				if strings.Contains(err.Error(), "already applied") {
+					log.Printf("pubkey already applied")
+					return
+				}
+				log.Printf("apply acc attempt %d failed: %v", i+1, err)
+				if i == maxRetries-1 {
+					log.Printf("apply acc failed after %d attempts", maxRetries)
+					return
+				}
+				time.Sleep(time.Second)
+				continue
+			}
+			log.Printf("apply acc txid: %v", resp.TransactionID)
+			return
+		}
 	}()
 
 	if targetChain.ChainName == "eos" {
