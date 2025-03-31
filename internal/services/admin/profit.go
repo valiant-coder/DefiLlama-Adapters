@@ -4,6 +4,7 @@ import (
 	"context"
 	"exapp-go/internal/db/db"
 	entity_admin "exapp-go/internal/entity/admin"
+	"exapp-go/pkg/queryparams"
 
 	"github.com/shopspring/decimal"
 )
@@ -36,4 +37,25 @@ func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool, 
 		MaxValue:   decimal.New(maxValue, 0),
 		RangeCount: rangeCount,
 	}, isEvmUser)
+}
+
+func (s *AdminServices) QueryUserBalance(ctx context.Context, params *queryparams.QueryParams) ([]*entity_admin.RespUserBalance, error) {
+	if uid := params.Query.Values["username"]; uid != nil {
+		params.CustomQuery["username"] = []interface{}{uid}
+	}
+	if coin := params.Query.Values["uid"]; coin != nil {
+		params.CustomQuery["uid"] = []interface{}{coin}
+	}
+
+	users, err := s.repo.QueryUserBalanceList(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*entity_admin.RespUserBalance
+	for _, user := range users {
+		resp = append(resp, new(entity_admin.RespUserBalance).Fill(user))
+	}
+
+	return resp, nil
 }

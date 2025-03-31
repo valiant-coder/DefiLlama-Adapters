@@ -3,6 +3,7 @@ package admin
 import (
 	"exapp-go/api"
 	"exapp-go/internal/services/admin"
+	"exapp-go/pkg/queryparams"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,6 +40,17 @@ func getUserBalanceStat(c *gin.Context) {
 	rangeCount := c.GetInt("range_count")
 
 	resp, err := admin.New().GetUserBalanceStat(c.Request.Context(), isEvmUser, minValue, maxValue, rangeCount)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, resp)
+}
+
+func queryUserBalance(c *gin.Context) {
+
+	resp, err := admin.New().QueryUserBalance(c.Request.Context(), queryparams.NewQueryParams(c))
 	if err != nil {
 		api.Error(c, err)
 		return

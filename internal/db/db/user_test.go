@@ -157,3 +157,31 @@ func TestGetUserBalanceDistribution(t *testing.T) {
 
 	log.Println("success")
 }
+
+func TestQueryUserBalanceList(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	queryparams := &queryparams.QueryParams{
+		Offset: 0,
+		Limit:  10,
+		CustomQuery: map[string][]interface{}{
+			"username": []any{"Harry Chen"},
+			"uid":      []any{"12496040"},
+		},
+	}
+	resp, err := r.QueryUserBalanceList(context.Background(), queryparams)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, v := range resp {
+		log.Println(v.Username, v.USDTAmount, v.UID, v.Time)
+	}
+
+	log.Println("success")
+
+}

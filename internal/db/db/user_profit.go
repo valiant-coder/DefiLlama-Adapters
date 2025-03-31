@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"exapp-go/pkg/queryparams"
 	"fmt"
 	"math"
 	"strings"
@@ -162,7 +163,8 @@ func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, be
 func (r *Repo) GetUserTotalBalanceByIsEvmUser(ctx context.Context, isEvmUser bool) (decimal.Decimal, error) {
 	var totalUsdt decimal.Decimal
 
-	err := r.DB.Raw(`SELECT SUM(usdt_amount) as usdt_amount FROM (
+	err := r.DB.Raw(`
+	SELECT SUM(usdt_amount) as usdt_amount FROM (
         SELECT t1.usdt_amount
         FROM user_balance_records t1
         INNER JOIN (
@@ -171,7 +173,8 @@ func (r *Repo) GetUserTotalBalanceByIsEvmUser(ctx context.Context, isEvmUser boo
             GROUP BY uid
         ) t2 ON t1.uid = t2.uid AND t1.time = t2.max_time
         WHERE t1.is_evm_user = ?
-    ) latest`, isEvmUser).Scan(&totalUsdt).Error
+    ) latest
+	`, isEvmUser).Scan(&totalUsdt).Error
 	if err != nil {
 		return decimal.Zero, err
 	}
@@ -292,6 +295,39 @@ func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRan
 	}
 
 	return result, nil
+}
+
+type UserBalanceWithUsername struct {
+	UserBalanceRecord
+	Username string `gorm:"column:username"`
+}
+
+func (r *Repo) QueryUserBalanceList(ctx context.Context, params *queryparams.QueryParams) ([]*UserBalanceWithUsername, error) {
+
+	var records []*UserBalanceWithUsername
+
+	tx := r.DB.WithContext(ctx).Table("user_balance_records AS ubr").
+		Select("ubr.*, users.username").
+		Joins("JOIN users ON users.uid = ubr.uid").
+		Joins(`JOIN (
+			SELECT uid, MAX(time) as max_time
+			FROM user_balance_records
+			GROUP BY uid
+		) latest ON ubr.uid = latest.uid AND ubr.time = latest.max_time`)
+
+	if uid, ok := params.CustomQuery["uid"]; ok {
+		tx = tx.Where("ubr.uid = ?", uid[0])
+	}
+	if username, ok := params.CustomQuery["username"]; ok {
+		tx = tx.Where("users.username = ?", username[0])
+	}
+
+	err := tx.Limit(params.Limit).Offset(params.Offset).Order(params.Order).Find(&records).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }
 
 type UserCoinBalanceRecord struct {
