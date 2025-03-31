@@ -99,9 +99,37 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			if address.Remark == remark {
 				return entity.RespDeposit{
 					Address: address.Address,
+					Memo:    remark,
 				}, nil
 			}
 		}
+	}
+	go func() {
+		signupClient := onedex.NewSignupClient(
+			s.eosCfg.NodeURL,
+			s.eosCfg.OneDex.Actor,
+			s.eosCfg.OneDex.ActorPrivateKey,
+			s.eosCfg.OneDex.ActorPermission,
+		)
+		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), passkey.PublicKey)
+		if err != nil {
+			log.Printf("apply acc txid: %v", resp.TransactionID)
+		}
+		log.Printf("apply acc txid: %v", resp.TransactionID)
+	}()
+
+	if targetChain.ChainName == "eos" {
+		return entity.RespDeposit{
+			Address: config.Conf().Eos.OneDex.PortalContract,
+			Memo:    remark,
+		}, nil
+	}
+
+	if targetChain.ChainName == "exsat" {
+		return entity.RespDeposit{
+			Address: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
+			Memo:    remark,
+		}, nil
 	}
 
 	var newDepositAddress string
@@ -162,19 +190,6 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 	log.Printf("new deposit address: %s", newDepositAddress)
-	signupClient := onedex.NewSignupClient(
-		s.eosCfg.NodeURL,
-		s.eosCfg.OneDex.Actor,
-		s.eosCfg.OneDex.ActorPrivateKey,
-		s.eosCfg.OneDex.ActorPermission,
-	)
-	go func() {
-		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), passkey.PublicKey)
-		if err != nil {
-			log.Printf("apply acc txid: %v", resp.TransactionID)
-		}
-		log.Printf("apply acc txid: %v", resp.TransactionID)
-	}()
 
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
@@ -187,6 +202,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 	return entity.RespDeposit{
 		Address: newDepositAddress,
+		Memo:    remark,
 	}, nil
 }
 

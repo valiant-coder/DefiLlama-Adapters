@@ -2229,6 +2229,9 @@ const docTemplatemarketplace = `{
             "properties": {
                 "address": {
                     "type": "string"
+                },
+                "memo": {
+                    "type": "string"
                 }
             }
         },

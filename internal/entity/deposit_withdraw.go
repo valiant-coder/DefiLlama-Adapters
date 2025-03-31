@@ -9,6 +9,7 @@ type ReqDeposit struct {
 
 type RespDeposit struct {
 	Address string `json:"address"`
+	Memo    string `json:"memo"`
 }
 
 type RespDepositRecord struct {
