@@ -105,13 +105,18 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("apply acc panic: %v", r)
+			}
+		}()
 		signupClient := onedex.NewSignupClient(
 			s.eosCfg.NodeURL,
 			s.eosCfg.OneDex.Actor,
 			s.eosCfg.OneDex.ActorPrivateKey,
 			s.eosCfg.OneDex.ActorPermission,
 		)
-		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), passkey.PublicKey)
+		resp, err := signupClient.ApplyAcc(context.Background(), cast.ToUint64(uid), passkey.PublicKey)
 		if err != nil {
 			log.Printf("apply acc txid: %v", resp.TransactionID)
 		}
