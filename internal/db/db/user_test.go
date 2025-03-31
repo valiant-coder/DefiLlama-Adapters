@@ -7,6 +7,8 @@ import (
 	"exapp-go/pkg/utils"
 	"log"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestQueryUsers(t *testing.T) {
@@ -130,6 +132,27 @@ func TestGetUserCoinTotalBalanceByIsEvmUser(t *testing.T) {
 
 	for _, v := range data {
 		log.Println(v.Coin, v.Amount)
+	}
+
+	log.Println("success")
+}
+func TestGetUserBalanceDistribution(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	data, err := r.GetUserBalanceDistribution(context.Background(), BalanceRangeConfig{
+		MinValue:   decimal.New(0, 0),
+		MaxValue:   decimal.New(1000000, 0),
+		RangeCount: 4,
+	}, false)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, v := range data {
+		log.Println(v.MinValue, v.MaxValue, v.Count)
 	}
 
 	log.Println("success")

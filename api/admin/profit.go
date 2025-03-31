@@ -30,3 +30,15 @@ func getCoinBalances(c *gin.Context) {
 
 	api.OK(c, resp)
 }
+
+func getUserBalanceStat(c *gin.Context) {
+	isEvmUser := c.GetBool("is_evm_user")
+
+	resp, err := admin.New().GetUserBalanceStat(c.Request.Context(), isEvmUser)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, resp)
+}

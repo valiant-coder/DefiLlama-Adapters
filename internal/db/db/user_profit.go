@@ -2,6 +2,10 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"math"
+	"strings"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -173,6 +177,123 @@ func (r *Repo) GetUserTotalBalanceByIsEvmUser(ctx context.Context, isEvmUser boo
 	}
 
 	return totalUsdt, nil
+}
+
+type BalanceRangeConfig struct {
+	MinValue   decimal.Decimal
+	MaxValue   decimal.Decimal
+	RangeCount int
+}
+
+type BalanceRange struct {
+	MinValue  decimal.Decimal `json:"min_value"`
+	MaxValue  decimal.Decimal `json:"max_value"`
+	Count     int64           `json:"count"`
+	RangeDesc string          `json:"range_desc"`
+}
+
+func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRangeConfig, isEvmUser bool) ([]BalanceRange, error) {
+	thresholds := make([]decimal.Decimal, config.RangeCount+1)
+	thresholds[0] = decimal.Zero
+
+	if config.RangeCount <= 1 {
+		return nil, errors.New("range count must be greater than 1")
+	}
+
+	// Handle case when MinValue is 0
+	if config.MinValue.IsZero() {
+		config.MinValue = decimal.NewFromFloat(0.001) // Use a small non-zero value instead
+	}
+
+	ratio := decimal.NewFromFloat(math.Pow(
+		config.MaxValue.Div(config.MinValue).InexactFloat64(),
+		1.0/float64(config.RangeCount-1),
+	))
+
+	currentValue := config.MinValue
+	thresholds[1] = currentValue
+	for i := 2; i <= config.RangeCount; i++ {
+		currentValue = currentValue.Mul(ratio)
+		thresholds[i] = currentValue
+	}
+
+	var caseStatements []string
+	for i := 0; i <= config.RangeCount; i++ {
+		var caseStmt string
+		if i == 0 {
+			caseStmt = fmt.Sprintf("COUNT(CASE WHEN usdt_amount < %s THEN 1 END) as range_%d", thresholds[1].String(), i)
+		} else if i == config.RangeCount {
+			caseStmt = fmt.Sprintf("COUNT(CASE WHEN usdt_amount >= %s THEN 1 END) as range_%d", thresholds[i].String(), i)
+		} else {
+			caseStmt = fmt.Sprintf("COUNT(CASE WHEN usdt_amount >= %s AND usdt_amount < %s THEN 1 END) as range_%d",
+				thresholds[i].String(), thresholds[i+1].String(), i)
+		}
+		caseStatements = append(caseStatements, caseStmt)
+	}
+
+	baseQuery := `
+		WITH latest_balances AS (
+			SELECT t1.uid, t1.usdt_amount
+			FROM user_balance_records t1
+			INNER JOIN (
+				SELECT uid, MAX(time) as max_time
+				FROM user_balance_records
+				WHERE is_evm_user = ?
+				GROUP BY uid
+			) t2 ON t1.uid = t2.uid AND t1.time = t2.max_time
+			WHERE t1.is_evm_user = ?
+		)
+		SELECT %s FROM latest_balances
+	`
+
+	query := fmt.Sprintf(baseQuery, strings.Join(caseStatements, ", "))
+
+	rows, err := r.DB.Raw(query, isEvmUser, isEvmUser).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil, errors.New("no results returned")
+	}
+
+	counts := make([]int64, config.RangeCount+1)
+	scanArgs := make([]interface{}, len(counts))
+	for i := range counts {
+		scanArgs[i] = &counts[i]
+	}
+
+	if err := rows.Scan(scanArgs...); err != nil {
+		return nil, err
+	}
+
+	result := make([]BalanceRange, config.RangeCount+1)
+
+	result[0] = BalanceRange{
+		MinValue:  decimal.Zero,
+		MaxValue:  thresholds[1],
+		Count:     counts[0],
+		RangeDesc: fmt.Sprintf("less than %s", thresholds[1]),
+	}
+
+	for i := 1; i < config.RangeCount; i++ {
+		result[i] = BalanceRange{
+			MinValue:  thresholds[i],
+			MaxValue:  thresholds[i+1],
+			Count:     counts[i],
+			RangeDesc: fmt.Sprintf("%s to %s", thresholds[i], thresholds[i+1]),
+		}
+	}
+
+	result[config.RangeCount] = BalanceRange{
+		MinValue:  thresholds[config.RangeCount],
+		MaxValue:  decimal.NewFromInt(0),
+		Count:     counts[config.RangeCount],
+		RangeDesc: fmt.Sprintf("greater than or equal to %s", thresholds[config.RangeCount]),
+	}
+
+	return result, nil
 }
 
 type UserCoinBalanceRecord struct {

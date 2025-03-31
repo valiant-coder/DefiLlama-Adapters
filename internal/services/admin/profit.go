@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"exapp-go/internal/db/db"
 	entity_admin "exapp-go/internal/entity/admin"
 
 	"github.com/shopspring/decimal"
@@ -27,4 +28,12 @@ func (s *AdminServices) GetCoinBalances(ctx context.Context, isEvmUser bool) ([]
 		resp = append(resp, new(entity_admin.RespCoinBalance).Fill(record))
 	}
 	return resp, nil
+}
+
+func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool) ([]db.BalanceRange, error) {
+	return s.repo.GetUserBalanceDistribution(ctx, db.BalanceRangeConfig{
+		MinValue:   decimal.New(0, 0),
+		MaxValue:   decimal.New(1000000, 0),
+		RangeCount: 4,
+	}, isEvmUser)
 }
