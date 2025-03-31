@@ -375,3 +375,24 @@ func (r *Repo) GetUserCoinTotalBalanceByIsEvmUser(ctx context.Context, isEvmUser
 
 	return records, err
 }
+
+func (r *Repo) GetUserCoinBalanceRecordForLastTimeByUID(ctx context.Context, uid string) ([]*UserCoinBalanceRecord, error) {
+	var records []*UserCoinBalanceRecord
+
+	err := r.DB.Raw(`
+		SELECT t1.* 
+		FROM user_coin_balance_records t1
+		INNER JOIN (
+			SELECT coin, MAX(time) as max_time
+			FROM user_coin_balance_records
+			WHERE uid = ?
+			GROUP BY coin
+		) t2 ON t1.coin = t2.coin AND t1.time = t2.max_time
+		WHERE t1.uid = ?
+	`, uid, uid).Scan(&records).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}

@@ -31,3 +31,14 @@ func (r *RespUserBalance) Fill(a *db.UserBalanceWithUsername) *RespUserBalance {
 	r.Balance = a.USDTAmount
 	return r
 }
+
+type RespUserCoinBalance struct {
+	Coin   string          `json:"coin"`
+	Amount decimal.Decimal `json:"amount"`
+}
+
+func (r *RespUserCoinBalance) Fill(a *db.UserCoinBalanceRecord) *RespUserCoinBalance {
+	r.Coin = a.Coin
+	r.Amount = a.Amount
+	return r
+}

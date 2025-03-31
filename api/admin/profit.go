@@ -58,3 +58,15 @@ func queryUserBalance(c *gin.Context) {
 
 	api.OK(c, resp)
 }
+
+func getUserCoinBalance(c *gin.Context) {
+	uid := c.Param("uid")
+
+	resp, err := admin.New().GetUserCoinBalance(c.Request.Context(), uid)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, resp)
+}

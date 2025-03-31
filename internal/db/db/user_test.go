@@ -185,3 +185,23 @@ func TestQueryUserBalanceList(t *testing.T) {
 	log.Println("success")
 
 }
+
+func TestGetUserCoinBalanceByUID(t *testing.T) {
+
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	resp, err := r.GetUserCoinBalanceRecordForLastTimeByUID(context.Background(), "62135133")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, v := range resp {
+		log.Println(v.Coin, v.Amount, v.UID, v.Time)
+	}
+
+	log.Println("success4")
+
+}

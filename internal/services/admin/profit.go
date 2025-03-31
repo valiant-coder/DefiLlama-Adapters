@@ -40,11 +40,11 @@ func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool, 
 }
 
 func (s *AdminServices) QueryUserBalance(ctx context.Context, params *queryparams.QueryParams) ([]*entity_admin.RespUserBalance, error) {
-	if uid := params.Query.Values["username"]; uid != nil {
-		params.CustomQuery["username"] = []interface{}{uid}
+	if username := params.Query.Values["username"]; username != nil {
+		params.CustomQuery["username"] = []interface{}{username}
 	}
-	if coin := params.Query.Values["uid"]; coin != nil {
-		params.CustomQuery["uid"] = []interface{}{coin}
+	if uid := params.Query.Values["uid"]; uid != nil {
+		params.CustomQuery["uid"] = []interface{}{uid}
 	}
 
 	users, err := s.repo.QueryUserBalanceList(ctx, params)
@@ -55,6 +55,21 @@ func (s *AdminServices) QueryUserBalance(ctx context.Context, params *queryparam
 	var resp []*entity_admin.RespUserBalance
 	for _, user := range users {
 		resp = append(resp, new(entity_admin.RespUserBalance).Fill(user))
+	}
+
+	return resp, nil
+}
+
+func (s *AdminServices) GetUserCoinBalance(ctx context.Context, uid string) ([]*entity_admin.RespUserCoinBalance, error) {
+
+	balances, err := s.repo.GetUserCoinBalanceRecordForLastTimeByUID(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*entity_admin.RespUserCoinBalance
+	for _, user := range balances {
+		resp = append(resp, new(entity_admin.RespUserCoinBalance).Fill(user))
 	}
 
 	return resp, nil
