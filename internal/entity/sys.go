@@ -11,8 +11,9 @@ type SystemInfo struct {
 	ExsatNetwork       ExsatNetwork       `json:"exsat_network"`
 	TradingCompetition TradingCompetition `json:"trading_competition"`
 
-	BTCBridgeContract string `json:"btc_bridge_contract"`
-	BridgeContract    string `json:"bridge_contract"`
+	BTCBridgeContract   string `json:"btc_bridge_contract"`
+	BridgeContract      string `json:"bridge_contract"`
+	EVMExtensionAddress string `json:"evm_extension_address"`
 }
 
 type TradingCompetition struct {
