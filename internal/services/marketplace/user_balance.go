@@ -471,9 +471,9 @@ func (s *UserService) getEvmUserAvailableBalances(ctx context.Context, evmAddres
 }
 
 // CalculateTotalUSDTValueForUser calculates the total value of all user assets in USDT
-func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, accountName string) (decimal.Decimal, error) {
+func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid string) (decimal.Decimal, error) {
 	// Get all user balances
-	balances, err := s.FetchUserBalanceByUID(ctx, accountName)
+	balances, err := s.FetchUserBalanceByUID(ctx, uid)
 	if err != nil {
 		return decimal.Zero, err
 	}
