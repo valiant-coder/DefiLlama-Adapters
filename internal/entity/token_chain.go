@@ -22,9 +22,9 @@ func TokenFromDB(token db.Token) Token {
 			chain.MinDepositAmount = chain.ExsatMinDepositAmount
 		}
 		chains = append(chains, Chain{
-			ChainName: chain.ChainName,
-			ChainID:   chain.ChainID,
-
+			ChainName:         chain.ChainName,
+			ChainID:           chain.ChainID,
+			PermissionID:      chain.PermissionID,
 			MinDepositAmount:  chain.MinDepositAmount.String(),
 			MinWithdrawAmount: chain.MinWithdrawAmount.String(),
 
@@ -75,8 +75,9 @@ func TokenFromDB(token db.Token) Token {
 }
 
 type Chain struct {
-	ChainID   uint8  `json:"chain_id"`
-	ChainName string `json:"chain_name"`
+	ChainID      uint8  `json:"chain_id"`
+	ChainName    string `json:"chain_name"`
+	PermissionID uint64 `json:"permission_id"`
 
 	MinDepositAmount  string `json:"min_deposit_amount"`
 	MinWithdrawAmount string `json:"min_withdraw_amount"`

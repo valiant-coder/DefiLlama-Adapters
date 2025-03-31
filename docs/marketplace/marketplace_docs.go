@@ -1672,6 +1672,9 @@ const docTemplatemarketplace = `{
                 "min_withdraw_amount": {
                     "type": "string"
                 },
+                "permission_id": {
+                    "type": "integer"
+                },
                 "withdraw_fee": {
                     "type": "string"
                 }
