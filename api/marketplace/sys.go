@@ -46,6 +46,7 @@ func getSystemInfo(c *gin.Context) {
 		BTCBridgeContract:  config.Conf().Eos.Exsat.BTCBridgeContract,
 		BridgeContract:     config.Conf().Eos.Exsat.BridgeContract,
 		DepositRecipientAd: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
+		MakerAgentContract: config.Conf().Eos.OneDex.MakerAgentContract,
 	}
 	api.OK(c, sysInfo)
 }

@@ -178,6 +178,7 @@ type OneDexConfig struct {
 	TokenContract    string  `yaml:"token_contract"`
 	EVMAgentContract string  `yaml:"evm_agent_contract"`
 	SignUpContract   string  `yaml:"sign_up_contract"`
+	MakerAgentContract string  `yaml:"maker_agent_contract"`
 }
 
 type ExsatConfig struct {

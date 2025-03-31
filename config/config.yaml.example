@@ -120,7 +120,7 @@ eos:
     add_xsat_chain: addxsatchain
     map_xsat: "mapxsat"
     log_new_trader: lognewtrader
-    
+    maker_agent_contract: makeragcontract
 evm:
   ethscan:
     endpoint: "https://sepolia.etherscan.io/api"

@@ -2482,6 +2482,9 @@ const docTemplatemarketplace = `{
                 "exsat_network": {
                     "$ref": "#/definitions/entity.ExsatNetwork"
                 },
+                "maker_agent_contract": {
+                    "type": "string"
+                },
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
                 },
