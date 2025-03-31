@@ -117,10 +117,10 @@ eos:
     log_send: logsend
     set_min_amt: setminamt
     set_pool_fee_rate: setpfeerate
-    create_token: "createtoken"
     add_xsat_chain: addxsatchain
     map_xsat: "mapxsat"
-
+    log_new_trader: lognewtrader
+    
 evm:
   ethscan:
     endpoint: "https://sepolia.etherscan.io/api"
