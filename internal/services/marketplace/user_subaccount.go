@@ -10,6 +10,9 @@ import (
 
 	"log"
 
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 	"gorm.io/datatypes"
 )
 
@@ -68,23 +71,59 @@ func (s *UserService) GetSubAccounts(ctx context.Context, uid string) ([]*entity
 		return nil, fmt.Errorf("failed to get sub-accounts: %w", err)
 	}
 
-	var result []*entity.SubAccountInfo
-	for _, sa := range subAccounts {
-		subAccountBalance, err := s.GetUserSubaccountBalances(ctx, sa.EOSAccount, sa.Permission)
-		if err != nil {
-			log.Printf("failed to get sub-account balance: %v", err)
-			subAccountBalance = []entity.SubAccountBalance{}
+	// Create a result slice with the same capacity as subAccounts
+	result := make([]*entity.SubAccountInfo, len(subAccounts))
 
-		}
-		result = append(result, &entity.SubAccountInfo{
-			SID:        sa.SID,
-			Name:       sa.Name,
-			EOSAccount: sa.EOSAccount,
-			Permission: sa.Permission,
-			APIKey:     sa.APIKey,
-			PublicKeys: sa.PublicKeys,
-			Balances:   subAccountBalance,
+	// Use a wait group to wait for all goroutines to complete
+	var wg sync.WaitGroup
+	wg.Add(len(subAccounts))
+
+	// Create a mutex to protect concurrent writes to the result slice
+	var mu sync.Mutex
+
+	// Use error group to handle errors from goroutines
+	g, ctx := errgroup.WithContext(ctx)
+
+	// Process each sub-account in parallel
+	for i, sa := range subAccounts {
+		i, sa := i, sa // Create local variables to avoid closure problems
+
+		g.Go(func() error {
+			defer wg.Done()
+
+			// Fetch balance in the goroutine
+			subAccountBalance, err := s.GetUserSubaccountBalances(ctx, sa.EOSAccount, sa.Permission)
+			if err != nil {
+				log.Printf("failed to get sub-account balance: %v", err)
+				subAccountBalance = []entity.SubAccountBalance{}
+			}
+
+			// Create the SubAccountInfo object
+			subAccountInfo := &entity.SubAccountInfo{
+				SID:        sa.SID,
+				Name:       sa.Name,
+				EOSAccount: sa.EOSAccount,
+				Permission: sa.Permission,
+				APIKey:     sa.APIKey,
+				PublicKeys: sa.PublicKeys,
+				Balances:   subAccountBalance,
+			}
+
+			// Safely assign to the result slice at the correct index
+			mu.Lock()
+			result[i] = subAccountInfo
+			mu.Unlock()
+
+			return nil
 		})
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Check if any error occurred in the goroutines
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("error fetching sub-account balances: %w", err)
 	}
 
 	return result, nil
