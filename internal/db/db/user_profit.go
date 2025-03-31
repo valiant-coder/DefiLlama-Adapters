@@ -74,6 +74,26 @@ func (r *Repo) GetUserBalanceRecordsByTimeRange(ctx context.Context, startTime, 
 	return records, err
 }
 
+func (r *Repo) GetUserUsdtAmountForLastTimeByUid(ctx context.Context, uid string) (decimal.Decimal, error) {
+	usdtAmount := decimal.Decimal{}
+
+	err := r.DB.Raw(`
+		SELECT t1.usdt_amount
+		FROM user_balance_records t1
+		INNER JOIN (
+			SELECT MAX(time) as max_time
+			FROM user_balance_records
+			WHERE uid = ?
+		) t2 ON t1.time = t2.max_time
+		WHERE t1.uid = ?
+	`, uid, uid).Scan(&usdtAmount).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return usdtAmount, nil
+}
+
 func (r *Repo) BatchCreateUserBalanceRecords(ctx context.Context, records []*UserBalanceRecord) error {
 	if len(records) == 0 {
 		return nil
@@ -195,7 +215,7 @@ type BalanceRange struct {
 	RangeDesc string          `json:"range_desc"`
 }
 
-func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRangeConfig, isEvmUser bool) ([]BalanceRange, error) {
+func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRangeConfig, isEvmUser bool) ([]*BalanceRange, error) {
 	thresholds := make([]decimal.Decimal, config.RangeCount+1)
 	thresholds[0] = decimal.Zero
 
@@ -269,9 +289,9 @@ func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRan
 		return nil, err
 	}
 
-	result := make([]BalanceRange, config.RangeCount+1)
+	result := make([]*BalanceRange, config.RangeCount+1)
 
-	result[0] = BalanceRange{
+	result[0] = &BalanceRange{
 		MinValue:  decimal.Zero,
 		MaxValue:  thresholds[1],
 		Count:     counts[0],
@@ -279,7 +299,7 @@ func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRan
 	}
 
 	for i := 1; i < config.RangeCount; i++ {
-		result[i] = BalanceRange{
+		result[i] = &BalanceRange{
 			MinValue:  thresholds[i],
 			MaxValue:  thresholds[i+1],
 			Count:     counts[i],
@@ -287,7 +307,7 @@ func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRan
 		}
 	}
 
-	result[config.RangeCount] = BalanceRange{
+	result[config.RangeCount] = &BalanceRange{
 		MinValue:  thresholds[config.RangeCount],
 		MaxValue:  decimal.NewFromInt(0),
 		Count:     counts[config.RangeCount],

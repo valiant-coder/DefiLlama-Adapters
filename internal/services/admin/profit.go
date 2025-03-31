@@ -31,7 +31,7 @@ func (s *AdminServices) GetCoinBalances(ctx context.Context, isEvmUser bool) ([]
 	return resp, nil
 }
 
-func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool, minValue, maxValue int64, rangeCount int) ([]db.BalanceRange, error) {
+func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool, minValue, maxValue int64, rangeCount int) ([]*db.BalanceRange, error) {
 	return s.repo.GetUserBalanceDistribution(ctx, db.BalanceRangeConfig{
 		MinValue:   decimal.New(minValue, 0),
 		MaxValue:   decimal.New(maxValue, 0),
@@ -60,16 +60,24 @@ func (s *AdminServices) QueryUserBalance(ctx context.Context, params *queryparam
 	return resp, nil
 }
 
-func (s *AdminServices) GetUserCoinBalance(ctx context.Context, uid string) ([]*entity_admin.RespUserCoinBalance, error) {
+func (s *AdminServices) GetUserCoinBalance(ctx context.Context, uid string) (*entity_admin.RespUserCoinBalanceAndUsdtAmount, error) {
 
 	balances, err := s.repo.GetUserCoinBalanceRecordForLastTimeByUID(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
 
-	var resp []*entity_admin.RespUserCoinBalance
+	usdtAmount, err := s.repo.GetUserUsdtAmountForLastTimeByUid(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &entity_admin.RespUserCoinBalanceAndUsdtAmount{
+		CoinBalance: make([]*entity_admin.RespUserCoinBalance, 0),
+		UsdtAmount:  usdtAmount,
+	}
 	for _, user := range balances {
-		resp = append(resp, new(entity_admin.RespUserCoinBalance).Fill(user))
+		resp.CoinBalance = append(resp.CoinBalance, new(entity_admin.RespUserCoinBalance).Fill(user))
 	}
 
 	return resp, nil

@@ -37,6 +37,11 @@ type RespUserCoinBalance struct {
 	Amount decimal.Decimal `json:"amount"`
 }
 
+type RespUserCoinBalanceAndUsdtAmount struct {
+	UsdtAmount  decimal.Decimal        `json:"usdt_amount"`
+	CoinBalance []*RespUserCoinBalance `json:"coin_balance"`
+}
+
 func (r *RespUserCoinBalance) Fill(a *db.UserCoinBalanceRecord) *RespUserCoinBalance {
 	r.Coin = a.Coin
 	r.Amount = a.Amount

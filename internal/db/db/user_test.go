@@ -205,3 +205,17 @@ func TestGetUserCoinBalanceByUID(t *testing.T) {
 	log.Println("success4")
 
 }
+
+func TestGetUserBalanceRecordForLastTimeByUid(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	resp, err := r.GetUserUsdtAmountForLastTimeByUid(context.Background(), "62135133")
+	if err != nil {
+		t.Fatalf("Failed to get USDT amount: %v", err)
+	}
+
+	log.Println("USDT amount:", resp)
+	log.Println("Test passed successfully")
+}
