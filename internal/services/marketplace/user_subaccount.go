@@ -56,6 +56,7 @@ func (s *UserService) AddSubAccount(ctx context.Context, uid string, req entity.
 	}
 
 	return &entity.RespAddSubAccount{
+		SID:    subAccount.SID,
 		APIKey: apiKey,
 	}, nil
 }
@@ -76,6 +77,7 @@ func (s *UserService) GetSubAccounts(ctx context.Context, uid string) ([]*entity
 
 		}
 		result = append(result, &entity.SubAccountInfo{
+			SID:        sa.SID,
 			Name:       sa.Name,
 			EOSAccount: sa.EOSAccount,
 			Permission: sa.Permission,
@@ -89,8 +91,8 @@ func (s *UserService) GetSubAccounts(ctx context.Context, uid string) ([]*entity
 }
 
 // DeleteSubAccount deletes a sub-account by name
-func (s *UserService) DeleteSubAccount(ctx context.Context, uid string, req entity.ReqDeleteSubAccount) (*entity.RespDeleteSubAccount, error) {
-	err := s.repo.DeleteUserSubAccount(ctx, uid, req.Name)
+func (s *UserService) DeleteSubAccount(ctx context.Context, req entity.ReqDeleteSubAccount) (*entity.RespDeleteSubAccount, error) {
+	err := s.repo.DeleteUserSubAccount(ctx, req.SID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete sub-account: %w", err)
 	}

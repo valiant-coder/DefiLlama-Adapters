@@ -67,8 +67,8 @@ func (r *Repo) GetUserSubAccount(ctx context.Context, uid string, name string) (
 }
 
 // DeleteUserSubAccount deletes a sub-account by UID and name
-func (r *Repo) DeleteUserSubAccount(ctx context.Context, uid string, name string) error {
-	return r.WithContext(ctx).Where("uid = ? AND name = ?", uid, name).Delete(&UserSubAccount{}).Error
+func (r *Repo) DeleteUserSubAccount(ctx context.Context, sid string) error {
+	return r.WithContext(ctx).Where("sid = ?", sid).Delete(&UserSubAccount{}).Error
 }
 
 func (r *Repo) GetUserSubAccountByEOSAccountAndPermission(ctx context.Context, eosAccount string, permission string) (*UserSubAccount, error) {

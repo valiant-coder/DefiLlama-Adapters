@@ -2133,7 +2133,7 @@
         "entity.ReqDeleteSubAccount": {
             "type": "object",
             "properties": {
-                "name": {
+                "sid": {
                     "type": "string"
                 }
             }
@@ -2198,6 +2198,9 @@
             "type": "object",
             "properties": {
                 "api_key": {
+                    "type": "string"
+                },
+                "sid": {
                     "type": "string"
                 }
             }
@@ -2433,6 +2436,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "sid": {
+                    "type": "string"
                 }
             }
         },

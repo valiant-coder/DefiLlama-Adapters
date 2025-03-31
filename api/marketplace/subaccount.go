@@ -82,14 +82,8 @@ func deleteSubAccount(c *gin.Context) {
 		return
 	}
 
-	uid := c.GetString("uid")
-	if uid == "" {
-		api.Error(c, errors.New("unauthorized"))
-		return
-	}
-
 	userService := marketplace.NewUserService()
-	resp, err := userService.DeleteSubAccount(c.Request.Context(), uid, req)
+	resp, err := userService.DeleteSubAccount(c.Request.Context(), req)
 	if err != nil {
 		api.Error(c, err)
 		return

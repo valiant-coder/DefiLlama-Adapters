@@ -2136,7 +2136,7 @@ const docTemplatemarketplace = `{
         "entity.ReqDeleteSubAccount": {
             "type": "object",
             "properties": {
-                "name": {
+                "sid": {
                     "type": "string"
                 }
             }
@@ -2201,6 +2201,9 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "api_key": {
+                    "type": "string"
+                },
+                "sid": {
                     "type": "string"
                 }
             }
@@ -2436,6 +2439,9 @@ const docTemplatemarketplace = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "sid": {
+                    "type": "string"
                 }
             }
         },
