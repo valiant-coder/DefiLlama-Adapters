@@ -30,10 +30,10 @@ func (s *AdminServices) GetCoinBalances(ctx context.Context, isEvmUser bool) ([]
 	return resp, nil
 }
 
-func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool) ([]db.BalanceRange, error) {
+func (s *AdminServices) GetUserBalanceStat(ctx context.Context, isEvmUser bool, minValue, maxValue int64, rangeCount int) ([]db.BalanceRange, error) {
 	return s.repo.GetUserBalanceDistribution(ctx, db.BalanceRangeConfig{
-		MinValue:   decimal.New(0, 0),
-		MaxValue:   decimal.New(1000000, 0),
-		RangeCount: 4,
+		MinValue:   decimal.New(minValue, 0),
+		MaxValue:   decimal.New(maxValue, 0),
+		RangeCount: rangeCount,
 	}, isEvmUser)
 }

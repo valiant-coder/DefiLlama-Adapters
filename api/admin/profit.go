@@ -32,9 +32,13 @@ func getCoinBalances(c *gin.Context) {
 }
 
 func getUserBalanceStat(c *gin.Context) {
-	isEvmUser := c.GetBool("is_evm_user")
 
-	resp, err := admin.New().GetUserBalanceStat(c.Request.Context(), isEvmUser)
+	isEvmUser := c.GetBool("is_evm_user")
+	minValue := c.GetInt64("min_value")
+	maxValue := c.GetInt64("max_value")
+	rangeCount := c.GetInt("range_count")
+
+	resp, err := admin.New().GetUserBalanceStat(c.Request.Context(), isEvmUser, minValue, maxValue, rangeCount)
 	if err != nil {
 		api.Error(c, err)
 		return

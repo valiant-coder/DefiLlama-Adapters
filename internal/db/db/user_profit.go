@@ -199,10 +199,8 @@ func (r *Repo) GetUserBalanceDistribution(ctx context.Context, config BalanceRan
 	if config.RangeCount <= 1 {
 		return nil, errors.New("range count must be greater than 1")
 	}
-
-	// Handle case when MinValue is 0
 	if config.MinValue.IsZero() {
-		config.MinValue = decimal.NewFromFloat(0.001) // Use a small non-zero value instead
+		return nil, errors.New("min value cannot be zero")
 	}
 
 	ratio := decimal.NewFromFloat(math.Pow(

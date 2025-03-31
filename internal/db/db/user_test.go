@@ -142,17 +142,17 @@ func TestGetUserBalanceDistribution(t *testing.T) {
 	r := New()
 
 	data, err := r.GetUserBalanceDistribution(context.Background(), BalanceRangeConfig{
-		MinValue:   decimal.New(0, 0),
+		MinValue:   decimal.New(10000, 0),
 		MaxValue:   decimal.New(1000000, 0),
-		RangeCount: 4,
-	}, false)
+		RangeCount: 3,
+	}, true)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	for _, v := range data {
-		log.Println(v.MinValue, v.MaxValue, v.Count)
+		log.Println(v.MinValue, v.MaxValue, v.Count, v.RangeDesc)
 	}
 
 	log.Println("success")
