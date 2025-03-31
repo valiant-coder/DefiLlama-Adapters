@@ -271,6 +271,7 @@ func (s *Service) registerHandlers() {
 	s.handlers["eosio:updateauth"] = s.handleUpdateAuth
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.AddXSATChain)] = s.handleAddXSATChain
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.MapXSAT)] = s.handleMapXSAT
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.MakerAgentContract, s.eosCfg.Events.LogRegSubAccount)] = s.handleRegSubAccount
 }
 
 func (s *Service) HandleMessage(msg *nsq.Message) error {
@@ -351,7 +352,7 @@ func (s *Service) getPartitionKey(action hyperion.Action) string {
 		return "pool-action"
 	case s.eosCfg.Events.LogNewAcc, s.eosCfg.Events.DepositLog, s.eosCfg.Events.LogSend, s.eosCfg.Events.LogDeposit:
 		return fmt.Sprintf("deposit-or-create-account")
-	case "updateauth", s.eosCfg.Events.LogNewTrader:
+	case "updateauth", s.eosCfg.Events.LogNewTrader, s.eosCfg.Events.LogRegSubAccount:
 		return "eos-account-action"
 	case s.eosCfg.Events.WithdrawLog, s.eosCfg.Events.LogWithdraw:
 		return fmt.Sprintf("withdraw")

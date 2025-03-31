@@ -258,6 +258,9 @@ type EventConfig struct {
 	MapXSAT      string `yaml:"map_xsat"`
 
 	LogNewTrader string `yaml:"log_new_trader"`
+
+	// sub-account events
+	LogRegSubAccount string `yaml:"log_reg_subaccount"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -277,5 +280,6 @@ func DefaultEventConfig() EventConfig {
 		AddXSATChain:   "addxsatchain",
 		MapXSAT:        "mapxsat",
 		LogNewTrader:   "lognewtrader",
+		LogRegSubAccount: "logregsubacc",
 	}
 }

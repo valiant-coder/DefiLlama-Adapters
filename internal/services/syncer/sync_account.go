@@ -17,11 +17,18 @@ func (s *Service) initAccountLastBlockNum(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("get user max block number failed: %w", err)
 	}
+	lastSubAccountMaxBlockNumber, err := s.repo.GetUserSubAccountMaxBlockNumber(ctx)
+	if err != nil {
+		return fmt.Errorf("get user subaccount max block number failed: %w", err)
+	}
 	var lastBlockNum uint64
 	if lastCredentialMaxBlockNumber > lastUserMaxBlockNumber {
 		lastBlockNum = lastCredentialMaxBlockNumber
 	} else {
 		lastBlockNum = lastUserMaxBlockNumber
+	}
+	if lastSubAccountMaxBlockNumber > lastBlockNum {
+		lastBlockNum = lastSubAccountMaxBlockNumber
 	}
 	if lastBlockNum == 0 {
 		lastBlockNum = s.hyperionCfg.StartBlock
@@ -41,10 +48,14 @@ func (s *Service) syncAccountHistory(ctx context.Context) error {
 	for {
 		resp, err := s.hyperionClient.GetActions(ctx, hyperion.GetActionsRequest{
 			Account: "",
-			Filter:  fmt.Sprintf("eosio:updateauth,%s:%s", s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader),
-			Limit:   s.hyperionCfg.BatchSize,
-			Sort:    "asc",
-			After:   strconv.FormatUint(s.accountLastBlockNum, 10),
+			Filter: fmt.Sprintf(
+				"eosio:updateauth,%s:%s,%s:%s",
+				s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader,
+				s.oneDexCfg.MakerAgentContract, s.eosCfg.Events.LogRegSubAccount,
+			),
+			Limit: s.hyperionCfg.BatchSize,
+			Sort:  "asc",
+			After: strconv.FormatUint(s.accountLastBlockNum, 10),
 		},
 		)
 
@@ -90,6 +101,14 @@ func (s *Service) SyncAccount(ctx context.Context) (<-chan hyperion.Action, erro
 		{
 			Contract:  s.oneDexCfg.EVMAgentContract,
 			Action:    s.eosCfg.Events.LogNewTrader,
+			Account:   "",
+			StartFrom: int64(s.accountLastBlockNum) + 1,
+			ReadUntil: 0,
+			Filters:   []hyperion.RequestFilter{},
+		},
+		{
+			Contract:  s.oneDexCfg.MakerAgentContract,
+			Action:    s.eosCfg.Events.LogRegSubAccount,
 			Account:   "",
 			StartFrom: int64(s.accountLastBlockNum) + 1,
 			ReadUntil: 0,

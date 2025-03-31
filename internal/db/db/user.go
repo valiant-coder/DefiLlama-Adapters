@@ -136,6 +136,12 @@ func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (strin
 	return user.UID, nil
 }
 
+func (r *Repo) GetUserByEOSAccount(ctx context.Context, eosAccount string) (*User, error) {
+	var user User
+	err := r.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&user).Error
+	return &user, err
+}
+
 func (r *Repo) GetUIDByEOSAccountAndPermission(ctx context.Context, eosAccount, permission string) (string, error) {
 	var user User
 	err := r.WithCache(fmt.Sprintf("uid_by_eos_account_and_permission_%s_%s", eosAccount, permission), 1*time.Hour).WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&user).Error
@@ -238,7 +244,6 @@ func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredent
 func (r *Repo) DeleteUserCredential(ctx context.Context, credential *UserCredential) error {
 	return r.DB.WithContext(ctx).Where("id = ?", credential.ID).Delete(&UserCredential{}).Error
 }
-
 
 func (r *Repo) GetUserCredentialMaxBlockNumber(ctx context.Context) (uint64, error) {
 	var blockNumber *uint64

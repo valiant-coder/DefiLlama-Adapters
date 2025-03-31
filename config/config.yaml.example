@@ -121,6 +121,7 @@ eos:
     map_xsat: "mapxsat"
     log_new_trader: lognewtrader
     maker_agent_contract: makeragcontract
+    log_reg_subaccount: logregsubacc
 evm:
   ethscan:
     endpoint: "https://sepolia.etherscan.io/api"
