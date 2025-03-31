@@ -103,15 +103,6 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			}
 		}
 	}
-	if len(depositAddress) > 0 {
-		for _, address := range depositAddress {
-			if address.Remark == remark {
-				return entity.RespDeposit{
-					Address: address.Address,
-				}, nil
-			}
-		}
-	}
 
 	var newDepositAddress string
 	if req.Symbol == "BTC" && targetChain.DepositByBTCBridge {
