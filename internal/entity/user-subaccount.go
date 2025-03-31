@@ -3,10 +3,6 @@ package entity
 type ReqAddSubAccount struct {
 	// sub account name
 	Name string `json:"name"`
-	// eos permission
-	Permission string `json:"permission"`
-	// eos account
-	EOSAccount string `json:"eos_account"`
 }
 
 type RespAddSubAccount struct {

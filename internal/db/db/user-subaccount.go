@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -21,6 +22,7 @@ func init() {
 type UserSubAccount struct {
 	gorm.Model
 	UID        string                      `gorm:"column:uid;type:varchar(255);not null;index:idx_uid_name"`
+	SID        string                      `gorm:"column:sid;type:varchar(255);default:null;uniqueIndex:idx_sid"`
 	EOSAccount string                      `gorm:"column:eos_account;type:varchar(255);not null;index:idx_eos_account;uniqueIndex:idx_eos_account_permission"`
 	Name       string                      `gorm:"column:name;type:varchar(255);not null;index:idx_uid_name"`
 	Permission string                      `gorm:"column:permission;type:varchar(255);not null;uniqueIndex:idx_eos_account_permission"`
@@ -30,6 +32,13 @@ type UserSubAccount struct {
 
 func (UserSubAccount) TableName() string {
 	return "user_subaccounts"
+}
+
+func (u *UserSubAccount) BeforeCreate(tx *gorm.DB) (err error) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomNum := r.Intn(90000000) + 10000000
+	u.SID = fmt.Sprintf("%d", randomNum)
+	return
 }
 
 func (r *Repo) CreateUserSubAccount(ctx context.Context, userSubAccount *UserSubAccount) error {
@@ -90,5 +99,3 @@ func (r *Repo) GetUserSubAccountBalance(ctx context.Context, eosAccount string, 
 	err := r.WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).Find(&balances).Error
 	return balances, err
 }
-
-

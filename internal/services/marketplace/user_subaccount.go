@@ -45,9 +45,7 @@ func (s *UserService) AddSubAccount(ctx context.Context, uid string, req entity.
 	// Create sub-account in database
 	subAccount := &db.UserSubAccount{
 		UID:        uid,
-		EOSAccount: req.EOSAccount,
 		Name:       req.Name,
-		Permission: req.Permission,
 		APIKey:     apiKey,
 		PublicKeys: datatypes.NewJSONSlice([]string{}),
 	}
