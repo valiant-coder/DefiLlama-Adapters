@@ -2145,11 +2145,15 @@ const docTemplatemarketplace = `{
             "type": "object",
             "required": [
                 "chain_id",
+                "pubkey",
                 "symbol"
             ],
             "properties": {
                 "chain_id": {
                     "type": "integer"
+                },
+                "pubkey": {
+                    "type": "string"
                 },
                 "symbol": {
                     "type": "string"

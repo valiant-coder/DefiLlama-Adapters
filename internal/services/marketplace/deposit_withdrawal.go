@@ -66,7 +66,7 @@ func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridge
 }
 
 func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req *entity.ReqDeposit) (entity.RespDeposit, error) {
-	passkey, err := s.repo.GetUserCredential(ctx, uid)
+	passkey, err := s.repo.GetUserCredentialByPubkey(ctx, req.Pubkey)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return entity.RespDeposit{}, errno.DefaultParamsError("not found passkey")

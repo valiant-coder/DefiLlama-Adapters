@@ -4,6 +4,7 @@ import "exapp-go/internal/db/db"
 
 type ReqDeposit struct {
 	Symbol  string `json:"symbol" binding:"required"`
+	Pubkey  string `json:"pubkey" binding:"required"`
 	ChainID uint8  `json:"chain_id" binding:"required"`
 }
 
