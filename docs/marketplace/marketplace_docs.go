@@ -2473,10 +2473,10 @@ const docTemplatemarketplace = `{
                 "btc_bridge_contract": {
                     "type": "string"
                 },
-                "evm_agent_contract": {
+                "deposit_recipient_address": {
                     "type": "string"
                 },
-                "evm_extension_address": {
+                "evm_agent_contract": {
                     "type": "string"
                 },
                 "exsat_network": {

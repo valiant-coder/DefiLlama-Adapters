@@ -43,9 +43,9 @@ func getSystemInfo(c *gin.Context) {
 			DailyPoints:       config.Conf().TradingCompetition.DailyPoints,
 			AccumulatedPoints: config.Conf().TradingCompetition.AccumulatedPoints,
 		},
-		BTCBridgeContract:   config.Conf().Eos.Exsat.BTCBridgeContract,
-		BridgeContract:      config.Conf().Eos.Exsat.BridgeContract,
-		EVMExtensionAddress: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress	,
+		BTCBridgeContract:  config.Conf().Eos.Exsat.BTCBridgeContract,
+		BridgeContract:     config.Conf().Eos.Exsat.BridgeContract,
+		DepositRecipientAd: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
 	}
 	api.OK(c, sysInfo)
 }
