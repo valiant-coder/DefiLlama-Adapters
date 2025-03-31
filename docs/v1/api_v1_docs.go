@@ -1094,6 +1094,12 @@ const docTemplateapi_v1 = `{
                 "eos_contract": {
                     "type": "string"
                 },
+                "exsat_decimals": {
+                    "type": "integer"
+                },
+                "exsat_token_address": {
+                    "type": "string"
+                },
                 "icon_url": {
                     "type": "string"
                 },
@@ -1187,9 +1193,6 @@ const docTemplateapi_v1 = `{
                 "buyer": {
                     "type": "string"
                 },
-                "buyer_permission": {
-                    "type": "string"
-                },
                 "pool_id": {
                     "type": "integer"
                 },
@@ -1200,9 +1203,6 @@ const docTemplateapi_v1 = `{
                     "type": "string"
                 },
                 "seller": {
-                    "type": "string"
-                },
-                "seller_permission": {
                     "type": "string"
                 },
                 "side": {
@@ -1216,13 +1216,16 @@ const docTemplateapi_v1 = `{
         "entity.TradeDetail": {
             "type": "object",
             "properties": {
+                "base_coin": {
+                    "type": "string"
+                },
                 "base_quantity": {
                     "type": "string"
                 },
-                "maker": {
-                    "type": "string"
+                "global_seq": {
+                    "type": "integer"
                 },
-                "maker_app_fee": {
+                "maker": {
                     "type": "string"
                 },
                 "maker_fee": {
@@ -1234,19 +1237,22 @@ const docTemplateapi_v1 = `{
                 "maker_order_id": {
                     "type": "integer"
                 },
+                "maker_permission": {
+                    "type": "string"
+                },
                 "pool_id": {
                     "type": "integer"
                 },
                 "price": {
                     "type": "string"
                 },
+                "quote_coin": {
+                    "type": "string"
+                },
                 "quote_quantity": {
                     "type": "string"
                 },
                 "taker": {
-                    "type": "string"
-                },
-                "taker_app_fee": {
                     "type": "string"
                 },
                 "taker_fee": {
@@ -1260,6 +1266,9 @@ const docTemplateapi_v1 = `{
                 },
                 "taker_order_id": {
                     "type": "integer"
+                },
+                "taker_permission": {
+                    "type": "string"
                 },
                 "timestamp": {
                     "type": "string"

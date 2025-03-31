@@ -96,6 +96,7 @@ eos:
     app_maker_fee_rate: 0.001
     token_contract: tokencontract
     evm_agent_contract: evmag.1dex
+    sign_up_contract: "signup.1dex"
   exsat:
     bridge_extension_evm_address: exsat_bridge_extension_evm_address
     bridge_contract: bridgecontract

@@ -9,30 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @Summary First deposit
-// @Description First deposit
-// @Security ApiKeyAuth
-// @Tags deposit
-// @Accept json
-// @Produce json
-// @Param req body entity.ReqFirstDeposit true "first deposit params"
-// @Success 200 {object} entity.RespFirstDeposit ""
-// @Router /first-deposit [post]
-func firstDeposit(c *gin.Context) {
-	depositWithdrawalService := marketplace.NewDepositWithdrawalService()
-	var req entity.ReqFirstDeposit
-	if err := c.ShouldBind(&req); err != nil {
-		api.Error(c, err)
-		return
-	}
-	resp, err := depositWithdrawalService.FirstDeposit(c.Request.Context(), c.GetString("uid"), &req)
-	if err != nil {
-		api.Error(c, err)
-		return
-	}
-	api.OK(c, resp)
-}
-
 // @Summary Deposit
 // @Description Deposit
 // @Security ApiKeyAuth

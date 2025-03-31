@@ -111,43 +111,37 @@ func (r *Repo) GetTotalUserCount(ctx context.Context) (int64, error) {
 
 func (r *Repo) GetEOSAccountAndPermissionByUID(ctx context.Context, uid string) (string, string, error) {
 	var user User
-	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
-	if result.Error != nil {
-		return "", "", result.Error
-	}
-	if user.LoginMethod == LoginMethodEVM && user.EVMAddress != "" {
-		return user.EOSAccount, user.Permission, nil
-	}
-	credentials, err := r.GetUserCredentials(ctx, uid)
+	err := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user).Error
 	if err != nil {
 		return "", "", err
 	}
-	for _, c := range credentials {
-		if c.EOSAccount != "" {
-			return c.EOSAccount, "active", nil
-		}
+	return user.EOSAccount, user.Permission, nil
+}
+
+func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (string, error) {
+	var user User
+	err := r.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&user).Error
+	if err != nil {
+		return "", err
 	}
-	return "", "", nil
+	return user.UID, nil
 }
 
 func (r *Repo) GetUIDByEOSAccountAndPermission(ctx context.Context, eosAccount, permission string) (string, error) {
-	var userCredential UserCredential
-	err := r.WithCache(fmt.Sprintf("uid_by_eos_account_and_permission_%s_%s", eosAccount, permission), 1*time.Hour).WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&userCredential).Error
+	var user User
+	err := r.WithCache(fmt.Sprintf("uid_by_eos_account_and_permission_%s_%s", eosAccount, permission), 1*time.Hour).WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			var user User
-			err = r.WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&user).Error
+			var subAccount UserSubAccount
+			err = r.WithCache(fmt.Sprintf("uid_by_subaccount_eos_account_and_permission_%s_%s", eosAccount, permission), 1*time.Hour).WithContext(ctx).Where("eos_account = ? AND permission = ?", eosAccount, permission).First(&subAccount).Error
 			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					return "", nil
-				}
 				return "", err
 			}
-			return user.UID, nil
+			return subAccount.UID, nil
 		}
 		return "", err
 	}
-	return userCredential.UID, nil
+	return user.UID, nil
 }
 
 func (r *Repo) GetUserMaxBlockNumber(ctx context.Context) (uint64, error) {
@@ -192,6 +186,12 @@ func (r *Repo) CreateCredentialIfNotExist(ctx context.Context, credential *UserC
 	return nil
 }
 
+func (s *Repo) GetUserCredential(ctx context.Context, uid string) (*UserCredential, error) {
+	var credential UserCredential
+	result := s.DB.WithContext(ctx).Where("uid = ?", uid).First(&credential)
+	return &credential, result.Error
+}
+
 func (r *Repo) GetUserCredentials(ctx context.Context, uid string) ([]*UserCredential, error) {
 	var credentials []*UserCredential
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).Find(&credentials)
@@ -213,15 +213,6 @@ func (r *Repo) GetUserCredentialsByEOSAccount(ctx context.Context, eosAccount st
 	return credentials, nil
 }
 
-func (r *Repo) GetEosAccountByUID(ctx context.Context, uid string) (string, error) {
-	var credential UserCredential
-	err := r.DB.WithContext(ctx).Where("uid = ? and eos_account != ''", uid).First(&credential).Error
-	if err != nil {
-		return "", err
-	}
-	return credential.EOSAccount, nil
-}
-
 func (r *Repo) GetUserCredentialsByKeys(ctx context.Context, keys []string) ([]*UserCredential, error) {
 	var credentials []*UserCredential
 	err := r.DB.WithContext(ctx).Where("public_key IN (?)", keys).Find(&credentials).Error
@@ -239,11 +230,6 @@ func (r *Repo) DeleteUserCredential(ctx context.Context, credential *UserCredent
 	return r.DB.WithContext(ctx).Where("id = ?", credential.ID).Delete(&UserCredential{}).Error
 }
 
-func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (string, error) {
-	var credential UserCredential
-	result := r.DB.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&credential)
-	return credential.UID, result.Error
-}
 
 func (r *Repo) GetUserCredentialMaxBlockNumber(ctx context.Context) (uint64, error) {
 	var blockNumber *uint64

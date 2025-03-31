@@ -36,12 +36,16 @@ func getSystemInfo(c *gin.Context) {
 			NetworkName:      config.Conf().Evm.ExsatNetwork.NetworkName,
 			BlockExplorerUrl: config.Conf().Evm.ExsatNetwork.BlockExplorerUrl,
 		},
+
 		TradingCompetition: entity.TradingCompetition{
 			BeginTime:         entity.Time(config.Conf().TradingCompetition.BeginTime),
 			EndTime:           entity.Time(config.Conf().TradingCompetition.EndTime),
 			DailyPoints:       config.Conf().TradingCompetition.DailyPoints,
 			AccumulatedPoints: config.Conf().TradingCompetition.AccumulatedPoints,
 		},
+		BTCBridgeContract:   config.Conf().Eos.Exsat.BTCBridgeContract,
+		BridgeContract:      config.Conf().Eos.Exsat.BridgeContract,
+		EVMExtensionAddress: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress	,
 	}
 	api.OK(c, sysInfo)
 }

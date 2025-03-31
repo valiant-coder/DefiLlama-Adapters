@@ -18,7 +18,6 @@ func (s *Service) handleNewAccount(action hyperion.Action) error {
 	var data struct {
 		ID      string `json:"id"`
 		Account string `json:"account"`
-		Pubkey  string `json:"pubkey"`
 	}
 	if err := json.Unmarshal(action.Act.Data, &data); err != nil {
 		log.Printf("Unmarshal new account failed: %v", err)
@@ -26,9 +25,25 @@ func (s *Service) handleNewAccount(action hyperion.Action) error {
 	}
 
 	ctx := context.Background()
-	credential, err := s.repo.GetUserCredentialByPubkey(ctx, data.Pubkey)
+
+	user, err := s.repo.GetUser(ctx, data.ID)
 	if err != nil {
-		log.Printf("Get user credential by pubkey failed: %v", err)
+		log.Printf("Get user by uid failed: %v", err)
+		return nil
+	}
+
+	user.EOSAccount = data.Account
+	user.Permission = "active"
+	user.BlockNumber = action.BlockNum
+	err = s.repo.UpdateUser(ctx, user)
+	if err != nil {
+		log.Printf("Update user failed: %v-%v", data, err)
+		return nil
+	}
+
+	credential, err := s.repo.GetUserCredential(ctx, data.ID)
+	if err != nil {
+		log.Printf("Get user credential by uid failed: %v", err)
 		return nil
 	}
 
