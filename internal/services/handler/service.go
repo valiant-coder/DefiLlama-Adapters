@@ -263,7 +263,7 @@ func (s *Service) registerHandlers() {
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.DepositLog)] = s.handleBTCDeposit
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.exsatCfg.BTCBridgeContract, s.eosCfg.Events.WithdrawLog)] = s.updateBTCWithdraw
-	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
+	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.SignUpContract, s.eosCfg.Events.LogNewAcc)] = s.handleNewAccount
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.EVMAgentContract, s.eosCfg.Events.LogNewTrader)] = s.handleEVMTraderMap
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogWithdraw)] = s.handleWithdraw
 	s.handlers[fmt.Sprintf("%s:%s", s.oneDexCfg.PortalContract, s.eosCfg.Events.LogDeposit)] = s.handleDeposit
