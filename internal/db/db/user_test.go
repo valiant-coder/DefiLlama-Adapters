@@ -101,6 +101,22 @@ func TestGetStatisAddDepositCount(t *testing.T) {
 	log.Println(total)
 }
 
+func TestGetUserTotalBalanceByIsEvmUser(t *testing.T) {
+	utils.WorkInProjectPath("exapp-go")
+	config.Load("config/config.yaml")
+	r := New()
+
+	data, err := r.GetUserTotalBalanceByIsEvmUser(context.Background(), false)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(data)
+
+	log.Println("success1")
+}
+
 func TestGetUserCoinTotalBalanceByIsEvmUser(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config.yaml")

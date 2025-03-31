@@ -7,6 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func getBalances(c *gin.Context) {
+	isEvmUser := c.GetBool("is_evm_user")
+
+	resp, err := admin.New().GetBalances(c.Request.Context(), isEvmUser)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	api.OK(c, resp)
+}
+
 func getCoinBalances(c *gin.Context) {
 	isEvmUser := c.GetBool("is_evm_user")
 

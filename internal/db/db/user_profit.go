@@ -26,6 +26,7 @@ type UserBalanceRecord struct {
 	Time       time.Time       `gorm:"column:time;type:timestamp;not null;uniqueIndex:idx_uid_time;index:idx_time"`
 	Account    string          `gorm:"column:account;type:varchar(255);not null;"`
 	USDTAmount decimal.Decimal `gorm:"column:usdt_amount;type:decimal(20,6);not null;"`
+	IsEvmUser  bool            `gorm:"column:is_evm_user;type:bool;not null;"`
 }
 
 func (t *UserBalanceRecord) TableName() string {
@@ -152,6 +153,26 @@ func (r *Repo) GetUserAccumulatedProfitRecordByTimeRange(ctx context.Context, be
 		Where("begin_time = ? AND end_time = ?", beginTime, endTime).
 		Find(&records).Error
 	return records, err
+}
+
+func (r *Repo) GetUserTotalBalanceByIsEvmUser(ctx context.Context, isEvmUser bool) (decimal.Decimal, error) {
+	var totalUsdt decimal.Decimal
+
+	err := r.DB.Raw(`SELECT SUM(usdt_amount) as usdt_amount FROM (
+        SELECT t1.usdt_amount
+        FROM user_balance_records t1
+        INNER JOIN (
+            SELECT uid, MAX(time) as max_time
+            FROM user_balance_records
+            GROUP BY uid
+        ) t2 ON t1.uid = t2.uid AND t1.time = t2.max_time
+        WHERE t1.is_evm_user = ?
+    ) latest`, isEvmUser).Scan(&totalUsdt).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return totalUsdt, nil
 }
 
 type UserCoinBalanceRecord struct {

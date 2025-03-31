@@ -314,14 +314,14 @@ func (s *UserService) fetchUserDetailedBalances(
 }
 
 // FetchUserBalanceByUID retrieves all user balances by user ID
-func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]entity.UserBalance, error) {
+func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]entity.UserBalance, bool, error) {
 	// Validate input
 	if uid == "" {
-		return nil, errors.New("uid is required")
+		return nil, false, errors.New("uid is required")
 	}
 	user, err := s.repo.GetUser(ctx, uid)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	var userAvailableBalances []UserBalance
 	var isEvmUser bool
@@ -329,24 +329,24 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		isEvmUser = true
 		userAvailableBalances, err = s.getEvmUserAvailableBalances(ctx, user.EVMAddress)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else {
 		userAvailableBalances, err = s.getPasskeyUserAvailableBalances(ctx, user.EOSAccount)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	}
 
 	// Get token metadata
 	allTokens, err := s.repo.GetAllTokens(ctx)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	poolTokens, err := s.repo.GetVisiblePoolTokens(ctx)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Fetch detailed balances including locked amounts
@@ -360,13 +360,13 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		allTokens,
 		poolTokens)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Get current USDT prices for all coins
 	coinUSDTPrice, err := s.fetchCoinUSDTPriceWithCache(ctx)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Convert to entity.UserBalance format for API response
@@ -375,7 +375,6 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		// Create user balance entity
 		var userBalance entity.UserBalance
 		userBalance.Coin = ub.Coin
-		userBalance.IsEvmUser = isEvmUser
 		setUSDTPrice(&userBalance, ub.Coin, coinUSDTPrice)
 
 		// Convert decimal values to strings for JSON response
@@ -390,7 +389,7 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		result = append(result, userBalance)
 	}
 
-	return result, nil
+	return result, isEvmUser, nil
 }
 
 func (s *UserService) getPasskeyUserAvailableBalances(ctx context.Context, accountName string) ([]UserBalance, error) {
@@ -465,11 +464,11 @@ func (s *UserService) getEvmUserAvailableBalances(ctx context.Context, evmAddres
 
 // CalculateTotalUSDTValueForUser calculates the total value of all user assets in USDT
 
-func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid string) (decimal.Decimal, []entity.UserBalance, error) {
+func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid string) (decimal.Decimal, []entity.UserBalance, bool, error) {
 	// Get all user balances
-	balances, err := s.FetchUserBalanceByUID(ctx, uid)
+	balances, isEvmUser, err := s.FetchUserBalanceByUID(ctx, uid)
 	if err != nil {
-		return decimal.Zero, nil, err
+		return decimal.Zero, nil, false, err
 	}
 
 	// Calculate total value
@@ -500,5 +499,5 @@ func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid st
 		total = total.Add(price.Mul(amount.Add(locked)))
 	}
 
-	return total, balances, nil
+	return total, balances, isEvmUser, nil
 }

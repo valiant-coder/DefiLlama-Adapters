@@ -3,7 +3,17 @@ package admin
 import (
 	"context"
 	entity_admin "exapp-go/internal/entity/admin"
+
+	"github.com/shopspring/decimal"
 )
+
+func (s *AdminServices) GetBalances(ctx context.Context, isEvmUser bool) (decimal.Decimal, error) {
+	usdtBalance, err := s.repo.GetUserTotalBalanceByIsEvmUser(ctx, isEvmUser)
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return usdtBalance, nil
+}
 
 func (s *AdminServices) GetCoinBalances(ctx context.Context, isEvmUser bool) ([]*entity_admin.RespCoinBalance, error) {
 

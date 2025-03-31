@@ -85,7 +85,7 @@ func (s *Service) recordUserBalances() error {
 	for i := 0; i < workerCount; i++ {
 		go func() {
 			for account := range taskChan {
-				usdtAmount, balances, err := userService.CalculateTotalUSDTValueForUser(ctx, account.UID)
+				usdtAmount, balances, isEvmUser, err := userService.CalculateTotalUSDTValueForUser(ctx, account.UID)
 				if err != nil {
 					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.EOSAccount, err)}
 					continue
@@ -96,6 +96,7 @@ func (s *Service) recordUserBalances() error {
 					Account:    account.EOSAccount,
 					UID:        account.UID,
 					USDTAmount: usdtAmount,
+					IsEvmUser:  isEvmUser,
 				}
 
 				var coinRecord []*db.UserCoinBalanceRecord
@@ -111,7 +112,7 @@ func (s *Service) recordUserBalances() error {
 						UID:       account.UID,
 						Coin:      balance.Coin,
 						Amount:    amount,
-						IsEvmUser: balance.IsEvmUser,
+						IsEvmUser: isEvmUser,
 					})
 				}
 

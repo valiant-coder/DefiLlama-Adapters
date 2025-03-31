@@ -12,9 +12,9 @@ func TestUserService_GetUserBalance(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config_dev.yaml")
 	userService := NewUserService()
-	userBalances, err := userService.FetchUserBalanceByUID(context.Background(), "abcabcabcabc")
+	userBalances, isEvmUser, err := userService.FetchUserBalanceByUID(context.Background(), "abcabcabcabc")
 	if err != nil {
 		t.Errorf("GetUserBalance failed: %v", err)
 	}
-	log.Printf("GetUserBalance = %v", userBalances)
+	log.Printf("GetUserBalance = %v, %v", userBalances, isEvmUser)
 }
