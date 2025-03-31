@@ -15,32 +15,6 @@ const docTemplatemarketplace = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/balances": {
-            "get": {
-                "description": "Get user balances",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get user balances",
-                "responses": {
-                    "200": {
-                        "description": "user balances",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.UserBalance"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/depth": {
             "get": {
                 "description": "Get order book by pool id",
@@ -262,6 +236,32 @@ const docTemplatemarketplace = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.Pool"
+                        }
+                    }
+                }
+            }
+        },
+        "/balances": {
+            "get": {
+                "description": "Get user balances",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user balances",
+                "responses": {
+                    "200": {
+                        "description": "user balances",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.UserBalance"
+                            }
                         }
                     }
                 }
@@ -2788,6 +2788,9 @@ const docTemplatemarketplace = `{
                 },
                 "depositing": {
                     "type": "string"
+                },
+                "is_evm_user": {
+                    "type": "boolean"
                 },
                 "locked": {
                     "type": "string"

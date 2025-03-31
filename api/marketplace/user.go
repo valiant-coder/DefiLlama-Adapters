@@ -108,7 +108,7 @@ func getUserInfo(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {array} entity.UserBalance "user balances"
-// @Router /api/v1/balances [get]
+// @Router /balances [get]
 func getUserBalances(c *gin.Context) {
 	userService := marketplace.NewUserService()
 	balances, err := userService.FetchUserBalanceByUID(c.Request.Context(), c.GetString("uid"))
