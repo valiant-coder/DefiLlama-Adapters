@@ -201,12 +201,6 @@ func (r *Repo) CreateCredentialIfNotExist(ctx context.Context, credential *UserC
 	return nil
 }
 
-func (s *Repo) GetUserCredential(ctx context.Context, uid string) (*UserCredential, error) {
-	var credential UserCredential
-	result := s.DB.WithContext(ctx).Where("uid = ?", uid).First(&credential)
-	return &credential, result.Error
-}
-
 func (r *Repo) GetUserCredentials(ctx context.Context, uid string) ([]*UserCredential, error) {
 	var credentials []*UserCredential
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).Find(&credentials)
