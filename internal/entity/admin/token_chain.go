@@ -21,8 +21,8 @@ type RespToken struct {
 	Chains            []entity.Chain `json:"chains"`
 	//
 	Info      entity.TokenInfo `json:"info"`
-	CreatedAt string           `json:"created_at"`
-	UpdatedAt string           `json:"updated_at"`
+	CreatedAt entity.Time      `json:"created_at"`
+	UpdatedAt entity.Time      `json:"updated_at"`
 }
 
 func TokenFromDB(token *db.Token) *RespToken {
@@ -81,8 +81,8 @@ func TokenFromDB(token *db.Token) *RespToken {
 
 		Chains:    chains,
 		Info:      info,
-		UpdatedAt: token.UpdatedAt.Format("2006-01-02 15:04:05"),
-		CreatedAt: token.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt: entity.Time(token.UpdatedAt),
+		CreatedAt: entity.Time(token.CreatedAt),
 	}
 }
 

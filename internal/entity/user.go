@@ -82,6 +82,7 @@ type UserBalance struct {
 	Withdrawing string        `json:"withdrawing"`
 	Depositing  string        `json:"depositing"`
 	Locks       []LockBalance `json:"locks"`
+	IsEvmUser   bool          `json:"is_evm_user"`
 }
 
 type LockBalance struct {

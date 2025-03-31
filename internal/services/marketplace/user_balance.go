@@ -375,6 +375,7 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		// Create user balance entity
 		var userBalance entity.UserBalance
 		userBalance.Coin = ub.Coin
+		userBalance.IsEvmUser = isEvmUser
 		setUSDTPrice(&userBalance, ub.Coin, coinUSDTPrice)
 
 		// Convert decimal values to strings for JSON response
@@ -463,11 +464,12 @@ func (s *UserService) getEvmUserAvailableBalances(ctx context.Context, evmAddres
 }
 
 // CalculateTotalUSDTValueForUser calculates the total value of all user assets in USDT
-func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid string) (decimal.Decimal, error) {
+
+func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid string) (decimal.Decimal, []entity.UserBalance, error) {
 	// Get all user balances
 	balances, err := s.FetchUserBalanceByUID(ctx, uid)
 	if err != nil {
-		return decimal.Zero, err
+		return decimal.Zero, nil, err
 	}
 
 	// Calculate total value
@@ -498,5 +500,5 @@ func (s *UserService) CalculateTotalUSDTValueForUser(ctx context.Context, uid st
 		total = total.Add(price.Mul(amount.Add(locked)))
 	}
 
-	return total, nil
+	return total, balances, nil
 }

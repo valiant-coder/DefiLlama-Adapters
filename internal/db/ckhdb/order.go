@@ -3,6 +3,7 @@ package ckhdb
 import (
 	"context"
 	"exapp-go/pkg/queryparams"
+	"strings"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -100,4 +101,242 @@ func (r *ClickHouseRepo) GetOrder(ctx context.Context, poolID uint64, orderID ui
 		return nil, err
 	}
 	return &order, nil
+}
+
+type HistoryOrderForm struct {
+	PoolID           uint64          `gorm:"column:pool_id"`
+	OrderID          uint64          `gorm:"column:order_id"`
+	IsBid            bool            `gorm:"column:is_bid"`
+	CreatedAt        time.Time       `gorm:"column:created_at"`
+	CompleteAt       time.Time       `gorm:"column:complete_at"`
+	PoolBaseCoin     string          `gorm:"column:pool_base_coin"`
+	Trader           string          `gorm:"column:trader"`
+	Fee              decimal.Decimal `gorm:"column:fee"`
+	PoolSymbol       string          `gorm:"column:pool_symbol"`
+	App              string          `gorm:"column:app"`
+	ExecutedQuantity decimal.Decimal `gorm:"column:executed_quantity"`
+	Price            decimal.Decimal `gorm:"column:price"`
+	TxIDs            string          `gorm:"column:tx_ids"`
+}
+
+func (r *ClickHouseRepo) QueryHistoryOrdersList(ctx context.Context, params *queryparams.QueryParams) ([]*HistoryOrderForm, int64, error) {
+	var whereClauses []string
+	var args []interface{}
+
+	if poolBaseCoin, ok := params.CustomQuery["pool_base_coin"]; ok {
+		whereClauses = append(whereClauses, "pool_base_coin = ?")
+		args = append(args, poolBaseCoin[0].(string))
+	}
+	if poolSymbol, ok := params.CustomQuery["pool_symbol"]; ok {
+		whereClauses = append(whereClauses, "pool_symbol = ?")
+		args = append(args, poolSymbol[0].(string))
+	}
+	if app, ok := params.CustomQuery["app"]; ok {
+		whereClauses = append(whereClauses, "app = ?")
+		args = append(args, app[0].(string))
+	}
+	if trader, ok := params.CustomQuery["trader"]; ok {
+		whereClauses = append(whereClauses, "trader = ?")
+		args = append(args, trader[0].(string))
+	}
+	if startTime, ok := params.CustomQuery["start_time"]; ok {
+		whereClauses = append(whereClauses, "created_at >= ?")
+		args = append(args, startTime[0].(string))
+	}
+	if endTime, ok := params.CustomQuery["end_time"]; ok {
+		whereClauses = append(whereClauses, "created_at <= ?")
+		args = append(args, endTime[0].(string))
+	}
+
+	whereClause := ""
+	if len(whereClauses) > 0 {
+		whereClause = " AND " + strings.Join(whereClauses, " AND ")
+	}
+
+	orders := []*HistoryOrderForm{}
+	query := `
+    SELECT 
+        pool_id,
+        order_id,
+        is_bid,
+        created_at,
+        pool_base_coin,
+        trader,
+        pool_symbol,
+        app,
+        executed_quantity,
+        price,
+		MIN(trade_created_at) AS complete_at,
+		arrayStringConcat(groupArray(tx_id), ',') AS tx_ids,
+		SUM(fee) AS fee
+    FROM (
+        SELECT 
+            o.pool_id,
+            o.order_id,
+            o.is_bid,
+            o.created_at,
+            o.pool_base_coin,
+            o.trader,
+            o.pool_symbol,
+            o.app,
+            o.executed_quantity,
+            o.price,
+            t.time AS trade_created_at,
+            t.tx_id,
+            t.maker_fee AS fee
+        FROM history_orders AS o
+        LEFT JOIN trades AS t ON 
+            t.maker_order_tag = concat(toString(o.pool_id), '-', toString(o.order_id), '-', if(o.is_bid = 1, '1', '0'))
+        WHERE o.is_market = true
+        ` + whereClause + `
+
+        UNION ALL
+
+        SELECT 
+            o.pool_id,
+            o.order_id,
+            o.is_bid,
+            o.created_at,
+            o.pool_base_coin,
+            o.trader,
+            o.pool_symbol,
+            o.app,
+            o.executed_quantity,
+            o.price,
+            t.time AS trade_created_at,
+            t.tx_id,
+            t.taker_fee AS fee
+        FROM history_orders AS o
+        LEFT JOIN trades AS t ON 
+            t.taker_order_tag = concat(toString(o.pool_id), '-', toString(o.order_id), '-', if(o.is_bid = 1, '1', '0'))
+        WHERE o.is_market = false
+        ` + whereClause + `
+    ) AS combined
+    GROUP BY 
+        pool_id, order_id, is_bid, created_at, pool_base_coin,
+        trader, pool_symbol, app, executed_quantity, price
+    ORDER BY created_at DESC
+	LIMIT ?, ?
+    `
+
+	values := args
+	args = append(args, args...)
+	args = append(args, params.Offset, params.Limit)
+
+	err := r.DB.Raw(query, args...).Scan(&orders).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int64
+	if whereClause != "" {
+		whereClause = strings.TrimPrefix(whereClause, " AND")
+	}
+	err = r.DB.Table("history_orders").Where(whereClause, values...).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return orders, total, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) (decimal.Decimal, error) {
+	var total decimal.Decimal
+
+	err := r.DB.Raw(`SELECT SUM(executed_quantity * avg_price) AS total
+		FROM history_orders
+		WHERE created_at BETWEEN ? AND ?`, startTime, endTime).Scan(&total).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return total, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersCoinQuantity(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
+	var orders []*HistoryOrder
+
+	err := r.DB.Raw(`SELECT pool_base_coin, SUM(executed_quantity) AS executed_quantity 
+		FROM history_orders
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_base_coin
+		ORDER BY executed_quantity DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+type OrdersSymbolQuantity struct {
+	Symbol   string          `json:"symbol"`
+	Quantity decimal.Decimal `json:"quantity"`
+	Price    decimal.Decimal `json:"price"`
+}
+
+func (r *ClickHouseRepo) GetOrdersSymbolQuantity(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolQuantity, error) {
+	var orders []*OrdersSymbolQuantity
+
+	err := r.DB.Raw(`
+		SELECT pool_symbol as symbol,
+		SUM(executed_quantity) AS quantity,
+		SUM(executed_quantity * avg_price) AS price
+		FROM history_orders
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_symbol
+		ORDER BY quantity DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersFeeTotal(ctx context.Context, startTime, endTime string) (decimal.Decimal, error) {
+	var total decimal.Decimal
+
+	err := r.DB.Raw(`SELECT SUM(taker_fee + maker_fee) AS total 
+		FROM trades
+		WHERE created_at BETWEEN ? AND ?`, startTime, endTime).Scan(&total).Error
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return total, nil
+}
+
+func (r *ClickHouseRepo) GetOrdersCoinFee(ctx context.Context, startTime, endTime string) ([]*HistoryOrderForm, error) {
+	var orders []*HistoryOrderForm
+
+	err := r.DB.Raw(`SELECT base_coin as pool_base_coin, SUM(taker_fee + maker_fee) AS fee 
+		FROM trades
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY pool_base_coin
+		ORDER BY fee DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+type OrdersSymbolFee struct {
+	Symbol   string          `json:"symbol"`
+	TakerFee decimal.Decimal `json:"taker_fee"`
+	MakerFee decimal.Decimal `json:"maker_fee"`
+}
+
+func (r *ClickHouseRepo) GetOrdersSymbolFee(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolFee, error) {
+	var orders []*OrdersSymbolFee
+
+	err := r.DB.Raw(`SELECT symbol, SUM(taker_fee) AS taker_fee, SUM(maker_fee) AS maker_fee
+		FROM trades
+		WHERE created_at BETWEEN ? AND ?
+		GROUP BY symbol
+		ORDER BY taker_fee DESC`, startTime, endTime).Scan(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }
