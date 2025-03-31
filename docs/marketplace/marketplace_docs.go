@@ -2465,6 +2465,12 @@ const docTemplatemarketplace = `{
                 "app_contract": {
                     "type": "string"
                 },
+                "bridge_contract": {
+                    "type": "string"
+                },
+                "btc_bridge_contract": {
+                    "type": "string"
+                },
                 "evm_agent_contract": {
                     "type": "string"
                 },

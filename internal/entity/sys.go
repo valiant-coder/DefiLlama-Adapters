@@ -10,6 +10,9 @@ type SystemInfo struct {
 	AppContract        string             `json:"app_contract"`
 	ExsatNetwork       ExsatNetwork       `json:"exsat_network"`
 	TradingCompetition TradingCompetition `json:"trading_competition"`
+
+	BTCBridgeContract string `json:"btc_bridge_contract"`
+	BridgeContract    string `json:"bridge_contract"`
 }
 
 type TradingCompetition struct {
