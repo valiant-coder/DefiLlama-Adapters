@@ -6,12 +6,14 @@ import (
 	"exapp-go/config"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/errno"
 	"exapp-go/pkg/eos/onedex"
 	"exapp-go/pkg/queryparams"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
 
@@ -63,149 +65,13 @@ func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridge
 	return "", errors.New("timeout waiting for deposit address")
 }
 
-func (s *DepositWithdrawalService) FirstDeposit(ctx context.Context, uid string, req *entity.ReqFirstDeposit) (entity.RespFirstDeposit, error) {
-	passkeys, err := s.repo.GetUserCredentials(ctx, uid)
-	if err != nil {
-		return entity.RespFirstDeposit{}, err
-	}
-	if len(passkeys) == 0 {
-		return entity.RespFirstDeposit{}, errors.New("no passkey found")
-	}
-	var hasPasskey bool
-	for _, passkey := range passkeys {
-		if passkey.EOSAccount != "" {
-			return entity.RespFirstDeposit{}, errors.New("had first deposit,please use deposit")
-		}
-		if passkey.PublicKey == req.PublicKey {
-			hasPasskey = true
-			break
-		}
-	}
-	if !hasPasskey {
-		return entity.RespFirstDeposit{}, errors.New("no found passkey")
-	}
-
-	token, err := s.repo.GetToken(ctx, req.Symbol)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return entity.RespFirstDeposit{}, errors.New("token not found")
-		}
-		return entity.RespFirstDeposit{}, err
-	}
-	var targetChain db.ChainInfo
-	for _, chain := range token.Chains {
-		if chain.ChainName == req.ChainName {
-			targetChain = chain
-			break
-		}
-	}
-	if targetChain.ChainName == "" {
-		return entity.RespFirstDeposit{}, errors.New("chain not found")
-	}
-	remark := fmt.Sprintf("new-%s-%s", uid, req.PublicKey)
-	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
-	if err != nil {
-		return entity.RespFirstDeposit{}, err
-	}
-	if len(depositAddress) > 0 {
-		for _, address := range depositAddress {
-			if address.Remark == remark {
-				return entity.RespFirstDeposit{
-					Address: address.Address,
-				}, nil
-			}
-		}
-	}
-
-	var newDepositAddress string
-	if req.Symbol == "BTC" && targetChain.DepositByBTCBridge {
-		btcBridgeClient := onedex.NewBTCBridgeClient(
-			s.eosCfg.NodeURL,
-			s.eosCfg.Exsat.BTCBridgeContract,
-			s.eosCfg.OneDex.Actor,
-			s.eosCfg.OneDex.ActorPrivateKey,
-			s.eosCfg.OneDex.ActorPermission,
-		)
-
-		resp, err := btcBridgeClient.MappingAddress(ctx, onedex.BTCMappingAddrRequest{
-			Remark:           remark,
-			RecipientAddress: s.eosCfg.Exsat.BridgeExtensionEVMAddress,
-		})
-		if err != nil {
-			return entity.RespFirstDeposit{}, err
-		}
-		log.Printf("mapping new btc address txid: %v", resp.TransactionID)
-
-		newDepositAddress, err = s.pollForBTCAddress(ctx, btcBridgeClient, onedex.RequestBTCDepositAddress{
-			Remark:              remark,
-			RecipientEVMAddress: s.eosCfg.Exsat.BridgeExtensionEVMAddress,
-		})
-		if err != nil {
-			log.Printf("get btc deposit address from bridge error: %v", err)
-			return entity.RespFirstDeposit{}, err
-		}
-	} else {
-		bridgeClient := onedex.NewBridgeClient(
-			s.eosCfg.NodeURL,
-			s.eosCfg.Exsat.BridgeContract,
-			s.eosCfg.OneDex.Actor,
-			s.eosCfg.OneDex.ActorPrivateKey,
-			s.eosCfg.OneDex.ActorPermission,
-		)
-
-		resp, err := bridgeClient.MappingAddress(ctx, onedex.MappingAddrRequest{
-			PermissionID:     targetChain.PermissionID,
-			RecipientAddress: s.eosCfg.Exsat.BridgeExtensionEVMAddress,
-			Remark:           remark,
-		})
-		if err != nil {
-			return entity.RespFirstDeposit{}, err
-		}
-		log.Printf("mapping new address txid: %v", resp.TransactionID)
-
-		newDepositAddress, err = s.pollForDepositAddress(ctx, bridgeClient, onedex.RequestDepositAddress{
-			PermissionID: targetChain.PermissionID,
-			Remark:       remark,
-			Recipient:    s.eosCfg.Exsat.BridgeExtensionEVMAddress,
-		})
-		if err != nil {
-			log.Printf("get deposit address from bridge error: %v", err)
-			return entity.RespFirstDeposit{}, err
-		}
-	}
-
-	log.Printf("get first deposit address: %s", newDepositAddress)
-	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
-		UID:          uid,
-		Address:      newDepositAddress,
-		PermissionID: targetChain.PermissionID,
-		Remark:       remark,
-	})
-	if err != nil {
-		return entity.RespFirstDeposit{}, err
-	}
-	return entity.RespFirstDeposit{
-		Address: newDepositAddress,
-	}, nil
-}
-
 func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req *entity.ReqDeposit) (entity.RespDeposit, error) {
-	passkeys, err := s.repo.GetUserCredentials(ctx, uid)
+	passkey, err := s.repo.GetUserCredentialByPubkey(ctx, req.PublicKey)
 	if err != nil {
 		return entity.RespDeposit{}, err
 	}
-	if len(passkeys) == 0 {
-		return entity.RespDeposit{}, errors.New("no passkey found")
-	}
-	var eosAccount string
-	for _, passkey := range passkeys {
-		if passkey.EOSAccount != "" {
-			eosAccount = passkey.EOSAccount
-			break
-		}
-	}
-	if eosAccount == "" {
-		return entity.RespDeposit{}, errors.New("no eos account found")
+	if passkey.EOSAccount != "" {
+		return entity.RespDeposit{}, errno.DefaultParamsError("fund blockchain account")
 	}
 
 	token, err := s.repo.GetToken(ctx, req.Symbol)
@@ -217,13 +83,10 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 	var targetChain db.ChainInfo
 	for _, chain := range token.Chains {
-		if chain.ChainName == req.ChainName {
+		if chain.ChainID == req.ChainID {
 			targetChain = chain
 			break
 		}
-	}
-	if targetChain.ChainName == "" {
-		return entity.RespDeposit{}, errors.New("chain not found")
 	}
 
 	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
@@ -231,7 +94,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		return entity.RespDeposit{}, err
 	}
 
-	remark := fmt.Sprintf("deposit-%s", eosAccount)
+	remark := fmt.Sprintf("topup-%s", uid)
 	if len(depositAddress) > 0 {
 		for _, address := range depositAddress {
 			if address.Remark == remark {
@@ -269,6 +132,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			log.Printf("get btc deposit address from bridge error: %v", err)
 			return entity.RespDeposit{}, err
 		}
+
 	} else {
 		bridgeClient := onedex.NewBridgeClient(
 			s.eosCfg.NodeURL,
@@ -298,8 +162,21 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 			return entity.RespDeposit{}, err
 		}
 	}
-
 	log.Printf("new deposit address: %s", newDepositAddress)
+	signupClient := onedex.NewSignupClient(
+		s.eosCfg.NodeURL,
+		s.eosCfg.OneDex.Actor,
+		s.eosCfg.OneDex.ActorPrivateKey,
+		s.eosCfg.OneDex.ActorPermission,
+	)
+	go func() {
+		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), req.PublicKey)
+		if err != nil {
+			log.Printf("apply acc txid: %v", resp.TransactionID)
+		}
+		log.Printf("apply acc txid: %v", resp.TransactionID)
+	}()
+
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
 		Address:      newDepositAddress,

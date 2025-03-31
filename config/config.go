@@ -177,6 +177,7 @@ type OneDexConfig struct {
 	AppMakerFeeRate  float64 `yaml:"app_maker_fee_rate"`
 	TokenContract    string  `yaml:"token_contract"`
 	EVMAgentContract string  `yaml:"evm_agent_contract"`
+	SignUpContract   string  `yaml:"sign_up_contract"`
 }
 
 type ExsatConfig struct {

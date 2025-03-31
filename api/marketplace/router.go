@@ -122,7 +122,7 @@ func Run(addr string, release bool) error {
 	auth.GET("/sub-accounts", getSubAccounts)
 	auth.DELETE("/sub-accounts", deleteSubAccount)
 
-	auth.POST("/first-deposit", firstDeposit)
+	// auth.POST("/first-deposit", firstDeposit)
 	auth.POST("/deposit", deposit)
 
 	auth.GET("/deposit-history", getDepositHistory)

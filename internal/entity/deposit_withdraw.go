@@ -14,7 +14,8 @@ type RespFirstDeposit struct {
 
 type ReqDeposit struct {
 	Symbol    string `json:"symbol" binding:"required"`
-	ChainName string `json:"chain_name" binding:"required"`
+	PublicKey string `json:"public_key" binding:"required"`
+	ChainID   uint8  `json:"chain_id" binding:"required"`
 }
 
 type RespDeposit struct {

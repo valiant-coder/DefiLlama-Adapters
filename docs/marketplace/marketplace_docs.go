@@ -504,45 +504,6 @@ const docTemplatemarketplace = `{
                 }
             }
         },
-        "/first-deposit": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "First deposit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "deposit"
-                ],
-                "summary": "First deposit",
-                "parameters": [
-                    {
-                        "description": "first deposit params",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ReqFirstDeposit"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.RespFirstDeposit"
-                        }
-                    }
-                }
-            }
-        },
         "/history-orders": {
             "get": {
                 "description": "Get history orders",
@@ -2184,28 +2145,13 @@ const docTemplatemarketplace = `{
         "entity.ReqDeposit": {
             "type": "object",
             "required": [
-                "chain_name",
-                "symbol"
-            ],
-            "properties": {
-                "chain_name": {
-                    "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ReqFirstDeposit": {
-            "type": "object",
-            "required": [
-                "chain_name",
+                "chain_id",
                 "public_key",
                 "symbol"
             ],
             "properties": {
-                "chain_name": {
-                    "type": "string"
+                "chain_id": {
+                    "type": "integer"
                 },
                 "public_key": {
                     "type": "string"
@@ -2314,14 +2260,6 @@ const docTemplatemarketplace = `{
                     "type": "integer"
                 },
                 "symbol": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.RespFirstDeposit": {
-            "type": "object",
-            "properties": {
-                "address": {
                     "type": "string"
                 }
             }
