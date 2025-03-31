@@ -319,28 +319,20 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 	if uid == "" {
 		return nil, errors.New("uid is required")
 	}
-
 	user, err := s.repo.GetUser(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
-
-	var eosAccount string
 	var userAvailableBalances []UserBalance
 	var isEvmUser bool
 	if user.LoginMethod == db.LoginMethodEVM {
 		isEvmUser = true
-		eosAccount = user.EOSAccount
 		userAvailableBalances, err = s.getEvmUserAvailableBalances(ctx, user.EVMAddress)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		eosAccount, err = s.repo.GetEosAccountByUID(ctx, uid)
-		if err != nil {
-			return nil, err
-		}
-		userAvailableBalances, err = s.getPasskeyUserAvailableBalances(ctx, eosAccount)
+		userAvailableBalances, err = s.getPasskeyUserAvailableBalances(ctx, user.EOSAccount)
 		if err != nil {
 			return nil, err
 		}
@@ -362,7 +354,7 @@ func (s *UserService) FetchUserBalanceByUID(ctx context.Context, uid string) ([]
 		ctx,
 		isEvmUser,
 		uid,
-		eosAccount,
+		user.EOSAccount,
 		user.Permission,
 		userAvailableBalances,
 		allTokens,
