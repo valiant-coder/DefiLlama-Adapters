@@ -73,7 +73,7 @@ func (s *UserService) GetSubAccounts(ctx context.Context, uid string) ([]*entity
 		subAccountBalance, err := s.GetUserSubaccountBalances(ctx, sa.EOSAccount, sa.Permission)
 		if err != nil {
 			log.Printf("failed to get sub-account balance: %v", err)
-			continue
+			subAccountBalance = []entity.SubAccountBalance{}
 
 		}
 		result = append(result, &entity.SubAccountInfo{

@@ -2,34 +2,16 @@ package marketplace
 
 import (
 	"context"
-	"exapp-go/config"
 	"exapp-go/internal/entity"
-	"exapp-go/pkg/eos/onedex"
-	"fmt"
 
-	"github.com/eoscanada/eos-go"
 	"github.com/shopspring/decimal"
 )
 
 func (s *UserService) GetUserSubaccountBalances(ctx context.Context, eosAccount, permission string) ([]entity.SubAccountBalance, error) {
-	// Initialize EOS API client
-	api := eos.New(config.Conf().Eos.NodeURL)
 
-	// Fetch subaccount balances from OneDex
-	balances, err := onedex.GetSubaccountBalances(ctx, api, eosAccount, permission)
+	userAvailableBalances, err := s.getPasskeyUserAvailableBalances(ctx, eosAccount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get subaccount balances: %w", err)
-	}
-
-	// Convert to UserBalance format for processing
-	var userAvailableBalances []UserBalance
-	for _, balance := range balances {
-		userBalance := UserBalance{
-			Account: eosAccount,
-			Coin:    fmt.Sprintf("%s-%s", balance.Contract, balance.Symbol),
-			Balance: balance.BalanceDecimal,
-		}
-		userAvailableBalances = append(userAvailableBalances, userBalance)
+		return nil, err
 	}
 
 	// Get token metadata
