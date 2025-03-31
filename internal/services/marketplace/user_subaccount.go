@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
-	"exapp-go/internal/errno"
 	"fmt"
 	"math/big"
 
@@ -37,15 +36,6 @@ func generateAPIKey() (string, error) {
 
 // AddSubAccount creates a new sub-account for the user
 func (s *UserService) AddSubAccount(ctx context.Context, uid string, req entity.ReqAddSubAccount) (*entity.RespAddSubAccount, error) {
-	eosAccount, err := s.repo.GetEosAccountByUID(ctx, uid)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get EOS account: %w", err)
-	}
-
-	if eosAccount == "" {
-		return nil, errno.DefaultParamsError("User has no blockchain account")
-	}
-
 	// Generate API key
 	apiKey, err := generateAPIKey()
 	if err != nil {
@@ -55,7 +45,7 @@ func (s *UserService) AddSubAccount(ctx context.Context, uid string, req entity.
 	// Create sub-account in database
 	subAccount := &db.UserSubAccount{
 		UID:        uid,
-		EOSAccount: eosAccount,
+		EOSAccount: req.EOSAccount,
 		Name:       req.Name,
 		Permission: req.Permission,
 		APIKey:     apiKey,

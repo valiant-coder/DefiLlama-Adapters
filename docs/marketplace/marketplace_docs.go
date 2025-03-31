@@ -2116,6 +2116,10 @@ const docTemplatemarketplace = `{
         "entity.ReqAddSubAccount": {
             "type": "object",
             "properties": {
+                "eos_account": {
+                    "description": "eos account",
+                    "type": "string"
+                },
                 "name": {
                     "description": "sub account name",
                     "type": "string"
