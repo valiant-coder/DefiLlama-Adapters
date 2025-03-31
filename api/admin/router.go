@@ -145,7 +145,8 @@ func Run(addr string, release bool) error {
 	authorized.GET("/orders_coin_fee", getOrdersCoinFee)
 	authorized.GET("/orders_symbol_fee", getOrdersSymbolFee)
 
-	// balance
+	// profit
+	authorized.GET("/balances", getCoinBalances)
 
 	return r.Run(addr)
 

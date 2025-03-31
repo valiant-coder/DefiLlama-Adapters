@@ -87,7 +87,7 @@ func (s *Service) recordUserBalances() error {
 			for account := range taskChan {
 				usdtAmount, balances, err := userService.CalculateTotalUSDTValueForUser(ctx, account.UID)
 				if err != nil {
-					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.UID, err)}
+					resultChan <- result{err: fmt.Errorf("failed to calculate USDT balance for user %s: %w", account.EOSAccount, err)}
 					continue
 				}
 

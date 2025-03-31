@@ -164,6 +164,10 @@ type UserCoinBalanceRecord struct {
 	IsEvmUser bool            `gorm:"column:is_evm_user;type:bool;not null;"`
 }
 
+func (t *UserCoinBalanceRecord) TableName() string {
+	return "user_coin_balance_records"
+}
+
 func (r *Repo) BatchCreateUserCoinBalanceRecords(ctx context.Context, records []*UserCoinBalanceRecord) error {
 	if len(records) == 0 {
 		return nil
@@ -174,4 +178,24 @@ func (r *Repo) BatchCreateUserCoinBalanceRecords(ctx context.Context, records []
 			DoUpdates: clause.AssignmentColumns([]string{"amount", "updated_at"}),
 		}).
 		CreateInBatches(records, 100).Error
+}
+
+func (r *Repo) GetUserCoinTotalBalanceByIsEvmUser(ctx context.Context, isEvmUser bool) ([]*UserCoinBalanceRecord, error) {
+	var records []*UserCoinBalanceRecord
+
+	err := r.DB.Raw(`SELECT coin, SUM(amount) as amount FROM (
+		SELECT t1.* 
+		FROM user_coin_balance_records t1
+		INNER JOIN (
+			SELECT uid, coin, MAX(time) as max_time
+			FROM user_coin_balance_records
+			GROUP BY uid, coin
+		) t2 ON t1.uid = t2.uid AND t1.coin = t2.coin AND t1.time = t2.max_time
+		WHERE t1.is_evm_user = ?
+	) latest GROUP BY coin`, isEvmUser).Scan(&records).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return records, err
 }

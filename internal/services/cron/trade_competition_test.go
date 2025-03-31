@@ -18,5 +18,5 @@ func TestRecordUserBalances(t *testing.T) {
 		t.Errorf("recordUserBalances error %v", err)
 	}
 
-	fmt.Println(" successfully")
+	fmt.Println("success")
 }

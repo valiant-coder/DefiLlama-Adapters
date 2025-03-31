@@ -68,7 +68,7 @@ For local development, you can use Docker Compose to start MySQL and Redis:
 ```
 cd develop
 
-./develope.sh
+./develop.sh
 ```
 
 ## API Routes
