@@ -36,7 +36,7 @@ type User struct {
 	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);default:null;uniqueIndex:idx_login_method_oauth_id"`
 	Avatar      string      `gorm:"column:avatar;type:varchar(255);default:null"`
 	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);default:null;uniqueIndex:idx_login_method_oauth_id"`
-	Email       string      `gorm:"column:email;type:varchar(255);default:null"`
+	Email       string      `gorm:"column:email;type:varchar(255);default:null;index:idx_email"`
 
 	// for evm user
 	EVMAddress string `gorm:"column:evm_address;type:varchar(255);default:null;index:idx_evm_address"`
@@ -80,6 +80,15 @@ func (r *Repo) UpsertUser(ctx context.Context, user *User) error {
 
 func (r *Repo) UpdateUser(ctx context.Context, user *User) error {
 	return r.DB.WithContext(ctx).Model(&User{}).Where("id =?", user.ID).Updates(user).Error
+}
+
+func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	var user User
+	err := r.DB.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {

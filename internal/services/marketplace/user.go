@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserService struct {
@@ -156,6 +158,25 @@ func (s *UserService) Login(ctx context.Context, req entity.ReqUserLogin) (strin
 	if err != nil {
 		log.Logger().Errorf("login failed for method %s: %v", req.Method, err)
 		return "", err
+	}
+
+	if user.Email != "" {
+		existingUser, err := s.repo.GetUserByEmail(ctx, user.Email)
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return "", fmt.Errorf("get user by email: %w", err)
+			}
+
+		} else {
+			user = &db.User{
+				Username:    user.Username,
+				OauthID:     existingUser.OauthID,
+				LoginMethod: existingUser.LoginMethod,
+				Avatar:      user.Avatar,
+				Email:       user.Email,
+			}
+		}
+
 	}
 
 	if err := s.repo.UpsertUser(ctx, user); err != nil {
