@@ -132,6 +132,9 @@ func dbConnect(user, pass, host, port, dbName, loc string) (*gorm.DB, error) {
 		return nil, err
 	}
 	
+	//	TODO: remove this line
+	db = db.Debug()
+	
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
 	
 	sqlDB, err := db.DB()
