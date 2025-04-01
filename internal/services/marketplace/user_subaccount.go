@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
+	"exapp-go/internal/errno"
 	"fmt"
 	"math/big"
 
@@ -39,6 +40,14 @@ func generateAPIKey() (string, error) {
 
 // AddSubAccount creates a new sub-account for the user
 func (s *UserService) AddSubAccount(ctx context.Context, uid string, req entity.ReqAddSubAccount) (*entity.RespAddSubAccount, error) {
+	user, err := s.repo.GetUser(ctx, uid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	if user.IsEVMUser() {
+		return nil, errno.DefaultParamsError("EVM user cannot create sub-account")
+	}
 	// Generate API key
 	apiKey, err := generateAPIKey()
 	if err != nil {
