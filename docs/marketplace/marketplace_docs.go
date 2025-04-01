@@ -15,32 +15,6 @@ const docTemplatemarketplace = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/balances": {
-            "get": {
-                "description": "Get user balances",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get user balances",
-                "responses": {
-                    "200": {
-                        "description": "user balances",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.UserBalance"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/depth": {
             "get": {
                 "description": "Get order book by pool id",
@@ -262,6 +236,32 @@ const docTemplatemarketplace = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entity.Pool"
+                        }
+                    }
+                }
+            }
+        },
+        "/balances": {
+            "get": {
+                "description": "Get user balances",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user balances",
+                "responses": {
+                    "200": {
+                        "description": "user balances",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.UserBalance"
+                            }
                         }
                     }
                 }
@@ -1672,6 +1672,9 @@ const docTemplatemarketplace = `{
                 "min_withdraw_amount": {
                     "type": "string"
                 },
+                "permission_id": {
+                    "type": "integer"
+                },
                 "withdraw_fee": {
                     "type": "string"
                 }
@@ -2116,16 +2119,8 @@ const docTemplatemarketplace = `{
         "entity.ReqAddSubAccount": {
             "type": "object",
             "properties": {
-                "eos_account": {
-                    "description": "eos account",
-                    "type": "string"
-                },
                 "name": {
                     "description": "sub account name",
-                    "type": "string"
-                },
-                "permission": {
-                    "description": "eos permission",
                     "type": "string"
                 }
             }
@@ -2141,7 +2136,7 @@ const docTemplatemarketplace = `{
         "entity.ReqDeleteSubAccount": {
             "type": "object",
             "properties": {
-                "name": {
+                "sid": {
                     "type": "string"
                 }
             }
@@ -2150,14 +2145,14 @@ const docTemplatemarketplace = `{
             "type": "object",
             "required": [
                 "chain_id",
-                "public_key",
+                "pubkey",
                 "symbol"
             ],
             "properties": {
                 "chain_id": {
                     "type": "integer"
                 },
-                "public_key": {
+                "pubkey": {
                     "type": "string"
                 },
                 "symbol": {
@@ -2211,6 +2206,9 @@ const docTemplatemarketplace = `{
             "properties": {
                 "api_key": {
                     "type": "string"
+                },
+                "sid": {
+                    "type": "string"
                 }
             }
         },
@@ -2234,6 +2232,9 @@ const docTemplatemarketplace = `{
             "type": "object",
             "properties": {
                 "address": {
+                    "type": "string"
+                },
+                "memo": {
                     "type": "string"
                 }
             }
@@ -2341,7 +2342,6 @@ const docTemplatemarketplace = `{
                     "type": "string"
                 },
                 "evm_address": {
-                    "description": "for evm user",
                     "type": "string"
                 },
                 "passkeys": {
@@ -2446,6 +2446,9 @@ const docTemplatemarketplace = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "sid": {
+                    "type": "string"
                 }
             }
         },
@@ -2475,14 +2478,17 @@ const docTemplatemarketplace = `{
                 "btc_bridge_contract": {
                     "type": "string"
                 },
-                "evm_agent_contract": {
+                "deposit_recipient_address": {
                     "type": "string"
                 },
-                "evm_extension_address": {
+                "evm_agent_contract": {
                     "type": "string"
                 },
                 "exsat_network": {
                     "$ref": "#/definitions/entity.ExsatNetwork"
+                },
+                "maker_agent_contract": {
+                    "type": "string"
                 },
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
@@ -2788,6 +2794,9 @@ const docTemplatemarketplace = `{
                 },
                 "depositing": {
                     "type": "string"
+                },
+                "is_evm_user": {
+                    "type": "boolean"
                 },
                 "locked": {
                     "type": "string"

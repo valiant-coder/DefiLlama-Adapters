@@ -13,7 +13,8 @@ type SystemInfo struct {
 
 	BTCBridgeContract   string `json:"btc_bridge_contract"`
 	BridgeContract      string `json:"bridge_contract"`
-	EVMExtensionAddress string `json:"evm_extension_address"`
+	DepositRecipientAd  string `json:"deposit_recipient_address"`
+	MakerAgentContract  string `json:"maker_agent_contract"`
 }
 
 type TradingCompetition struct {

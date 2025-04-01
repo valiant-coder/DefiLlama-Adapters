@@ -34,19 +34,21 @@ type ApplyAccArgs struct {
 // SignupClient encapsulates functionality for interacting with the signup.1dex contract
 type SignupClient struct {
 	api        *eos.API
+	contract   string
 	actor      string
 	priv       string
 	permission string
 }
 
 // NewSignupClient creates a new client for interacting with the signup.1dex contract
-func NewSignupClient(endpoint string, actor string, priv string, permission string) *SignupClient {
+func NewSignupClient(endpoint string, contract string, actor string, priv string, permission string) *SignupClient {
 	api := eos.New(endpoint)
 	return &SignupClient{
 		api:        api,
 		actor:      actor,
 		priv:       priv,
 		permission: permission,
+		contract:   contract,
 	}
 }
 
@@ -60,7 +62,7 @@ func (c *SignupClient) ApplyAcc(ctx context.Context, uid uint64, pubkey string) 
 	c.api.SetSigner(keyBag)
 
 	action := &eos.Action{
-		Account: eos.AN("signup.1dex"),
+		Account: eos.AN(c.contract),
 		Name:    eos.ActN("applyacc"),
 		Authorization: []eos.PermissionLevel{
 			{Actor: eos.AN(c.actor), Permission: eos.PN(c.permission)},
@@ -72,4 +74,40 @@ func (c *SignupClient) ApplyAcc(ctx context.Context, uid uint64, pubkey string) 
 	}
 
 	return c.api.SignPushActions(ctx, action)
+}
+
+type UIDPubkey struct {
+	ID     uint64 `json:"id"`
+	Pubkey string `json:"pubkey"`
+	Status uint8  `json:"status"`
+}
+
+// 获取 accapplies表记录，scope是 sigup.1dex, index_position 是primary key_type 是i64,
+func (c *SignupClient) GetPubkeyByUID(ctx context.Context, uid string) (string, error) {
+	request := eos.GetTableRowsRequest{
+		Code:       c.contract,
+		Scope:      c.contract,
+		Table:      "accapplies",
+		Index:      "1",
+		KeyType:    "i64",
+		LowerBound: uid,
+		UpperBound: uid,
+		JSON:       true,
+		Limit:      100,
+	}
+
+	response, err := c.api.GetTableRows(ctx, request)
+	if err != nil {
+		return "", err
+	}
+
+	var uidPubkeys []*UIDPubkey
+	err = response.JSONToStructs(&uidPubkeys)
+	if err != nil {
+		return "", err
+	}
+	if len(uidPubkeys) == 0 {
+		return "", nil
+	}
+	return uidPubkeys[0].Pubkey, nil
 }

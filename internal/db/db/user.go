@@ -36,7 +36,7 @@ type User struct {
 	LoginMethod LoginMethod `gorm:"column:login_method;type:varchar(255);default:null;uniqueIndex:idx_login_method_oauth_id"`
 	Avatar      string      `gorm:"column:avatar;type:varchar(255);default:null"`
 	OauthID     string      `gorm:"column:oauth_id;type:varchar(255);default:null;uniqueIndex:idx_login_method_oauth_id"`
-	Email       string      `gorm:"column:email;type:varchar(255);default:null"`
+	Email       string      `gorm:"column:email;type:varchar(255);default:null;index:idx_email"`
 
 	// for evm user
 	EVMAddress string `gorm:"column:evm_address;type:varchar(255);default:null;index:idx_evm_address"`
@@ -82,6 +82,15 @@ func (r *Repo) UpdateUser(ctx context.Context, user *User) error {
 	return r.DB.WithContext(ctx).Model(&User{}).Where("id =?", user.ID).Updates(user).Error
 }
 
+func (r *Repo) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	var user User
+	err := r.DB.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *Repo) IsUserExist(ctx context.Context, uid string) (bool, error) {
 	var user User
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&user)
@@ -125,6 +134,12 @@ func (r *Repo) GetUIDByEOSAccount(ctx context.Context, eosAccount string) (strin
 		return "", err
 	}
 	return user.UID, nil
+}
+
+func (r *Repo) GetUserByEOSAccount(ctx context.Context, eosAccount string) (*User, error) {
+	var user User
+	err := r.WithContext(ctx).Where("eos_account = ?", eosAccount).First(&user).Error
+	return &user, err
 }
 
 func (r *Repo) GetUIDByEOSAccountAndPermission(ctx context.Context, eosAccount, permission string) (string, error) {
@@ -186,12 +201,6 @@ func (r *Repo) CreateCredentialIfNotExist(ctx context.Context, credential *UserC
 	return nil
 }
 
-func (s *Repo) GetUserCredential(ctx context.Context, uid string) (*UserCredential, error) {
-	var credential UserCredential
-	result := s.DB.WithContext(ctx).Where("uid = ?", uid).First(&credential)
-	return &credential, result.Error
-}
-
 func (r *Repo) GetUserCredentials(ctx context.Context, uid string) ([]*UserCredential, error) {
 	var credentials []*UserCredential
 	result := r.DB.WithContext(ctx).Where("uid = ?", uid).Find(&credentials)
@@ -229,7 +238,6 @@ func (r *Repo) UpdateUserCredential(ctx context.Context, credential *UserCredent
 func (r *Repo) DeleteUserCredential(ctx context.Context, credential *UserCredential) error {
 	return r.DB.WithContext(ctx).Where("id = ?", credential.ID).Delete(&UserCredential{}).Error
 }
-
 
 func (r *Repo) GetUserCredentialMaxBlockNumber(ctx context.Context) (uint64, error) {
 	var blockNumber *uint64

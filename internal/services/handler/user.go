@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"exapp-go/internal/db/db"
+	"exapp-go/pkg/eos/onedex"
 	"exapp-go/pkg/hyperion"
 	"fmt"
 	"log"
@@ -41,7 +42,19 @@ func (s *Service) handleNewAccount(action hyperion.Action) error {
 		return nil
 	}
 
-	credential, err := s.repo.GetUserCredential(ctx, data.ID)
+	signupClient := onedex.NewSignupClient(
+		s.eosCfg.NodeURL,
+		s.oneDexCfg.SignUpContract,
+		s.oneDexCfg.Actor,
+		s.oneDexCfg.ActorPrivateKey,
+		s.oneDexCfg.ActorPermission,
+	)
+	pubkey, err := signupClient.GetPubkeyByUID(ctx, data.ID)
+	if err != nil {
+		log.Printf("Get pubkey by uid failed: %v", err)
+		return nil
+	}
+	credential, err := s.repo.GetUserCredentialByPubkey(ctx, pubkey)
 	if err != nil {
 		log.Printf("Get user credential by uid failed: %v", err)
 		return nil

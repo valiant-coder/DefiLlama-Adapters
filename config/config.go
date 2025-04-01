@@ -178,6 +178,7 @@ type OneDexConfig struct {
 	TokenContract    string  `yaml:"token_contract"`
 	EVMAgentContract string  `yaml:"evm_agent_contract"`
 	SignUpContract   string  `yaml:"sign_up_contract"`
+	MakerAgentContract string  `yaml:"maker_agent_contract"`
 }
 
 type ExsatConfig struct {
@@ -257,6 +258,9 @@ type EventConfig struct {
 	MapXSAT      string `yaml:"map_xsat"`
 
 	LogNewTrader string `yaml:"log_new_trader"`
+
+	// sub-account events
+	LogRegSubAccount string `yaml:"log_reg_subaccount"`
 }
 
 func DefaultEventConfig() EventConfig {
@@ -276,5 +280,6 @@ func DefaultEventConfig() EventConfig {
 		AddXSATChain:   "addxsatchain",
 		MapXSAT:        "mapxsat",
 		LogNewTrader:   "lognewtrader",
+		LogRegSubAccount: "logregsubacc",
 	}
 }

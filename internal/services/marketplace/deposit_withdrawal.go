@@ -11,6 +11,7 @@ import (
 	"exapp-go/pkg/queryparams"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/spf13/cast"
@@ -66,12 +67,12 @@ func (s *DepositWithdrawalService) pollForBTCAddress(ctx context.Context, bridge
 }
 
 func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req *entity.ReqDeposit) (entity.RespDeposit, error) {
-	passkey, err := s.repo.GetUserCredentialByPubkey(ctx, req.PublicKey)
+	passkey, err := s.repo.GetUserCredentialByPubkey(ctx, req.Pubkey)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.RespDeposit{}, errno.DefaultParamsError("not found passkey")
+		}
 		return entity.RespDeposit{}, err
-	}
-	if passkey.EOSAccount != "" {
-		return entity.RespDeposit{}, errno.DefaultParamsError("fund blockchain account")
 	}
 
 	token, err := s.repo.GetToken(ctx, req.Symbol)
@@ -89,20 +90,76 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 
+	remark := fmt.Sprintf("topup-%s", uid)
 	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
 	if err != nil {
 		return entity.RespDeposit{}, err
 	}
-
-	remark := fmt.Sprintf("topup-%s", uid)
 	if len(depositAddress) > 0 {
 		for _, address := range depositAddress {
 			if address.Remark == remark {
 				return entity.RespDeposit{
 					Address: address.Address,
+					Memo:    remark,
 				}, nil
 			}
 		}
+	}
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("apply acc panic: %v", r)
+			}
+		}()
+		signupClient := onedex.NewSignupClient(
+			s.eosCfg.NodeURL,
+			s.eosCfg.OneDex.SignUpContract,
+			s.eosCfg.OneDex.Actor,
+			s.eosCfg.OneDex.ActorPrivateKey,
+			s.eosCfg.OneDex.ActorPermission,
+		)
+		pubkey, err := signupClient.GetPubkeyByUID(context.Background(), uid)
+		if err != nil {
+			return
+		}
+		if strings.EqualFold(pubkey, passkey.PublicKey) {
+			log.Printf("pubkey already applied")
+			return
+		}
+
+		maxRetries := 3
+		for i := 0; i < maxRetries; i++ {
+			resp, err := signupClient.ApplyAcc(context.Background(), cast.ToUint64(uid), pubkey)
+			if err != nil {
+				if strings.Contains(err.Error(), "already applied") {
+					log.Printf("pubkey already applied")
+					return
+				}
+				log.Printf("apply acc attempt %d failed: %v", i+1, err)
+				if i == maxRetries-1 {
+					log.Printf("apply acc failed after %d attempts", maxRetries)
+					return
+				}
+				time.Sleep(time.Second)
+				continue
+			}
+			log.Printf("apply acc txid: %v", resp.TransactionID)
+			return
+		}
+	}()
+
+	if targetChain.ChainName == "eos" {
+		return entity.RespDeposit{
+			Address: config.Conf().Eos.OneDex.PortalContract,
+			Memo:    remark,
+		}, nil
+	}
+
+	if targetChain.ChainName == "exsat" {
+		return entity.RespDeposit{
+			Address: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
+			Memo:    remark,
+		}, nil
 	}
 
 	var newDepositAddress string
@@ -163,19 +220,6 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 	log.Printf("new deposit address: %s", newDepositAddress)
-	signupClient := onedex.NewSignupClient(
-		s.eosCfg.NodeURL,
-		s.eosCfg.OneDex.Actor,
-		s.eosCfg.OneDex.ActorPrivateKey,
-		s.eosCfg.OneDex.ActorPermission,
-	)
-	go func() {
-		resp, err := signupClient.ApplyAcc(ctx, cast.ToUint64(uid), req.PublicKey)
-		if err != nil {
-			log.Printf("apply acc txid: %v", resp.TransactionID)
-		}
-		log.Printf("apply acc txid: %v", resp.TransactionID)
-	}()
 
 	err = s.repo.CreateUserDepositAddress(ctx, &db.UserDepositAddress{
 		UID:          uid,
@@ -188,6 +232,7 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 	}
 	return entity.RespDeposit{
 		Address: newDepositAddress,
+		Memo:    remark,
 	}, nil
 }
 
