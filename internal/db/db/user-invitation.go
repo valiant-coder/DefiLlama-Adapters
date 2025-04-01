@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"exapp-go/data"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -89,13 +90,15 @@ func (r *Repo) UpdateUIValidInviteCount(ctx context.Context, uid string, maxCoun
 
 func (r *Repo) GetUserInvitation(ctx context.Context, uid string) (*UserInvitation, error) {
 
-	if val := GetCache[UserInvitation](UIRedisKey(uid)); val != nil {
-		return val, nil
-	}
+	// if val := GetCache[UserInvitation](UIRedisKey(uid)); val != nil {
+	// 	return val, nil
+	// }
 
 	var ui UserInvitation
 	err := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&ui).Error
 	if err != nil {
+
+		fmt.Println("get user invitation error ->", err)
 		return nil, err
 	}
 
