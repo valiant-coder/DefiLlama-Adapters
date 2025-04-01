@@ -152,6 +152,9 @@ func Run(addr string, release bool) error {
 	authorized.GET("/user_balances", queryUserBalance)
 	authorized.GET("/user_coin_balances/:uid", getUserCoinBalance)
 
+	// points
+	authorized.POST("/user_points_grant", createUserPointsGrant)
+
 	return r.Run(addr)
 
 }
