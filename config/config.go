@@ -169,15 +169,16 @@ type HyperionConfig struct {
 }
 
 type OneDexConfig struct {
-	PortalContract   string  `yaml:"portal_contract"`
-	Actor            string  `yaml:"actor"`
-	ActorPrivateKey  string  `yaml:"actor_private_key"`
-	ActorPermission  string  `yaml:"actor_permission"`
-	AppTakerFeeRate  float64 `yaml:"app_taker_fee_rate"`
-	AppMakerFeeRate  float64 `yaml:"app_maker_fee_rate"`
-	TokenContract    string  `yaml:"token_contract"`
-	EVMAgentContract string  `yaml:"evm_agent_contract"`
-	SignUpContract   string  `yaml:"sign_up_contract"`
+	PortalContract     string  `yaml:"portal_contract"`
+	PortalEvmAddress   string  `yaml:"portal_evm_address"`
+	Actor              string  `yaml:"actor"`
+	ActorPrivateKey    string  `yaml:"actor_private_key"`
+	ActorPermission    string  `yaml:"actor_permission"`
+	AppTakerFeeRate    float64 `yaml:"app_taker_fee_rate"`
+	AppMakerFeeRate    float64 `yaml:"app_maker_fee_rate"`
+	TokenContract      string  `yaml:"token_contract"`
+	EVMAgentContract   string  `yaml:"evm_agent_contract"`
+	SignUpContract     string  `yaml:"sign_up_contract"`
 	MakerAgentContract string  `yaml:"maker_agent_contract"`
 }
 
@@ -265,21 +266,21 @@ type EventConfig struct {
 
 func DefaultEventConfig() EventConfig {
 	return EventConfig{
-		EmitPlaced:     "emitplaced",
-		EmitCanceled:   "emitcanceled",
-		EmitFilled:     "emitfilled",
-		Create:         "create",
-		DepositLog:     "depositlog",
-		LogDeposit:     "logdeposit",
-		LogNewAcc:      "lognewacc",
-		LogWithdraw:    "logwithdraw",
-		WithdrawLog:    "withdrawlog",
-		LogSend:        "logsend",
-		SetMinAmt:      "setminamt",
-		SetPoolFeeRate: "setpfeerate",
-		AddXSATChain:   "addxsatchain",
-		MapXSAT:        "mapxsat",
-		LogNewTrader:   "lognewtrader",
+		EmitPlaced:       "emitplaced",
+		EmitCanceled:     "emitcanceled",
+		EmitFilled:       "emitfilled",
+		Create:           "create",
+		DepositLog:       "depositlog",
+		LogDeposit:       "logdeposit",
+		LogNewAcc:        "lognewacc",
+		LogWithdraw:      "logwithdraw",
+		WithdrawLog:      "withdrawlog",
+		LogSend:          "logsend",
+		SetMinAmt:        "setminamt",
+		SetPoolFeeRate:   "setpfeerate",
+		AddXSATChain:     "addxsatchain",
+		MapXSAT:          "mapxsat",
+		LogNewTrader:     "lognewtrader",
 		LogRegSubAccount: "logregsubacc",
 	}
 }

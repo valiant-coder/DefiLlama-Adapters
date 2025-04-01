@@ -7,6 +7,7 @@ const (
 	UserPointsTypeActive     UserPointsType = "active"     // 活动
 	UserPointsTypeManual     UserPointsType = "manual"     // 手动
 	UserPointsTypeInvitation UserPointsType = "invitation" // 邀请
+	UserPointsTypeCommunity  UserPointsType = "community"  // 社区
 )
 
 type UserPointsMethod string

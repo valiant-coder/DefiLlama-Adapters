@@ -71,6 +71,29 @@ func (s *UserPointsService) GetUserPointsConf(ctx context.Context) (*db.UserPoin
 	return userPointsConf, nil
 }
 
+func (s *UserPointsService) GetUserPointsRank(ctx context.Context, params data.UserPointsListParam, uid string) (*data.UserPointsRankInfo, error) {
+	rank, err := s.repo.GetUserPointsRank(ctx, uid)
+	if err != nil {
+
+		log.Logger().Error("获取用户积分排名出错 -> ", err)
+		return nil, err
+	}
+
+	params.Order = "total desc"
+
+	ranks, err := s.repo.ListUserPoints(ctx, params)
+	if err != nil {
+
+		log.Logger().Error("获取用户积分排名列表出错 -> ", err)
+		return nil, err
+	}
+
+	return &data.UserPointsRankInfo{
+		Rank:  rank,
+		Array: ranks.Array,
+	}, nil
+}
+
 func (s *UserPointsService) UpdateUserPointsConf(ctx context.Context, params *data.UserPointsConfParam) error {
 
 	userPointsConf, _ := s.repo.GetUserPointsConf(ctx)

@@ -24,11 +24,12 @@ func getSystemInfo(c *gin.Context) {
 		PayCPU: entity.PayCPU{
 			Account: config.Conf().Eos.PayerAccount,
 		},
-		EVMAgentContract: config.Conf().Eos.OneDex.EVMAgentContract,
-		VaultEVMAddress:  config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
-		VaultEOSAddress:  config.Conf().Eos.OneDex.PortalContract,
-		TokenContract:    config.Conf().Eos.OneDex.TokenContract,
-		AppContract:      config.Conf().Eos.CdexConfig.AppContract,
+		EVMAgentContract:    config.Conf().Eos.OneDex.EVMAgentContract,
+		ExtensionEVMAddress: config.Conf().Eos.Exsat.BridgeExtensionEVMAddress,
+		PortalContract:      config.Conf().Eos.OneDex.PortalContract,
+		PortalEvmAddress:    config.Conf().Eos.OneDex.PortalEvmAddress,
+		TokenContract:       config.Conf().Eos.OneDex.TokenContract,
+		AppContract:         config.Conf().Eos.CdexConfig.AppContract,
 		ExsatNetwork: entity.ExsatNetwork{
 			CurrencySymbol:   config.Conf().Evm.ExsatNetwork.CurrencySymbol,
 			NetworkUrl:       config.Conf().Evm.ExsatNetwork.NetworkUrl,

@@ -89,6 +89,7 @@ eos:
     default_pool_maker_fee_rate: 0.001
   onedex:
     portal_contract: portalcontract
+    portal_evm_address: portal_evm_address
     actor: exappactor
     actor_private_key: your_actor_private_key
     actor_permission: active

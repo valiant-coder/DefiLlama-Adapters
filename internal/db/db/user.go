@@ -50,6 +50,10 @@ func (User) TableName() string {
 	return "users"
 }
 
+func (u *User) IsEVMUser() bool {
+	return u.LoginMethod == LoginMethodEVM
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randomNum := r.Intn(90000000) + 10000000

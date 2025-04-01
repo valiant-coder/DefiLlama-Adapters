@@ -1,20 +1,21 @@
 package entity
 
 type SystemInfo struct {
-	Version            string             `json:"version"`
-	PayCPU             PayCPU             `json:"pay_cpu"`
-	EVMAgentContract   string             `json:"evm_agent_contract"`
-	VaultEVMAddress    string             `json:"vault_evm_address"`
-	VaultEOSAddress    string             `json:"vault_eos_address"`
-	TokenContract      string             `json:"token_contract"`
-	AppContract        string             `json:"app_contract"`
-	ExsatNetwork       ExsatNetwork       `json:"exsat_network"`
-	TradingCompetition TradingCompetition `json:"trading_competition"`
+	Version             string             `json:"version"`
+	PayCPU              PayCPU             `json:"pay_cpu"`
+	EVMAgentContract    string             `json:"evm_agent_contract"`
+	ExtensionEVMAddress string             `json:"extension_evm_address"`
+	PortalContract      string             `json:"portal_contract"`
+	PortalEvmAddress    string             `json:"portal_evm_address"`
+	TokenContract       string             `json:"token_contract"`
+	AppContract         string             `json:"app_contract"`
+	ExsatNetwork        ExsatNetwork       `json:"exsat_network"`
+	TradingCompetition  TradingCompetition `json:"trading_competition"`
 
-	BTCBridgeContract   string `json:"btc_bridge_contract"`
-	BridgeContract      string `json:"bridge_contract"`
-	DepositRecipientAd  string `json:"deposit_recipient_address"`
-	MakerAgentContract  string `json:"maker_agent_contract"`
+	BTCBridgeContract  string `json:"btc_bridge_contract"`
+	BridgeContract     string `json:"bridge_contract"`
+	DepositRecipientAd string `json:"deposit_recipient_address"`
+	MakerAgentContract string `json:"maker_agent_contract"`
 }
 
 type TradingCompetition struct {

@@ -8,8 +8,8 @@ on:
       - 'v*.*.*'
 
 env:
-  AWS_REGION: us-east-1
-  IMAGE_NAME: exapp/exapp-go
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'exapp/exapp-go' }}
 
 jobs:
   build-and-push:

@@ -90,7 +90,9 @@ func (s *DepositWithdrawalService) Deposit(ctx context.Context, uid string, req 
 		}
 	}
 
-	remark := fmt.Sprintf("topup-%s", uid)
+	// no 0x prefix
+	evmAddress := strings.TrimPrefix(config.Conf().Eos.OneDex.PortalEvmAddress, "0x")
+	remark := fmt.Sprintf("%s-topup-%s", strings.ToLower(evmAddress), uid)
 	depositAddress, err := s.repo.GetUserDepositAddress(ctx, uid, targetChain.PermissionID)
 	if err != nil {
 		return entity.RespDeposit{}, err

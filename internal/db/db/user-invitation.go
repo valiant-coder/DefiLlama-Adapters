@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"exapp-go/data"
+	"exapp-go/pkg/log"
 	"time"
 	
 	"gorm.io/gorm"
@@ -89,7 +90,24 @@ func (r *Repo) UpdateUIValidInviteCount(ctx context.Context, uid string, maxCoun
 
 func (r *Repo) GetUserInvitation(ctx context.Context, uid string) (*UserInvitation, error) {
 	
-	return Get[UserInvitation](&UserInvitation{UID: uid})
+	// if val := GetCache[UserInvitation](UIRedisKey(uid)); val != nil {
+	// 	return val, nil
+	// }
+	
+	var ui UserInvitation
+	err := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&ui).Error
+	
+	// 打印生成的SQL语句
+	log.Logger().Info(r.DB.WithContext(ctx).Where("uid = ?", uid).First(&ui).Statement.SQL.String())
+	
+	if err != nil {
+		
+		log.Logger().Error("get user invitation error ->", err)
+		return nil, err
+	}
+	
+	r.SaveCache(&ui)
+	return &ui, nil
 }
 
 func (r *Repo) SetUserFirstTrade(ctx context.Context, uid, txId string) (err error) {
