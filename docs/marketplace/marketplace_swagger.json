@@ -2484,23 +2484,26 @@
                 "exsat_network": {
                     "$ref": "#/definitions/entity.ExsatNetwork"
                 },
+                "extension_evm_address": {
+                    "type": "string"
+                },
                 "maker_agent_contract": {
                     "type": "string"
                 },
                 "pay_cpu": {
                     "$ref": "#/definitions/entity.PayCPU"
                 },
+                "portal_contract": {
+                    "type": "string"
+                },
+                "portal_evm_address": {
+                    "type": "string"
+                },
                 "token_contract": {
                     "type": "string"
                 },
                 "trading_competition": {
                     "$ref": "#/definitions/entity.TradingCompetition"
-                },
-                "vault_eos_address": {
-                    "type": "string"
-                },
-                "vault_evm_address": {
-                    "type": "string"
                 },
                 "version": {
                     "type": "string"
