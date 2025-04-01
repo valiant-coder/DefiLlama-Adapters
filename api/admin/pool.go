@@ -5,6 +5,7 @@ import (
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/internal/services/admin"
 	"exapp-go/pkg/queryparams"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,7 +49,11 @@ func updatePool(c *gin.Context) {
 		return
 	}
 
-	poolId := c.GetUint64("pool_id")
+	poolId, err := strconv.ParseUint(c.Param("pool_id"), 10, 64)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
 	pool, err := admin.New().UpdatePool(c.Request.Context(), req, poolId)
 	if err != nil {
 		api.Error(c, err)

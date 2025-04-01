@@ -30,3 +30,7 @@ func (r *RespUserPointsGrant) Fill(a *db.UserPointsGrant) *RespUserPointsGrant {
 	r.Admin = a.Admin
 	return r
 }
+
+type ReqUpdateUserPointsGrantStatus struct {
+	Status uint8 `json:"status"`
+}

@@ -5,6 +5,7 @@ import (
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/internal/services/admin"
 	"exapp-go/pkg/queryparams"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,8 +71,13 @@ func updateToken(c *gin.Context) {
 		return
 	}
 
-	id := c.GetUint("id")
-	token, err := admin.New().UpdateToken(c.Request.Context(), &req, id)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	token, err := admin.New().UpdateToken(c.Request.Context(), &req, uint(id))
 	if err != nil {
 		api.Error(c, err)
 		return

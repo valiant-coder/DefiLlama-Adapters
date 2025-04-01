@@ -5,6 +5,7 @@ import (
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/internal/services/admin"
 	"exapp-go/pkg/queryparams"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,4 +35,26 @@ func queryUserPointsGrant(c *gin.Context) {
 	}
 
 	api.List(c, resp, count)
+}
+
+func updateUserPointsGrantStatus(c *gin.Context) {
+	var req entity_admin.ReqUpdateUserPointsGrantStatus
+	if err := c.ShouldBind(&req); err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	operator := c.GetString("admin")
+
+	grant, err := admin.New().UpdateUserPointsGrantStatus(c.Request.Context(), uint(id), operator, &req)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, grant)
 }

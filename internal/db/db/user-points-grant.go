@@ -31,3 +31,7 @@ type UserPointsGrant struct {
 	Amount    uint64      `json:"amount" gorm:"column:amount;type:bigint(20);not null"`
 	Status    GrantStatus `json:"status" gorm:"column:status;type:int(11);not null;default:0"`
 }
+
+func (*UserPointsGrant) TableName() string {
+	return "user_points_grant"
+}

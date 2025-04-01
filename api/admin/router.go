@@ -155,6 +155,8 @@ func Run(addr string, release bool) error {
 	// points
 	authorized.POST("/user_points_grant", createUserPointsGrant)
 	authorized.GET("/user_points_grant", queryUserPointsGrant)
+	authorized.PUT("/user_points_grant/:id", updateUserPointsGrantStatus)
+	// authorized.PUT("/user_points_grants", batchUserPointsGrantAccept)
 
 	return r.Run(addr)
 

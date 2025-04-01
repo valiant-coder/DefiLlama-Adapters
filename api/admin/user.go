@@ -41,7 +41,7 @@ func queryUsers(c *gin.Context) {
 // @Success 200 {array} entity_admin.RespPasskey "Successful response"
 // @Router /user-passkeys/{uid} [get]
 func getUserPasskeys(c *gin.Context) {
-	uid := c.GetString("uid")
+	uid := c.Param("uid")
 	if uid == "" {
 		api.Error(c, errors.New("uid is empty"))
 		return
