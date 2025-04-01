@@ -54,3 +54,33 @@ func (s *AdminServices) UpdateUserPointsGrantStatus(ctx context.Context, id uint
 
 	return new(entity_admin.RespUserPointsGrant).Fill(&grant), err
 }
+
+func (s *AdminServices) BatchUserPointsGrantAccept(ctx context.Context, ids []uint) ([]*entity_admin.RespUserPointsGrant, error) {
+	var grants []*db.UserPointsGrant
+
+	for _, id := range ids {
+		var grant db.UserPointsGrant
+
+		err := s.repo.Get(ctx, id, &grant)
+		if err != nil {
+			return nil, err
+		}
+
+		if grant.Status != db.GrantStatusPending {
+			return nil, errors.New("only pending grants can be accepted")
+		}
+
+		grant.Status = db.GrantStatusAccept
+		err = s.repo.Update(ctx, &grant)
+		if err != nil {
+			return nil, err
+		}
+		grants = append(grants, &grant)
+	}
+
+	var resp []*entity_admin.RespUserPointsGrant
+	for _, grant := range grants {
+		resp = append(resp, new(entity_admin.RespUserPointsGrant).Fill(grant))
+	}
+	return resp, nil
+}

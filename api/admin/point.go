@@ -58,3 +58,18 @@ func updateUserPointsGrantStatus(c *gin.Context) {
 	}
 	api.OK(c, grant)
 }
+
+func batchUserPointsGrantAccept(c *gin.Context) {
+	var req entity_admin.ReqBatchUserPointsGrantAccept
+	if err := c.ShouldBind(&req); err != nil {
+		api.Error(c, err)
+		return
+	}
+
+	grants, err := admin.New().BatchUserPointsGrantAccept(c.Request.Context(), req.IDs)
+	if err != nil {
+		api.Error(c, err)
+		return
+	}
+	api.OK(c, grants)
+}

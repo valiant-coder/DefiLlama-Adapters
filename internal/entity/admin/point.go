@@ -34,3 +34,7 @@ func (r *RespUserPointsGrant) Fill(a *db.UserPointsGrant) *RespUserPointsGrant {
 type ReqUpdateUserPointsGrantStatus struct {
 	Status uint8 `json:"status"`
 }
+
+type ReqBatchUserPointsGrantAccept struct {
+	IDs []uint `json:"ids"`
+}
