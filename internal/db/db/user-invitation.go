@@ -96,6 +96,10 @@ func (r *Repo) GetUserInvitation(ctx context.Context, uid string) (*UserInvitati
 
 	var ui UserInvitation
 	err := r.DB.WithContext(ctx).Where("uid = ?", uid).First(&ui).Error
+
+	// 打印生成的SQL语句
+	fmt.Println(r.DB.WithContext(ctx).Where("uid = ?", uid).First(&ui).Statement.SQL.String())
+
 	if err != nil {
 
 		fmt.Println("get user invitation error ->", err)
