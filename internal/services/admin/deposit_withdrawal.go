@@ -5,6 +5,9 @@ import (
 	"exapp-go/internal/db/db"
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/pkg/queryparams"
+	"time"
+
+	"github.com/spf13/cast"
 )
 
 func (s *AdminServices) GetTransactionsRecord(ctx context.Context, params *queryparams.QueryParams) ([]*db.TransactionsRecord, int64, error) {
@@ -22,10 +25,12 @@ func (s *AdminServices) GetTransactionsRecord(ctx context.Context, params *query
 		params.CustomQuery["tx_hash"] = []interface{}{txHash}
 	}
 	if startTime := params.Query.Values["start_time"]; startTime != nil {
-		params.CustomQuery["start_time"] = []interface{}{startTime}
+		start := time.Unix(cast.ToInt64(startTime), 0)
+		params.CustomQuery["start_time"] = []interface{}{start}
 	}
 	if endTime := params.Query.Values["end_time"]; endTime != nil {
-		params.CustomQuery["end_time"] = []interface{}{endTime}
+		end := time.Unix(cast.ToInt64(endTime), 0)
+		params.CustomQuery["end_time"] = []interface{}{end}
 	}
 
 	record, total, err := s.repo.QueryTransactionsRecord(ctx, params)
@@ -36,7 +41,7 @@ func (s *AdminServices) GetTransactionsRecord(ctx context.Context, params *query
 	return record, total, nil
 }
 
-func (s *AdminServices) GetDepositAmountTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespGetDepositWithdrawTotal, error) {
+func (s *AdminServices) GetDepositAmountTotal(ctx context.Context, startTime, endTime time.Time) ([]*entity_admin.RespGetDepositWithdrawTotal, error) {
 
 	records, err := s.repo.GetDepositAmountTotal(ctx, startTime, endTime)
 	if err != nil {
@@ -51,7 +56,7 @@ func (s *AdminServices) GetDepositAmountTotal(ctx context.Context, startTime, en
 	return resp, nil
 }
 
-func (s *AdminServices) GetWithdrawAmountTotal(ctx context.Context, startTime, endTime string) ([]*entity_admin.RespGetDepositWithdrawTotal, error) {
+func (s *AdminServices) GetWithdrawAmountTotal(ctx context.Context, startTime, endTime time.Time) ([]*entity_admin.RespGetDepositWithdrawTotal, error) {
 
 	records, err := s.repo.GetWithdrawAmountTotal(ctx, startTime, endTime)
 	if err != nil {

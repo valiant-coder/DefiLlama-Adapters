@@ -7,6 +7,7 @@ import (
 	"exapp-go/pkg/utils"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestGetOrdersCoinTotal(t *testing.T) {
@@ -15,7 +16,10 @@ func TestGetOrdersCoinTotal(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	total, err := ckhRepo.GetOrdersCoinTotal(context.Background(), "2024-10-01", "2025-10-31")
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
+	total, err := ckhRepo.GetOrdersCoinTotal(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,7 +33,10 @@ func TestGetOrdersCoinQuantity(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	orders, err := ckhRepo.GetOrdersCoinQuantity(context.Background(), "2024-10-01", "2025-10-31")
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
+	orders, err := ckhRepo.GetOrdersCoinQuantity(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Error(err)
 	}
@@ -45,7 +52,10 @@ func TestGetOrdersSymbolQuantity(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	orders, err := ckhRepo.GetOrdersSymbolQuantity(context.Background(), "2024-10-01", "2025-10-31")
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
+	orders, err := ckhRepo.GetOrdersSymbolQuantity(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Error(err)
 	}
@@ -88,7 +98,10 @@ func TestGetOrdersFeeTotal(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	total, err := ckhRepo.GetOrdersFeeTotal(context.Background(), "2024-10-01", "2025-10-31")
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
+	total, err := ckhRepo.GetOrdersFeeTotal(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,7 +115,10 @@ func TestGetOrdersCoinFee(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	orders, err := ckhRepo.GetOrdersCoinFee(context.Background(), "2024-10-01", "2025-10-31")
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
+	orders, err := ckhRepo.GetOrdersCoinFee(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,7 +134,10 @@ func TestGetOrdersSymbolFee(t *testing.T) {
 	config.Load("config/config.yaml")
 	ckhRepo := New()
 
-	orders, err := ckhRepo.GetOrdersSymbolFee(context.Background(), "2024-10-01", "2025-10-31")
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
+	orders, err := ckhRepo.GetOrdersSymbolFee(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Error(err)
 	}

@@ -4,8 +4,10 @@ import (
 	"exapp-go/api"
 	"exapp-go/internal/services/admin"
 	"exapp-go/pkg/queryparams"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 )
 
 // @tags order
@@ -41,15 +43,18 @@ func queryHistoryOrders(c *gin.Context) {
 // @Summary get orders coin total
 // @Accept json
 // @Produce json
-// @Param start_time query string false "start_time"
-// @Param end_time query string false "end_time"
+// @Param start_time query string true "start_time"
+// @Param end_time query string true "end_time"
 // @Success 200 {object} decimal.Decimal "Successful response"
 // @Router /orders_coin_total [get]
 func getOrdersCoinTotal(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersCoinTotal(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetOrdersCoinTotal(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -71,7 +76,10 @@ func getOrdersCoinQuantity(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersCoinQuantity(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetOrdersCoinQuantity(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -93,7 +101,10 @@ func getOrdersSymbolQuantity(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersSymbolQuantity(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetOrdersSymbolQuantity(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -115,7 +126,10 @@ func getOrdersFeeTotal(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersFeeTotal(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetOrdersFeeTotal(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -137,7 +151,10 @@ func getOrdersCoinFee(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersCoinFee(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetOrdersCoinFee(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -159,7 +176,10 @@ func getOrdersSymbolFee(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetOrdersSymbolFee(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetOrdersSymbolFee(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return

@@ -128,7 +128,6 @@ func Run(addr string, release bool) error {
 
 	// token
 	authorized.GET("/tokens", queryTokens)
-	authorized.POST("/token", createToken)
 	authorized.PUT("/token/:id", updateToken)
 
 	// pool

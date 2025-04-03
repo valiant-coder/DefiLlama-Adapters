@@ -6,6 +6,9 @@ import (
 	entity_admin "exapp-go/internal/entity/admin"
 	"exapp-go/pkg/queryparams"
 	"fmt"
+	"time"
+
+	"github.com/spf13/cast"
 )
 
 func (s *AdminServices) QueryUsers(ctx context.Context, params *queryparams.QueryParams) ([]*entity_admin.RespUser, int64, error) {
@@ -17,10 +20,12 @@ func (s *AdminServices) QueryUsers(ctx context.Context, params *queryparams.Quer
 		params.CustomQuery["uid"] = []interface{}{uid}
 	}
 	if startTime := params.Query.Values["start_time"]; startTime != nil {
-		params.CustomQuery["start_time"] = []interface{}{startTime}
+		start := time.Unix(cast.ToInt64(startTime), 0)
+		params.CustomQuery["start_time"] = []interface{}{start}
 	}
 	if endTime := params.Query.Values["end_time"]; endTime != nil {
-		params.CustomQuery["end_time"] = []interface{}{endTime}
+		end := time.Unix(cast.ToInt64(endTime), 0)
+		params.CustomQuery["end_time"] = []interface{}{end}
 	}
 
 	users, total, err := s.repo.QueryUserList(ctx, params)

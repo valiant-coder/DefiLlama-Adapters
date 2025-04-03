@@ -4,7 +4,6 @@ import (
 	"exapp-go/internal/db/db"
 	"exapp-go/internal/entity"
 
-	"github.com/shopspring/decimal"
 	"gorm.io/datatypes"
 )
 
@@ -71,8 +70,8 @@ func TokenFromDB(token *db.Token) *RespToken {
 		Intro:                 tokenData.Intro,
 	}
 	return &RespToken{
-		ID:          token.ID,
-		IconUrl:     token.IconUrl,
+		ID:                token.ID,
+		IconUrl:           token.IconUrl,
 		Symbol:            token.Symbol,
 		Name:              token.Name,
 		Decimals:          token.Decimals,
@@ -83,84 +82,6 @@ func TokenFromDB(token *db.Token) *RespToken {
 		Info:      info,
 		UpdatedAt: entity.Time(token.UpdatedAt),
 		CreatedAt: entity.Time(token.CreatedAt),
-	}
-}
-
-type ReqCreateToken struct {
-	IconUrl     string           `json:"icon_url"`
-	Symbol      string           `json:"symbol"`
-	Name        string           `json:"name"`
-	Decimals    uint8            `json:"decimals"`
-	EVMContract string           `json:"evm_contract"`
-	EOSContract string           `json:"eos_contract"`
-	MaxSupply   string           `json:"max_supply"`
-	WithdrawFee string           `json:"withdraw_fee"`
-	BlockNum    uint64           `json:"block_num"`
-	Chains      []entity.Chain   `json:"chains"`
-	Info        entity.TokenInfo `json:"info"`
-}
-
-func DBFromCreateToken(token *ReqCreateToken) *db.Token {
-	chains := make([]db.ChainInfo, 0)
-	for _, chain := range token.Chains {
-		exsatWithdrawFee, _ := decimal.NewFromString(chain.ExsatWithdrawFee)
-		minDepositAmount, _ := decimal.NewFromString(chain.MinDepositAmount)
-		minWithdrawAmount, _ := decimal.NewFromString(chain.MinWithdrawAmount)
-		withdrawFee, _ := decimal.NewFromString(chain.WithdrawFee)
-
-		chains = append(chains, db.ChainInfo{
-			ChainID:           chain.ChainID,
-			ChainName:         chain.ChainName,
-			ExsatTokenAddress: chain.ExsatTokenAddress,
-			ExsatWithdrawFee:  exsatWithdrawFee,
-			MinDepositAmount:  minDepositAmount,
-			MinWithdrawAmount: minWithdrawAmount,
-			WithdrawFee:       withdrawFee,
-		})
-	}
-
-	links := make([]db.TokenLink, 0)
-	for _, link := range token.Info.Links {
-		links = append(links, db.TokenLink{
-			Name: link.Name,
-			Url:  link.Url,
-		})
-	}
-
-	tokenInfo := db.TokenInfo{
-		Rank:                  token.Info.Rank,
-		MarketCapitalization:  token.Info.MarketCapitalization,
-		FullyDilutedMarketCap: token.Info.FullyDilutedMarketCap,
-		MarketDominance:       token.Info.MarketDominance,
-		Volume:                token.Info.Volume,
-		VolumeDivMarketCap:    token.Info.VolumeDivMarketCap,
-		CirculatingSupply:     token.Info.CirculatingSupply,
-		TotalSupply:           token.Info.TotalSupply,
-		MaximumSupply:         token.Info.MaximumSupply,
-		IssueDate:             token.Info.IssueDate,
-		HistoricalHigh:        token.Info.HistoricalHigh,
-		HistoricalLow:         token.Info.HistoricalLow,
-		HistoricalHighDate:    token.Info.HistoricalHighDate,
-		HistoricalLowDate:     token.Info.HistoricalLowDate,
-		Links:                 links,
-		Intro:                 token.Info.Intro,
-	}
-
-	maxSupply, _ := decimal.NewFromString(token.MaxSupply)
-	withdrawFee, _ := decimal.NewFromString(token.WithdrawFee)
-
-	return &db.Token{
-		Symbol:             token.Symbol,
-		Name:               token.Name,
-		Decimals:           token.Decimals,
-		ExsatTokenAddress:  token.EVMContract,
-		EOSContractAddress: token.EOSContract,
-		IconUrl:            token.IconUrl,
-		MaxSupply:          maxSupply,
-		WithdrawFee:        withdrawFee,
-		BlockNum:           token.BlockNum,
-		Chains:             chains,
-		TokenInfo:          datatypes.NewJSONType(tokenInfo),
 	}
 }
 

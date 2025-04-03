@@ -58,8 +58,11 @@ func TestGetDepositAmountTotal(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config.yaml")
 
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
 	r := New()
-	record, err := r.GetDepositAmountTotal(context.Background(), "2024-10-01 00:00:00", "2025-04-01 23:59:59")
+	record, err := r.GetDepositAmountTotal(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,8 +78,11 @@ func TestGetWithdrawAmountTotal(t *testing.T) {
 	utils.WorkInProjectPath("exapp-go")
 	config.Load("config/config.yaml")
 
+	startTime, _ := time.Parse("2006-01-02", "2024-10-01")
+	endTime, _ := time.Parse("2006-01-02", "2025-10-31")
+
 	r := New()
-	record, err := r.GetWithdrawAmountTotal(context.Background(), "2024-10-01 00:00:00", "2025-04-01 23:59:59")
+	record, err := r.GetWithdrawAmountTotal(context.Background(), startTime, endTime)
 	if err != nil {
 		t.Fatal(err)
 	}

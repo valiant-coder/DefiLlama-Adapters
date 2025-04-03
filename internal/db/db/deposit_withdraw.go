@@ -299,7 +299,7 @@ func (r *Repo) QueryTransactionsRecord(ctx context.Context, params *queryparams.
 	return records, total, nil
 }
 
-func (r *Repo) GetDepositAmountTotal(ctx context.Context, startTime, endTime string) ([]*DepositRecord, error) {
+func (r *Repo) GetDepositAmountTotal(ctx context.Context, startTime, endTime time.Time) ([]*DepositRecord, error) {
 	var record []*DepositRecord
 
 	err := r.DB.Raw(`SELECT symbol, SUM(amount) AS amount 
@@ -314,7 +314,7 @@ func (r *Repo) GetDepositAmountTotal(ctx context.Context, startTime, endTime str
 	return record, nil
 }
 
-func (r *Repo) GetWithdrawAmountTotal(ctx context.Context, startTime, endTime string) ([]*WithdrawRecord, error) {
+func (r *Repo) GetWithdrawAmountTotal(ctx context.Context, startTime, endTime time.Time) ([]*WithdrawRecord, error) {
 	var record []*WithdrawRecord
 
 	err := r.DB.Raw(`SELECT symbol, SUM(amount) AS amount 

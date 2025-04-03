@@ -240,7 +240,7 @@ func (r *ClickHouseRepo) QueryHistoryOrdersList(ctx context.Context, params *que
 	return orders, total, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime string) (decimal.Decimal, error) {
+func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endTime time.Time) (decimal.Decimal, error) {
 	var total decimal.Decimal
 
 	err := r.DB.Raw(`SELECT SUM(executed_quantity * avg_price) AS total
@@ -253,7 +253,7 @@ func (r *ClickHouseRepo) GetOrdersCoinTotal(ctx context.Context, startTime, endT
 	return total, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersCoinQuantity(ctx context.Context, startTime, endTime string) ([]*HistoryOrder, error) {
+func (r *ClickHouseRepo) GetOrdersCoinQuantity(ctx context.Context, startTime, endTime time.Time) ([]*HistoryOrder, error) {
 	var orders []*HistoryOrder
 
 	err := r.DB.Raw(`SELECT pool_base_coin, SUM(executed_quantity) AS executed_quantity 
@@ -274,7 +274,7 @@ type OrdersSymbolQuantity struct {
 	Price    decimal.Decimal `json:"price"`
 }
 
-func (r *ClickHouseRepo) GetOrdersSymbolQuantity(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolQuantity, error) {
+func (r *ClickHouseRepo) GetOrdersSymbolQuantity(ctx context.Context, startTime, endTime time.Time) ([]*OrdersSymbolQuantity, error) {
 	var orders []*OrdersSymbolQuantity
 
 	err := r.DB.Raw(`
@@ -292,7 +292,7 @@ func (r *ClickHouseRepo) GetOrdersSymbolQuantity(ctx context.Context, startTime,
 	return orders, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersFeeTotal(ctx context.Context, startTime, endTime string) (decimal.Decimal, error) {
+func (r *ClickHouseRepo) GetOrdersFeeTotal(ctx context.Context, startTime, endTime time.Time) (decimal.Decimal, error) {
 	var total decimal.Decimal
 
 	err := r.DB.Raw(`SELECT SUM(taker_fee + maker_fee) AS total 
@@ -305,7 +305,7 @@ func (r *ClickHouseRepo) GetOrdersFeeTotal(ctx context.Context, startTime, endTi
 	return total, nil
 }
 
-func (r *ClickHouseRepo) GetOrdersCoinFee(ctx context.Context, startTime, endTime string) ([]*HistoryOrderForm, error) {
+func (r *ClickHouseRepo) GetOrdersCoinFee(ctx context.Context, startTime, endTime time.Time) ([]*HistoryOrderForm, error) {
 	var orders []*HistoryOrderForm
 
 	err := r.DB.Raw(`SELECT base_coin as pool_base_coin, SUM(taker_fee + maker_fee) AS fee 
@@ -326,7 +326,7 @@ type OrdersSymbolFee struct {
 	MakerFee decimal.Decimal `json:"maker_fee"`
 }
 
-func (r *ClickHouseRepo) GetOrdersSymbolFee(ctx context.Context, startTime, endTime string) ([]*OrdersSymbolFee, error) {
+func (r *ClickHouseRepo) GetOrdersSymbolFee(ctx context.Context, startTime, endTime time.Time) ([]*OrdersSymbolFee, error) {
 	var orders []*OrdersSymbolFee
 
 	err := r.DB.Raw(`SELECT symbol, SUM(taker_fee) AS taker_fee, SUM(maker_fee) AS maker_fee

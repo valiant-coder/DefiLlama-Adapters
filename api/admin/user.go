@@ -5,6 +5,7 @@ import (
 	"exapp-go/api"
 	"exapp-go/internal/services/admin"
 	"exapp-go/pkg/queryparams"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
@@ -39,7 +40,7 @@ func queryUsers(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Summary get user passkeys
 // @Success 200 {array} entity_admin.RespPasskey "Successful response"
-// @Router /user-passkeys/{uid} [get]
+// @Router /user_passkeys/{uid} [get]
 func getUserPasskeys(c *gin.Context) {
 	uid := c.Param("uid")
 	if uid == "" {
@@ -47,6 +48,7 @@ func getUserPasskeys(c *gin.Context) {
 		return
 	}
 	queryParams := queryparams.NewQueryParams(c)
+	queryParams.Set("uid", []string{uid})
 
 	resp, total, err := admin.New().GetPasskeys(c.Request.Context(), queryParams)
 	if err != nil {
@@ -121,7 +123,10 @@ func getDepositAmountTotal(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetDepositAmountTotal(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetDepositAmountTotal(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return
@@ -143,7 +148,10 @@ func getWithdrawAmountTotal(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	resp, err := admin.New().GetWithdrawAmountTotal(c.Request.Context(), startTime, endTime)
+	start := time.Unix(cast.ToInt64(startTime), 0)
+	end := time.Unix(cast.ToInt64(endTime), 0)
+
+	resp, err := admin.New().GetWithdrawAmountTotal(c.Request.Context(), start, end)
 	if err != nil {
 		api.Error(c, err)
 		return

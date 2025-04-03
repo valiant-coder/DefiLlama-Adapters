@@ -40,7 +40,7 @@ func queryPools(c *gin.Context) {
 // @Param id path string true "pool_id"
 // @Param body body entity_admin.ReqUpsertPool false "request body"
 // @Success 200 {object} entity_admin.RespPool "Successful response"
-// @Router /token/{id} [put]
+// @Router /pool/{id} [put]
 func updatePool(c *gin.Context) {
 
 	var req entity_admin.ReqUpsertPool
@@ -68,7 +68,7 @@ func updatePool(c *gin.Context) {
 // @summary create pool
 // @Param body body entity_admin.ReqUpsertPool false "request body"
 // @Success 200 {object} entity_admin.RespPool "Successful response"
-// @Router /token [post]
+// @Router /pool [post]
 func createPool(c *gin.Context) {
 
 	var req entity_admin.ReqUpsertPool

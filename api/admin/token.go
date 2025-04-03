@@ -36,28 +36,6 @@ func queryTokens(c *gin.Context) {
 
 // @tags token
 // @Security ApiKeyAuth
-// @summary create token
-// @Param body body entity_admin.ReqCreateToken false "request body"
-// @Success 200 {object} entity_admin.RespToken "Successful response"
-// @Router /token [post]
-func createToken(c *gin.Context) {
-
-	var req entity_admin.ReqCreateToken
-	if err := c.ShouldBind(&req); err != nil {
-		api.Error(c, err)
-		return
-	}
-
-	token, err := admin.New().CreateToken(c.Request.Context(), &req)
-	if err != nil {
-		api.Error(c, err)
-		return
-	}
-	api.OK(c, token)
-}
-
-// @tags token
-// @Security ApiKeyAuth
 // @Summary update token
 // @Param id path string true "id"
 // @Param body body entity_admin.ReqUpdateToken false "request body"
